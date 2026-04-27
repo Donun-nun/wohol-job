@@ -65,7 +65,7 @@ export function useJobs() {
       return
     }
 
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Sheet1`
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Form+Responses+1`
 
     fetch(url)
       .then(r => r.text())
