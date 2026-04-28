@@ -14,7 +14,6 @@ const TAG_COLORS = {
 const REGIONS = ["전체", "WA", "VIC", "NSW", "QLD", "SA", "NT"]
 const TYPES   = ["전체", "Casual", "Part-time", "Full-time"]
 
-// ── 별점 ──────────────────────────────────────────
 function Stars({ n }) {
   return (
     <div style={{ display:'flex', gap:2 }}>
@@ -25,55 +24,27 @@ function Stars({ n }) {
   )
 }
 
-// ── 사진 갤러리 ───────────────────────────────────
 function PhotoGallery({ photos }) {
   const [active, setActive] = useState(null)
   if (!photos?.length) return null
-
   return (
     <>
       <div style={{ display:'flex', gap:8, overflowX:'auto', padding:'0 20px 14px', scrollbarWidth:'none' }}>
         {photos.map((p, i) => (
           <div key={i} onClick={e => { e.stopPropagation(); setActive(i) }}
-            style={{
-              flexShrink:0, width: photos.length===1 ? '100%' : 160,
-              height:110, borderRadius:10, overflow:'hidden',
-              cursor:'zoom-in', position:'relative', border:'1.5px solid #E0D0B0',
-            }}>
+            style={{ flexShrink:0, width: photos.length===1 ? '100%' : 160, height:110, borderRadius:10, overflow:'hidden', cursor:'zoom-in', position:'relative', border:'1.5px solid #E0D0B0' }}>
             <img src={p.url} alt={p.caption} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
             {p.caption && (
-              <div style={{
-                position:'absolute', bottom:0, left:0, right:0,
-                background:'linear-gradient(transparent,rgba(0,0,0,0.55))',
-                color:'#fff', fontSize:11, padding:'12px 8px 6px', fontFamily:'Noto Sans KR',
-              }}>{p.caption}</div>
-            )}
-            {i === photos.length-1 && photos.length > 1 && (
-              <div style={{
-                position:'absolute', top:6, right:6,
-                background:'rgba(0,0,0,0.55)', color:'#fff',
-                fontSize:10, padding:'2px 7px', borderRadius:10, fontFamily:'Noto Sans KR',
-              }}>{photos.length}장</div>
+              <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'linear-gradient(transparent,rgba(0,0,0,0.55))', color:'#fff', fontSize:11, padding:'12px 8px 6px', fontFamily:'Noto Sans KR' }}>{p.caption}</div>
             )}
           </div>
         ))}
       </div>
-
       {active !== null && (
         <div onClick={e => { e.stopPropagation(); setActive(null) }}
-          style={{
-            position:'fixed', inset:0, zIndex:200,
-            background:'rgba(0,0,0,0.9)',
-            display:'flex', alignItems:'center', justifyContent:'center', padding:20,
-          }}>
+          style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.9)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
           <div style={{ position:'relative', maxWidth:600, width:'100%' }}>
-            <img src={photos[active].url} alt={photos[active].caption}
-              style={{ width:'100%', borderRadius:14, maxHeight:'70vh', objectFit:'contain' }} />
-            {photos[active].caption && (
-              <div style={{ textAlign:'center', color:'#E0C890', marginTop:12, fontFamily:'Noto Sans KR', fontSize:14 }}>
-                {photos[active].caption}
-              </div>
-            )}
+            <img src={photos[active].url} style={{ width:'100%', borderRadius:14, maxHeight:'70vh', objectFit:'contain' }} />
             {photos.length > 1 && (
               <div style={{ display:'flex', justifyContent:'center', gap:12, marginTop:16 }}>
                 <button onClick={e => { e.stopPropagation(); setActive(a => (a-1+photos.length)%photos.length) }}
@@ -84,12 +55,7 @@ function PhotoGallery({ photos }) {
               </div>
             )}
             <button onClick={e => { e.stopPropagation(); setActive(null) }}
-              style={{
-                position:'absolute', top:-14, right:-14,
-                background:'#2C1A00', color:'#FFD580',
-                border:'none', borderRadius:'50%', width:32, height:32,
-                cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center',
-              }}>✕</button>
+              style={{ position:'absolute', top:-14, right:-14, background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
           </div>
         </div>
       )}
@@ -97,8 +63,7 @@ function PhotoGallery({ photos }) {
   )
 }
 
-// ── 잡 카드 ───────────────────────────────────────
-function JobCard({ job, locked }) {
+function JobCard({ job, locked, liked, onLike }) {
   const [open, setOpen] = useState(false)
   const [tc, tb] = TAG_COLORS[job.tag] || TAG_COLORS["기타"]
   const hasPhotos = job.photos?.length > 0
@@ -106,46 +71,30 @@ function JobCard({ job, locked }) {
   return (
     <div
       onClick={() => !locked && setOpen(o => !o)}
-      style={{
-        background:'#FEFAF3', border:'1.5px solid #E8DCC8', borderRadius:16,
-        overflow:'hidden', cursor: locked ? 'default' : 'pointer',
-        transition:'box-shadow 0.18s, transform 0.18s', position:'relative',
-        boxShadow:'0 2px 8px rgba(120,90,40,0.07)',
-      }}
+      style={{ background:'#FEFAF3', border:'1.5px solid #E8DCC8', borderRadius:16, overflow:'hidden', cursor: locked ? 'default' : 'pointer', transition:'box-shadow 0.18s, transform 0.18s', position:'relative', boxShadow:'0 2px 8px rgba(120,90,40,0.07)' }}
       onMouseEnter={e => { if (!locked) { e.currentTarget.style.boxShadow='0 8px 28px rgba(120,90,40,0.15)'; e.currentTarget.style.transform='translateY(-2px)' }}}
       onMouseLeave={e => { e.currentTarget.style.boxShadow='0 2px 8px rgba(120,90,40,0.07)'; e.currentTarget.style.transform='none' }}
     >
-      {/* 잠금 오버레이 */}
       {locked && (
-        <div style={{
-          position:'absolute', inset:0, zIndex:10,
-          background:'rgba(254,250,243,0.88)', backdropFilter:'blur(5px)',
-          display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, borderRadius:16,
-        }}>
+        <div style={{ position:'absolute', inset:0, zIndex:10, background:'rgba(254,250,243,0.88)', backdropFilter:'blur(5px)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8, borderRadius:16 }}>
           <div style={{ fontSize:28 }}>🔒</div>
-          <div style={{ fontSize:13, color:'#A08050', fontFamily:'Noto Sans KR', textAlign:'center', lineHeight:1.5 }}>
-            내 경험을 공유하면<br />잠금이 해제됩니다
-          </div>
+          <div style={{ fontSize:13, color:'#A08050', fontFamily:'Noto Sans KR', textAlign:'center', lineHeight:1.5 }}>내 경험을 공유하면<br />잠금이 해제됩니다</div>
         </div>
       )}
 
-      {/* 사진 */}
       {hasPhotos && !locked && <div style={{ paddingTop:14 }}><PhotoGallery photos={job.photos} /></div>}
       {hasPhotos && locked && (
         <div style={{ height:80, overflow:'hidden', position:'relative' }}>
           <img src={job.photos[0].url} style={{ width:'100%', height:'100%', objectFit:'cover', filter:'blur(8px) brightness(0.7)', transform:'scale(1.1)' }} />
-          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:12, fontFamily:'Noto Sans KR' }}>
-            📷 사진 {job.photos.length}장 포함
-          </div>
+          <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:12, fontFamily:'Noto Sans KR' }}>📷 사진 {job.photos.length}장 포함</div>
         </div>
       )}
 
       <div style={{ padding:'16px 20px' }}>
-        {/* 헤더 */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
-              <span style={{ fontFamily:"'Playfair Display', serif", fontSize:18, fontWeight:700, color:'#2C1A00' }}>{job.title}</span>
+              <span style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:'#2C1A00' }}>{job.title}</span>
               <span style={{ background:tc, color:tb, fontSize:11, padding:'2px 9px', borderRadius:20, fontFamily:'Noto Sans KR', fontWeight:700 }}>{job.tag}</span>
               {hasPhotos && <span style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR' }}>📷 {job.photos.length}</span>}
             </div>
@@ -157,22 +106,36 @@ function JobCard({ job, locked }) {
           </div>
         </div>
 
-        {/* 한줄평 */}
-        <div style={{
-          background:'#F5EDD8', borderLeft:'3px solid #C8963C', borderRadius:'0 8px 8px 0',
-          padding:'10px 14px', marginBottom:12,
-          fontFamily:'Noto Sans KR', fontSize:13, color:'#4A3010', fontStyle:'italic', lineHeight:1.6,
-        }}>"{job.review}"</div>
+        <div style={{ background:'#F5EDD8', borderLeft:'3px solid #C8963C', borderRadius:'0 8px 8px 0', padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:13, color:'#4A3010', fontStyle:'italic', lineHeight:1.6 }}>
+          "{job.review}"
+        </div>
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <Stars n={job.stars} />
-          <div style={{ fontSize:11, color:'#B8A080', fontFamily:'Noto Sans KR' }}>{job.shift} · {job.author} · {job.date}</div>
+          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ fontSize:11, color:'#B8A080', fontFamily:'Noto Sans KR' }}>{job.shift} · {job.author} · {job.date}</div>
+            {/* 좋아요 버튼 */}
+            <button
+              onClick={e => { e.stopPropagation(); if (!locked) onLike(job.id) }}
+              style={{
+                display:'flex', alignItems:'center', gap:4,
+                background: liked ? 'rgba(200,150,60,0.15)' : 'rgba(0,0,0,0.04)',
+                border: `1.5px solid ${liked ? '#C8963C' : '#E0D0B0'}`,
+                borderRadius:20, padding:'4px 12px', cursor: locked ? 'default' : 'pointer',
+                fontFamily:'Noto Sans KR', fontSize:13,
+                color: liked ? '#C8963C' : '#A08060',
+                transition:'all 0.15s',
+              }}
+            >
+              <span>{liked ? '❤️' : '🤍'}</span>
+              <span>{job.likes}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 펼침: 장단점 */}
       {open && !locked && (
-        <div style={{ borderTop:'1.5px solid #E8DCC8', padding:'16px 20px 20px', background:'#FFFDF8', animation:'fadeIn 0.2s ease' }}>
+        <div style={{ borderTop:'1.5px solid #E8DCC8', padding:'16px 20px 20px', background:'#FFFDF8' }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             <div style={{ background:'#F0F9F0', borderRadius:10, padding:14 }}>
               <div style={{ fontSize:11, color:'#3A7A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👍 장점</div>
@@ -189,29 +152,24 @@ function JobCard({ job, locked }) {
   )
 }
 
-// ── 메인 앱 ───────────────────────────────────────
 export default function App() {
-  const { jobs, loading } = useJobs()
-  const [unlocked, setUnlocked]     = useState(() => localStorage.getItem('wohol_unlocked') === 'true')
-  const [region, setRegion]         = useState("전체")
-  const [type, setType]             = useState("전체")
-  const [sort, setSort]             = useState("별점순")
-  const [photoOnly, setPhotoOnly]   = useState(false)
-  const [showBanner, setShowBanner] = useState(true)
+  const { jobs, loading, likedIds, toggleLike } = useJobs()
+  const [region, setRegion] = useState("전체")
+  const [type, setType]     = useState("전체")
+  const [sort, setSort]     = useState("좋아요순")
+  const [photoOnly, setPhotoOnly] = useState(false)
 
-  const unlock = () => {
-    localStorage.setItem('wohol_unlocked', 'true')
-    setUnlocked(true)
-    // 구글 폼 링크로 이동 (환경변수에서 읽음)
-    const formUrl = import.meta.env.VITE_FORM_URL
-    if (formUrl) window.open(formUrl, '_blank')
-  }
+  const FORM_URL = import.meta.env.VITE_FORM_URL
 
   const filtered = jobs
     .filter(j => region === "전체" || j.region.includes(region))
     .filter(j => type === "전체"   || j.type === type)
     .filter(j => !photoOnly        || j.photos?.length > 0)
-    .sort((a,b) => sort === "별점순" ? b.stars-a.stars : sort === "시급순" ? b.hourly-a.hourly : b.id-a.id)
+    .sort((a,b) =>
+      sort === "좋아요순" ? b.likes - a.likes :
+      sort === "별점순"   ? b.stars - a.stars :
+      sort === "시급순"   ? b.hourly - a.hourly : b.id - a.id
+    )
 
   const chip = (active, accent) => ({
     padding:'6px 14px', borderRadius:20, cursor:'pointer',
@@ -222,30 +180,20 @@ export default function App() {
     color: active ? (accent ? '#fff' : '#FFD580') : '#8A7050',
   })
 
-  const totalPhotos = jobs.filter(j=>j.photos?.length).reduce((a,j)=>a+j.photos.length, 0)
+  const totalPhotos = jobs.filter(j=>j.photos?.length).reduce((a,j)=>a+j.photos.length,0)
 
   return (
-    <div style={{
-      minHeight:'100vh', background:'#F7F0E3',
-      backgroundImage:'radial-gradient(ellipse at 0% 0%,rgba(200,150,60,0.12) 0%,transparent 50%),radial-gradient(ellipse at 100% 100%,rgba(160,120,40,0.1) 0%,transparent 50%)',
-    }}>
+    <div style={{ minHeight:'100vh', background:'#F7F0E3', backgroundImage:'radial-gradient(ellipse at 0% 0%,rgba(200,150,60,0.12) 0%,transparent 50%),radial-gradient(ellipse at 100% 100%,rgba(160,120,40,0.1) 0%,transparent 50%)' }}>
 
       {/* 헤더 */}
-      <div style={{
-        borderBottom:'1.5px solid #E0D0B0', background:'rgba(247,240,227,0.95)',
-        backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50,
-        padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between',
-      }}>
+      <div style={{ borderBottom:'1.5px solid #E0D0B0', background:'rgba(247,240,227,0.95)', backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:900, color:'#2C1A00' }}>🦘 워홀잡</div>
+          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:900, color:'#2C1A00' }}>🦘 호주잡</div>
           <div style={{ fontSize:10, color:'#B8A070', fontFamily:'Noto Sans KR', marginTop:2 }}>호주 워홀러들의 직업 후기</div>
         </div>
-        {!unlocked
-          ? <button onClick={unlock} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-              경험 공유하고 전체 보기 🔓
-            </button>
-          : <div style={{ background:'#F0F9F0', border:'1.5px solid #A0D0A0', borderRadius:10, padding:'6px 14px', fontSize:12, color:'#3A7A3A', fontFamily:'Noto Sans KR' }}>🔓 전체 열람 중</div>
-        }
+        <button onClick={() => window.open(FORM_URL, '_blank')} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+          + 후기 추가하기
+        </button>
       </div>
 
       <div style={{ maxWidth:680, margin:'0 auto', padding:'0 16px 80px' }}>
@@ -258,12 +206,12 @@ export default function App() {
           </h1>
           <p style={{ color:'#8A7050', fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
             시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보.<br />
-            <span style={{ color:'#C8963C', fontWeight:700 }}>내 경험 공유 → 잠긴 후기 전체 열람.</span>
+            <span style={{ color:'#C8963C', fontWeight:700 }}>일터 사진을 올리면 다른 사람 사진도 볼 수 있어요 📷</span>
           </p>
         </div>
 
         {/* 사진 유도 배너 */}
-        {!unlocked && showBanner && (
+        {totalPhotos > 0 && (
           <div style={{ background:'#2C1A00', borderRadius:16, padding:24, marginBottom:24 }}>
             <div style={{ display:'flex', gap:6, marginBottom:18, height:80, opacity:0.55 }}>
               {jobs.filter(j=>j.photos?.length).slice(0,3).map((j,i) => (
@@ -275,16 +223,11 @@ export default function App() {
             <div style={{ color:'#FFD580', fontWeight:700, fontSize:15, fontFamily:'Noto Sans KR', marginBottom:6 }}>📷 일터에서 찍은 사진을 올리면</div>
             <div style={{ color:'#E0C890', fontSize:13, fontFamily:'Noto Sans KR', lineHeight:1.7, marginBottom:18 }}>
               다른 워홀러들이 올린 현장 사진도 볼 수 있어요.<br />
-              <span style={{ color:'#FFD580', fontWeight:700 }}>{totalPhotos}장의 사진</span>이 지금 잠겨 있습니다.
+              <span style={{ color:'#FFD580', fontWeight:700 }}>{totalPhotos}장의 사진</span>이 기다리고 있어요.
             </div>
-            <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-              <button onClick={unlock} style={{ background:'#C8963C', color:'#fff', border:'none', borderRadius:10, padding:'11px 22px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-                사진 + 후기 공유하고 전체 보기 🔓
-              </button>
-              <button onClick={() => setShowBanner(false)} style={{ background:'transparent', color:'#8A6A30', border:'1.5px solid #5A3A10', borderRadius:10, padding:'11px 14px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
-                나중에
-              </button>
-            </div>
+            <button onClick={() => window.open(FORM_URL, '_blank')} style={{ background:'#C8963C', color:'#fff', border:'none', borderRadius:10, padding:'11px 22px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+              사진 + 후기 공유하기 →
+            </button>
           </div>
         )}
 
@@ -293,7 +236,7 @@ export default function App() {
           {[
             { label:'등록된 직업', value: loading ? '…' : jobs.length+'개' },
             { label:'평균 시급',   value: loading ? '…' : '$'+Math.round(jobs.reduce((a,j)=>a+j.hourly,0)/Math.max(jobs.length,1)) },
-            { label:'사진 포함',   value: loading ? '…' : jobs.filter(j=>j.photos?.length).length+'개' },
+            { label:'총 좋아요',   value: loading ? '…' : jobs.reduce((a,j)=>a+j.likes,0)+'개' },
           ].map(({ label, value }) => (
             <div key={label} style={{ background:'#FEFAF3', border:'1.5px solid #E0D0B0', borderRadius:12, padding:'12px 18px', flex:1, minWidth:90 }}>
               <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:'#2C1A00' }}>{value}</div>
@@ -311,7 +254,7 @@ export default function App() {
             {TYPES.map(t => <button key={t} onClick={() => setType(t)} style={chip(type===t)}>{t}</button>)}
             <button onClick={() => setPhotoOnly(p=>!p)} style={chip(photoOnly, '#C8963C')}>📷 사진만</button>
             <div style={{ marginLeft:'auto', display:'flex', gap:6 }}>
-              {["별점순","시급순","최신순"].map(s => <button key={s} onClick={() => setSort(s)} style={{ ...chip(sort===s), fontSize:11 }}>{s}</button>)}
+              {["좋아요순","별점순","시급순","최신순"].map(s => <button key={s} onClick={() => setSort(s)} style={{ ...chip(sort===s), fontSize:11 }}>{s}</button>)}
             </div>
           </div>
         </div>
@@ -322,24 +265,22 @@ export default function App() {
 
         {/* 카드 목록 */}
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          {filtered.map((job, i) => (
-            <JobCard key={job.id} job={job} locked={!unlocked && i > 0} />
+          {filtered.map(job => (
+            <JobCard key={job.id} job={job} locked={false} liked={likedIds.includes(job.id)} onLike={toggleLike} />
           ))}
         </div>
 
         {/* 하단 CTA */}
-        {unlocked && (
-          <div style={{ marginTop:32, textAlign:'center', background:'#FEFAF3', border:'1.5px dashed #D4C5A9', borderRadius:16, padding:'28px 24px' }}>
-            <div style={{ fontSize:22, marginBottom:8 }}>✍️</div>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#6A5030', marginBottom:6, lineHeight:1.7 }}>
-              직업 후기 + 현장 사진으로<br />다음 워홀러 도와주기
-            </div>
-            <div style={{ fontSize:12, color:'#B8A070', fontFamily:'Noto Sans KR', marginBottom:16 }}>사진은 선택사항이에요</div>
-            <button onClick={unlock} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
-              후기 + 사진 공유하기 →
-            </button>
+        <div style={{ marginTop:32, textAlign:'center', background:'#FEFAF3', border:'1.5px dashed #D4C5A9', borderRadius:16, padding:'28px 24px' }}>
+          <div style={{ fontSize:22, marginBottom:8 }}>✍️</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#6A5030', marginBottom:6, lineHeight:1.7 }}>
+            직업 후기 + 현장 사진으로<br />다음 워홀러 도와주기
           </div>
-        )}
+          <div style={{ fontSize:12, color:'#B8A070', fontFamily:'Noto Sans KR', marginBottom:16 }}>사진은 선택사항이에요</div>
+          <button onClick={() => window.open(FORM_URL, '_blank')} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
+            후기 + 사진 공유하기 →
+          </button>
+        </div>
       </div>
     </div>
   )
