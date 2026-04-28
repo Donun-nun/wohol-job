@@ -191,9 +191,15 @@ export default function App() {
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:900, color:'#2C1A00' }}>🦘 호주잡</div>
           <div style={{ fontSize:10, color:'#B8A070', fontFamily:'Noto Sans KR', marginTop:2 }}>호주 워홀러들의 직업 후기</div>
         </div>
-        <button onClick={() => window.open(FORM_URL, '_blank')} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-          + 후기 추가하기
-        </button>
+        <div style={{ display:'flex', gap:8 }}>
+          <button onClick={() => window.open(FORM_URL, '_blank')} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+            ✍️ 폼으로 추가하기
+          </button>
+          <button onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SHEET_ID}`, '_blank')} style={{ background:'transparent', color:'#2C1A00', border:'1.5px solid #2C1A00', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+            📊 시트 수정하기
+          </button>
+        </div>
+
       </div>
 
       <div style={{ maxWidth:680, margin:'0 auto', padding:'0 16px 80px' }}>
@@ -277,9 +283,14 @@ export default function App() {
             직업 후기 + 현장 사진으로<br />다음 워홀러 도와주기
           </div>
           <div style={{ fontSize:12, color:'#B8A070', fontFamily:'Noto Sans KR', marginBottom:16 }}>사진은 선택사항이에요</div>
-          <button onClick={() => window.open(FORM_URL, '_blank')} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
-            후기 + 사진 공유하기 →
-          </button>
+          <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
+            <button onClick={() => window.open(FORM_URL, '_blank')} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
+              ✍️ 폼으로 추가하기
+            </button>
+            <button onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_SHEET_ID}`, '_blank')} style={{ background:'transparent', color:'#2C1A00', border:'1.5px solid #2C1A00', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
+              📊 시트에서 직접 추가
+            </button>
+          </div>
         </div>
       </div>
     </div>
