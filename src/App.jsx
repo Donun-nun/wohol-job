@@ -17,6 +17,17 @@ const TYPES   = ["전체", "Casual", "Part-time", "Full-time"]
 const CLOUDINARY_CLOUD  = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
+async function uploadPhoto(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', CLOUDINARY_PRESET)
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+    method: 'POST', body: formData,
+  })
+  const data = await res.json()
+  return data.secure_url
+}
+
 function Stars({ n }) {
   return (
     <div style={{ display:'flex', gap:2 }}>
@@ -37,9 +48,6 @@ function PhotoGallery({ photos }) {
           <div key={i} onClick={e => { e.stopPropagation(); setActive(i) }}
             style={{ flexShrink:0, width: photos.length===1 ? '100%' : 160, height:110, borderRadius:10, overflow:'hidden', cursor:'zoom-in', position:'relative', border:'1.5px solid #E0D0B0' }}>
             <img src={p.url} alt={p.caption} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-            {p.caption && (
-              <div style={{ position:'absolute', bottom:0, left:0, right:0, background:'linear-gradient(transparent,rgba(0,0,0,0.55))', color:'#fff', fontSize:11, padding:'12px 8px 6px', fontFamily:'Noto Sans KR' }}>{p.caption}</div>
-            )}
           </div>
         ))}
       </div>
@@ -66,23 +74,8 @@ function PhotoGallery({ photos }) {
   )
 }
 
-// 사진 업로드 함수
-async function uploadPhoto(file) {
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('upload_preset', CLOUDINARY_PRESET)
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
-    method: 'POST',
-    body: formData,
-  })
-  const data = await res.json()
-  return data.secure_url
-}
-
-// 사진 업로드 컴포넌트
 function PhotoUploader({ photos, setPhotos }) {
   const [uploading, setUploading] = useState(false)
-
   const handleFiles = async (e) => {
     const files = Array.from(e.target.files)
     if (!files.length) return
@@ -90,98 +83,159 @@ function PhotoUploader({ photos, setPhotos }) {
     try {
       const urls = await Promise.all(files.map(f => uploadPhoto(f)))
       setPhotos(prev => [...prev, ...urls.map(url => ({ url, caption: '' }))])
-    } catch {
-      alert('사진 업로드 실패했어요. 다시 시도해주세요.')
-    }
+    } catch { alert('사진 업로드 실패. 다시 시도해주세요.') }
     setUploading(false)
   }
-
   return (
     <div>
-      <div style={{ fontSize:12, color:'#9A7A50', fontFamily:'Noto Sans KR', marginBottom:8 }}>
-        📷 현장 사진 (선택) — 있으면 후기가 훨씬 생생해져요
-      </div>
-
-      {/* 업로드된 사진 미리보기 */}
       {photos.length > 0 && (
         <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:10 }}>
           {photos.map((p, i) => (
             <div key={i} style={{ position:'relative', width:80, height:80 }}>
               <img src={p.url} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:8, border:'1.5px solid #E0D0B0' }} />
-              <button
-                onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
-                style={{ position:'absolute', top:-6, right:-6, background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:'50%', width:20, height:20, cursor:'pointer', fontSize:12, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              <button onClick={() => setPhotos(prev => prev.filter((_,idx) => idx !== i))}
+                style={{ position:'absolute', top:-6, right:-6, background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:'50%', width:20, height:20, cursor:'pointer', fontSize:11, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
             </div>
           ))}
         </div>
       )}
-
-      {/* 업로드 버튼 */}
-      <label style={{
-        display:'inline-block', cursor:'pointer',
-        background: uploading ? 'rgba(0,0,0,0.04)' : 'rgba(200,150,60,0.08)',
-        border:'1.5px dashed #C8963C', borderRadius:10,
-        padding:'10px 20px', fontFamily:'Noto Sans KR', fontSize:13, color:'#C8963C',
-      }}>
+      <label style={{ display:'inline-block', cursor:'pointer', background: uploading ? 'rgba(0,0,0,0.04)' : 'rgba(200,150,60,0.08)', border:'1.5px dashed #C8963C', borderRadius:10, padding:'10px 20px', fontFamily:'Noto Sans KR', fontSize:13, color:'#C8963C' }}>
         {uploading ? '업로드 중...' : '📷 사진 선택하기'}
         <input type="file" accept="image/*" multiple onChange={handleFiles} style={{ display:'none' }} disabled={uploading} />
       </label>
-      <div style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR', marginTop:6 }}>
-        여러 장 동시에 선택 가능 · 로그인 불필요
-      </div>
+      <div style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR', marginTop:6 }}>여러 장 동시 선택 가능 · 로그인 불필요</div>
     </div>
   )
 }
 
-// 후기 작성 모달
-function SubmitModal({ onClose }) {
-  const FORM_URL = import.meta.env.VITE_FORM_URL
+const EMPTY_FORM = { title:'', company:'', region:'WA (퍼스)', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', stars:4, author:'' }
+
+function SubmitModal({ onClose, addJob }) {
+  const [form, setForm] = useState(EMPTY_FORM)
   const [photos, setPhotos] = useState([])
-  const [step, setStep] = useState(1) // 1: 폼작성, 2: 사진업로드
+  const [submitting, setSubmitting] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const inputStyle = { width:'100%', background:'#F5EDD8', border:'1.5px solid #E0D0B0', borderRadius:8, padding:'10px 12px', color:'#2C1A00', fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box' }
+  const labelStyle = { fontSize:12, color:'#9A7A50', fontFamily:'Noto Sans KR', marginBottom:6, display:'block' }
+
+  const handleSubmit = async () => {
+    if (!form.title || !form.hourly || !form.review) {
+      alert('직업명, 시급, 한줄평은 필수예요!')
+      return
+    }
+    setSubmitting(true)
+    const success = await addJob({
+      ...form,
+      hourly: Number(form.hourly),
+      photos: photos.map(p => p.url).join(','),
+    })
+    setSubmitting(false)
+    if (success) setDone(true)
+    else alert('저장 실패. 다시 시도해주세요.')
+  }
+
+  if (done) return (
+    <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:'#FEFAF3', borderRadius:20, padding:40, width:'100%', maxWidth:400, textAlign:'center' }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>🎉</div>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:'#2C1A00', marginBottom:8 }}>공유해줘서 고마워요!</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#8A7050', lineHeight:1.7, marginBottom:24 }}>다음 워홀러에게 큰 도움이 될 거예요.</div>
+        <button onClick={onClose} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
+      </div>
+    </div>
+  )
 
   return (
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:'#FEFAF3', borderRadius:20, padding:28, width:'100%', maxWidth:480, maxHeight:'90vh', overflowY:'auto' }}>
+      <div style={{ background:'#FEFAF3', borderRadius:20, padding:28, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto' }}>
 
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:'#2C1A00' }}>후기 공유하기</div>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
+          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:'#2C1A00' }}>내 경험 공유하기</div>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'#999' }}>✕</button>
         </div>
 
-        {step === 1 && (
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
           <div>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#6A5030', lineHeight:1.8, marginBottom:20 }}>
-              아래 버튼을 눌러 구글 폼에서 후기를 작성해주세요.<br />
-              작성 완료 후 돌아와서 사진도 올릴 수 있어요 📷
-            </div>
-            <button
-              onClick={() => { window.open(FORM_URL, '_blank'); setStep(2) }}
-              style={{ width:'100%', background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer', marginBottom:10 }}>
-              ✍️ 구글 폼에서 후기 작성하기 →
-            </button>
-            <button onClick={() => setStep(2)} style={{ width:'100%', background:'transparent', color:'#9A7A50', border:'1.5px solid #E0D0B0', borderRadius:10, padding:'11px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>
-              이미 작성했어요 — 사진만 올릴게요
-            </button>
+            <label style={labelStyle}>직업명 *</label>
+            <input style={inputStyle} placeholder="예: Service Attendant" value={form.title} onChange={e => set('title', e.target.value)} />
           </div>
-        )}
+          <div>
+            <label style={labelStyle}>고용주/회사</label>
+            <input style={inputStyle} placeholder="예: Sodexo" value={form.company} onChange={e => set('company', e.target.value)} />
+          </div>
+        </div>
 
-        {step === 2 && (
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
           <div>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#6A5030', lineHeight:1.8, marginBottom:20 }}>
-              일터에서 찍은 사진을 올려주세요.<br />
-              <span style={{ color:'#C8963C', fontWeight:700 }}>사진은 선택사항이에요.</span> 없어도 괜찮아요!
-            </div>
-            <PhotoUploader photos={photos} setPhotos={setPhotos} />
-            {photos.length > 0 && (
-              <div style={{ marginTop:16, background:'rgba(99,180,100,0.08)', border:'1.5px solid rgba(99,180,100,0.3)', borderRadius:10, padding:'12px 16px', fontFamily:'Noto Sans KR', fontSize:13, color:'#3A7A3A' }}>
-                ✅ 사진 {photos.length}장 업로드 완료! 관리자가 확인 후 게시돼요.
-              </div>
-            )}
-            <button onClick={onClose} style={{ width:'100%', marginTop:16, background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
-              완료 🎉
-            </button>
+            <label style={labelStyle}>지역 *</label>
+            <select style={inputStyle} value={form.region} onChange={e => set('region', e.target.value)}>
+              {['WA (퍼스)','WA (FIFO 광산)','NSW (시드니)','VIC (멜버른)','QLD (브리즈번)','QLD (번다버그 농장)','SA (애들레이드)','NT (다윈)','기타'].map(r => <option key={r}>{r}</option>)}
+            </select>
           </div>
-        )}
+          <div>
+            <label style={labelStyle}>고용 형태 *</label>
+            <select style={inputStyle} value={form.type} onChange={e => set('type', e.target.value)}>
+              {['Casual','Part-time','Full-time'].map(t => <option key={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+          <div>
+            <label style={labelStyle}>시급 (AUD) *</label>
+            <input style={inputStyle} type="number" placeholder="예: 32" value={form.hourly} onChange={e => set('hourly', e.target.value)} />
+          </div>
+          <div>
+            <label style={labelStyle}>주요 시프트</label>
+            <input style={inputStyle} placeholder="예: 12h 야간" value={form.shift} onChange={e => set('shift', e.target.value)} />
+          </div>
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>한줄평 * — 이 직업을 한 문장으로!</label>
+          <input style={inputStyle} placeholder="예: 몸은 힘들지만 통장이 웃는다" value={form.review} onChange={e => set('review', e.target.value)} />
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>장점 (줄바꿈으로 구분)</label>
+          <textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder="시급 높음&#10;숙식 제공&#10;저축 빠름" value={form.pros} onChange={e => set('pros', e.target.value)} />
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>단점 (줄바꿈으로 구분)</label>
+          <textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder="소셜 생활 제로&#10;체력 소모 큼" value={form.cons} onChange={e => set('cons', e.target.value)} />
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>하루 일과 — A day in the life</label>
+          <textarea style={{ ...inputStyle, height:100, resize:'vertical' }} placeholder="예: 6시 기상 → 7시 브렉퍼스트 룸 세팅 → 9시 청소 시작 → 12시 점심 → 오후 청소 마무리 → 6시 퇴근" value={form.daily_life} onChange={e => set('daily_life', e.target.value)} />
+        </div>
+
+        <div style={{ marginBottom:16 }}>
+          <label style={labelStyle}>추천 점수</label>
+          <div style={{ display:'flex', gap:8 }}>
+            {[1,2,3,4,5].map(n => (
+              <button key={n} onClick={() => set('stars', n)} style={{ background: n <= form.stars ? 'rgba(245,166,35,0.15)' : 'transparent', border:`1.5px solid ${n <= form.stars ? '#F5A623' : '#E0D0B0'}`, borderRadius:8, padding:'8px 14px', cursor:'pointer', color: n <= form.stars ? '#F5A623' : '#C0A880', fontSize:18 }}>★</button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:16 }}>
+          <label style={labelStyle}>닉네임 (선택)</label>
+          <input style={inputStyle} placeholder="익명으로 남겨도 됩니다" value={form.author} onChange={e => set('author', e.target.value)} />
+        </div>
+
+        <div style={{ marginBottom:20 }}>
+          <label style={labelStyle}>📷 현장 사진 (선택)</label>
+          <PhotoUploader photos={photos} setPhotos={setPhotos} />
+        </div>
+
+        <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1 }}>
+          {submitting ? '저장 중...' : '공유하기 🎉'}
+        </button>
       </div>
     </div>
   )
@@ -193,9 +247,8 @@ function JobCard({ job, liked, onLike }) {
   const hasPhotos = job.photos?.length > 0
 
   return (
-    <div
-      onClick={() => setOpen(o => !o)}
-      style={{ background:'#FEFAF3', border:'1.5px solid #E8DCC8', borderRadius:16, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s, transform 0.18s', position:'relative', boxShadow:'0 2px 8px rgba(120,90,40,0.07)' }}
+    <div onClick={() => setOpen(o => !o)}
+      style={{ background:'#FEFAF3', border:'1.5px solid #E8DCC8', borderRadius:16, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s, transform 0.18s', boxShadow:'0 2px 8px rgba(120,90,40,0.07)' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow='0 8px 28px rgba(120,90,40,0.15)'; e.currentTarget.style.transform='translateY(-2px)' }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow='0 2px 8px rgba(120,90,40,0.07)'; e.currentTarget.style.transform='none' }}
     >
@@ -224,9 +277,8 @@ function JobCard({ job, liked, onLike }) {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <Stars n={job.stars} />
           <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <div style={{ fontSize:11, color:'#B8A080', fontFamily:'Noto Sans KR' }}>{job.shift} · {job.author} · {job.date}</div>
-            <button
-              onClick={e => { e.stopPropagation(); onLike(job.id) }}
+            <div style={{ fontSize:11, color:'#B8A080', fontFamily:'Noto Sans KR' }}>{job.shift} · {job.author || '익명'} · {job.date}</div>
+            <button onClick={e => { e.stopPropagation(); onLike(job.id) }}
               style={{ display:'flex', alignItems:'center', gap:4, background: liked ? 'rgba(200,150,60,0.15)' : 'rgba(0,0,0,0.04)', border:`1.5px solid ${liked ? '#C8963C' : '#E0D0B0'}`, borderRadius:20, padding:'4px 12px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:13, color: liked ? '#C8963C' : '#A08060', transition:'all 0.15s' }}>
               <span>{liked ? '❤️' : '🤍'}</span>
               <span>{job.likes}</span>
@@ -237,7 +289,7 @@ function JobCard({ job, liked, onLike }) {
 
       {open && (
         <div style={{ borderTop:'1.5px solid #E8DCC8', padding:'16px 20px 20px', background:'#FFFDF8' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom: job.daily_life ? 12 : 0 }}>
             <div style={{ background:'#F0F9F0', borderRadius:10, padding:14 }}>
               <div style={{ fontSize:11, color:'#3A7A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👍 장점</div>
               {job.pros.map((p,i) => <div key={i} style={{ fontSize:13, color:'#2A5A2A', fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {p}</div>)}
@@ -247,6 +299,12 @@ function JobCard({ job, liked, onLike }) {
               {job.cons.map((c,i) => <div key={i} style={{ fontSize:13, color:'#6A2A2A', fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {c}</div>)}
             </div>
           </div>
+          {job.daily_life && (
+            <div style={{ background:'#F5EDD8', borderRadius:10, padding:14 }}>
+              <div style={{ fontSize:11, color:'#8A6A30', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>🌅 A day in the life</div>
+              <div style={{ fontSize:13, color:'#4A3010', fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.daily_life}</div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -254,7 +312,7 @@ function JobCard({ job, liked, onLike }) {
 }
 
 export default function App() {
-  const { jobs, loading, likedIds, toggleLike } = useJobs()
+  const { jobs, loading, likedIds, toggleLike, addJob } = useJobs()
   const [region, setRegion]       = useState("전체")
   const [type, setType]           = useState("전체")
   const [sort, setSort]           = useState("좋아요순")
@@ -395,8 +453,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* 후기 작성 모달 */}
-      {showModal && <SubmitModal onClose={() => setShowModal(false)} />}
+      {showModal && <SubmitModal onClose={() => setShowModal(false)} addJob={addJob} />}
     </div>
   )
 }
