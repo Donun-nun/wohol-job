@@ -111,7 +111,7 @@ function PhotoUploader({ photos, setPhotos }) {
 
 const EMPTY_FORM = { title:'', company:'', region:'WA (퍼스)', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', stars:4, author:'' }
 
-function SubmitModal({ onClose, addJob, updateJob, editData }) {
+function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   const isEdit = !!editData
 
   const toForm = (data) => data ? {
@@ -151,6 +151,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData }) {
       ...form,
       hourly: Number(form.hourly),
       photos: photos.map(p => p.url).join(','),
+      ...(!isEdit && user ? { user_id: user.id } : {}),
     }
     const success = isEdit
       ? await updateJob(editData.id, payload)
@@ -527,6 +528,7 @@ export default function App() {
           onClose={() => setShowModal(false)}
           addJob={addJob}
           updateJob={updateJob}
+          user={user}
         />
       )}
       {editJob && (
