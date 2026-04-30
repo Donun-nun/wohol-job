@@ -1,10 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_KEY
-)
+import { supabase } from './supabase'
 
 export function useJobs() {
   const [jobs, setJobs] = useState([])
@@ -62,6 +57,12 @@ export function useJobs() {
     return !error
   }
 
+  const updateJob = async (id, jobData) => {
+    const { error } = await supabase.from('jobs').update(jobData).eq('id', id)
+    if (!error) fetchJobs()
+    return !error
+  }
+
   const toggleLike = async (jobId) => {
     const alreadyLiked = likedIds.includes(jobId)
     if (alreadyLiked) {
@@ -82,7 +83,7 @@ export function useJobs() {
     ))
   }
 
-  return { jobs, loading, likedIds, toggleLike, addJob }
+  return { jobs, loading, likedIds, toggleLike, addJob, updateJob }
 }
 
 function inferTag(title, region) {
