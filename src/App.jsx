@@ -704,7 +704,7 @@ export default function App() {
 
         {/* 히어로 */}
         <div style={{ padding:'36px 0 24px' }}>
-          <div style={{ fontSize:11, letterSpacing:'3px', color:C.accent, fontFamily:'Noto Sans KR', marginBottom:10, textTransform:'uppercase' }}>KOREA → AUSTRALIA</div>
+          <div style={{ fontSize:20, marginBottom:10, letterSpacing:'4px' }}>🇰🇷 → 🇦🇺</div>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,7vw,44px)', fontWeight:900, color:C.dark, margin:'0 0 12px', lineHeight:1.15 }}>
             호주 워킹홀리데이<br />직업 후기
           </h1>
