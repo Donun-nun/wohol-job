@@ -361,10 +361,43 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   )
 }
 
-function JobCard({ job, liked, onLike, user, onEdit }) {
+function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
   const [open, setOpen] = useState(false)
+  const [comments, setComments] = useState([])
+  const [commentText, setCommentText] = useState('')
+  const [posting, setPosting] = useState(false)
   const hasPhotos = job.photos?.length > 0
   const isOwner = user && job.user_id && user.id === job.user_id
+
+  useEffect(() => {
+    if (!open) return
+    supabase.from('comments')
+      .select('*, profiles(nickname)')
+      .eq('job_id', job.id)
+      .order('created_at')
+      .then(({ data }) => setComments(data || []))
+  }, [open, job.id])
+
+  const postComment = async (e) => {
+    e.stopPropagation()
+    if (!commentText.trim()) return
+    setPosting(true)
+    const { data, error } = await supabase.from('comments')
+      .insert({ job_id: job.id, user_id: user.id, content: commentText.trim() })
+      .select('*, profiles(nickname)')
+      .single()
+    if (!error && data) {
+      setComments(prev => [...prev, data])
+      setCommentText('')
+    }
+    setPosting(false)
+  }
+
+  const deleteComment = async (e, commentId) => {
+    e.stopPropagation()
+    await supabase.from('comments').delete().eq('id', commentId)
+    setComments(prev => prev.filter(c => c.id !== commentId))
+  }
 
   return (
     <div onClick={() => setOpen(o => !o)}
@@ -411,13 +444,17 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
               </button>
             )}
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.8 }}>{job.author || '익명'}</div>
             <button onClick={e => { e.stopPropagation(); onLike(job.id) }}
               style={{ display:'flex', alignItems:'center', gap:4, background: liked ? 'rgba(200,150,60,0.1)' : 'transparent', border:`1px solid ${liked ? C.accent : C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:13, color: liked ? C.accent : C.sub, transition:'all 0.15s' }}>
               <span>{liked ? '❤️' : '🤍'}</span>
               <span>{job.likes}</span>
             </button>
+            <div style={{ display:'flex', alignItems:'center', gap:3, fontSize:13, color:C.sub, opacity:0.7 }}>
+              <span>💬</span>
+              <span>{comments.length}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -446,6 +483,43 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
               <div style={{ fontSize:13, color:'#2A3060', fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.interview_tips}</div>
             </div>
           )}
+
+          {/* 댓글 섹션 */}
+          <div style={{ marginTop:14, borderTop:`1px solid ${C.border}`, paddingTop:14 }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:10 }}>댓글 {comments.length > 0 ? comments.length : ''}</div>
+            {comments.map(c => (
+              <div key={c.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
+                <div>
+                  <span style={{ fontSize:12, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginRight:6 }}>{c.profiles?.nickname || '익명'}</span>
+                  <span style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.6 }}>{c.content}</span>
+                </div>
+                {user?.id === c.user_id && (
+                  <button onClick={e => deleteComment(e, c.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', flexShrink:0 }}>삭제</button>
+                )}
+              </div>
+            ))}
+            {comments.length === 0 && <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.6, marginBottom:10 }}>첫 댓글을 달아보세요</div>}
+
+            {user ? (
+              <div style={{ display:'flex', gap:8, marginTop:4 }}>
+                <input
+                  value={commentText}
+                  onChange={e => setCommentText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && postComment(e)}
+                  placeholder="댓글 달기..."
+                  style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 12px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none' }}
+                />
+                <button onClick={postComment} disabled={posting || !commentText.trim()}
+                  style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor: posting ? 'default' : 'pointer', opacity: (!commentText.trim() || posting) ? 0.5 : 1 }}>
+                  등록
+                </button>
+              </div>
+            ) : (
+              <button onClick={onLoginPrompt} style={{ fontSize:12, color:C.accent, fontFamily:'Noto Sans KR', background:'none', border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 14px', cursor:'pointer', width:'100%' }}>
+                로그인하면 댓글을 달 수 있어요
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -552,7 +626,7 @@ export default function App() {
         <div style={{ padding:'36px 0 24px' }}>
           <div style={{ fontSize:11, letterSpacing:'3px', color:C.accent, fontFamily:'Noto Sans KR', marginBottom:10, textTransform:'uppercase' }}>KOREA → AUSTRALIA</div>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,7vw,44px)', fontWeight:900, color:C.dark, margin:'0 0 12px', lineHeight:1.15 }}>
-            호주 워홀러를 위한<br />직업 리얼 후기
+            호주 워킹홀리데이<br />직업 후기
           </h1>
           <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
             시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보.
@@ -582,7 +656,7 @@ export default function App() {
         {/* 카드 목록 */}
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {filtered.map(job => (
-            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} />
+            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} />
           ))}
         </div>
 
