@@ -116,14 +116,28 @@ function Stars({ n }) {
   )
 }
 
-function PhotoGallery({ photos }) {
+function PhotoGallery({ photos, isOwner, onCaptionSave }) {
   const [active, setActive] = useState(null)
+  const [editing, setEditing] = useState(false)
+  const [captionDraft, setCaptionDraft] = useState('')
+
+  const openPhoto = (i) => { setActive(i); setCaptionDraft(photos[i]?.caption || ''); setEditing(false) }
+  const navigate = (dir) => {
+    const next = (active + dir + photos.length) % photos.length
+    setActive(next); setCaptionDraft(photos[next]?.caption || ''); setEditing(false)
+  }
+  const saveCaption = (e) => {
+    e.stopPropagation()
+    onCaptionSave(active, captionDraft)
+    setEditing(false)
+  }
+
   if (!photos?.length) return null
   return (
     <>
       <div style={{ display:'flex', gap:8, overflowX:'auto', padding:'0 20px 14px', scrollbarWidth:'none' }}>
         {photos.map((p, i) => (
-          <div key={i} onClick={e => { e.stopPropagation(); setActive(i) }}
+          <div key={i} onClick={e => { e.stopPropagation(); openPhoto(i) }}
             style={{ flexShrink:0, width: photos.length===1 ? '100%' : 160, borderRadius:10, overflow:'hidden', cursor:'zoom-in', position:'relative', border:`1px solid ${C.border}` }}>
             <img src={p.url} alt={p.caption} style={{ width:'100%', height: photos.length===1 ? 180 : 110, objectFit:'cover', display:'block' }} />
             {p.caption && <div style={{ padding:'4px 8px', fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', background:C.card, lineHeight:1.4 }}>{p.caption}</div>}
@@ -133,14 +147,48 @@ function PhotoGallery({ photos }) {
       {active !== null && (
         <div onClick={e => { e.stopPropagation(); setActive(null) }}
           style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-          <div style={{ position:'relative', maxWidth:600, width:'100%' }}>
-            <img src={photos[active].url} style={{ width:'100%', borderRadius:12, maxHeight:'70vh', objectFit:'contain' }} />
+          <div onClick={e => e.stopPropagation()} style={{ position:'relative', maxWidth:600, width:'100%' }}>
+            <img src={photos[active].url} style={{ width:'100%', borderRadius:12, maxHeight:'60vh', objectFit:'contain' }} />
+
+            {/* 캡션 영역 */}
+            <div style={{ marginTop:12, minHeight:36 }}>
+              {editing ? (
+                <div style={{ display:'flex', gap:8 }}>
+                  <input
+                    autoFocus
+                    value={captionDraft}
+                    onChange={e => setCaptionDraft(e.target.value)}
+                    onKeyDown={e => { if (e.key==='Enter') saveCaption(e); if (e.key==='Escape') setEditing(false) }}
+                    maxLength={60}
+                    placeholder="사진 설명 입력..."
+                    style={{ flex:1, background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:8, padding:'7px 11px', color:'#fff', fontSize:13, fontFamily:'Noto Sans KR', outline:'none' }}
+                  />
+                  <button onClick={saveCaption}
+                    style={{ background:C.accent, color:'#fff', border:'none', borderRadius:8, padding:'7px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', fontWeight:700 }}>저장</button>
+                  <button onClick={e => { e.stopPropagation(); setEditing(false) }}
+                    style={{ background:'rgba(255,255,255,0.1)', color:'#ccc', border:'none', borderRadius:8, padding:'7px 10px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>취소</button>
+                </div>
+              ) : (
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ color: photos[active].caption ? '#ddd' : 'rgba(255,255,255,0.35)', fontFamily:'Noto Sans KR', fontSize:13, flex:1 }}>
+                    {photos[active].caption || (isOwner ? '+ 설명 추가' : '')}
+                  </span>
+                  {isOwner && (
+                    <button onClick={e => { e.stopPropagation(); setEditing(true) }}
+                      style={{ background:'rgba(255,255,255,0.1)', color:'#ccc', border:'1px solid rgba(255,255,255,0.2)', borderRadius:6, padding:'4px 10px', fontFamily:'Noto Sans KR', fontSize:11, cursor:'pointer' }}>
+                      ✏️ 수정
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
             {photos.length > 1 && (
-              <div style={{ display:'flex', justifyContent:'center', gap:12, marginTop:16 }}>
-                <button onClick={e => { e.stopPropagation(); setActive(a => (a-1+photos.length)%photos.length) }}
+              <div style={{ display:'flex', justifyContent:'center', gap:12, marginTop:14 }}>
+                <button onClick={e => { e.stopPropagation(); navigate(-1) }}
                   style={{ background:'rgba(255,255,255,0.12)', border:'none', color:'#fff', borderRadius:8, padding:'8px 18px', cursor:'pointer', fontSize:16 }}>‹</button>
                 <span style={{ color:'#999', fontFamily:'Noto Sans KR', fontSize:13, alignSelf:'center' }}>{active+1} / {photos.length}</span>
-                <button onClick={e => { e.stopPropagation(); setActive(a => (a+1)%photos.length) }}
+                <button onClick={e => { e.stopPropagation(); navigate(1) }}
                   style={{ background:'rgba(255,255,255,0.12)', border:'none', color:'#fff', borderRadius:8, padding:'8px 18px', cursor:'pointer', fontSize:16 }}>›</button>
               </div>
             )}
@@ -383,7 +431,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   )
 }
 
-function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen }) {
+function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen, updateJob }) {
   const [open, setOpen] = useState(!!defaultOpen)
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
@@ -403,6 +451,11 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen 
   }
   const hasPhotos = job.photos?.length > 0
   const isOwner = user && job.user_id && user.id === job.user_id
+
+  const handleCaptionSave = async (photoIndex, caption) => {
+    const updatedPhotos = job.photos.map((p, i) => i === photoIndex ? { ...p, caption } : p)
+    await updateJob(job.id, { photos: JSON.stringify(updatedPhotos) })
+  }
 
   useEffect(() => {
     if (!open) return
@@ -461,7 +514,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen 
       onMouseEnter={e => { e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.1)'; e.currentTarget.style.transform='translateY(-1px)' }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'; e.currentTarget.style.transform='none' }}
     >
-      {hasPhotos && <div style={{ paddingTop:14 }}><PhotoGallery photos={job.photos} /></div>}
+      {hasPhotos && <div style={{ paddingTop:14 }}><PhotoGallery photos={job.photos} isOwner={isOwner} onCaptionSave={handleCaptionSave} /></div>}
 
       <div style={{ padding:'16px 20px' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
@@ -761,7 +814,7 @@ export default function App() {
         {/* 카드 목록 */}
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {filtered.map(job => (
-            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} defaultOpen={targetId === String(job.id)} />
+            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} defaultOpen={targetId === String(job.id)} updateJob={updateJob} />
           ))}
         </div>
 
