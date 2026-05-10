@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './supabase'
 
-export function useJobs() {
+export function useJobs(user) {
   const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
-  const [likedIds, setLikedIds] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('liked_ids') || '[]') } catch { return [] }
-  })
+  const [likedIds, setLikedIds] = useState([])
 
   const deviceId = (() => {
     let id = localStorage.getItem('device_id')
@@ -18,15 +16,33 @@ export function useJobs() {
   })()
 
   const fetchJobs = async () => {
-    const [{ data: jobsData }, { data: likesData }, { data: profilesData }] = await Promise.all([
+    const [{ data: jobsData }, { data: profilesData }] = await Promise.all([
       supabase.from('jobs').select('*').order('created_at', { ascending: false }),
-      supabase.from('likes').select('job_id'),
       supabase.from('profiles').select('id, nickname'),
     ])
 
+    // Fetch likes count separately (all likes)
+    const { data: allLikesData } = await supabase.from('likes').select('job_id')
+
+    // Fetch which jobs this user/device has liked
+    let myLikesData = []
+    if (user?.id) {
+      const { data } = await supabase.from('likes').select('job_id').eq('user_id', user.id)
+      myLikesData = data || []
+    } else {
+      const { data } = await supabase.from('likes').select('job_id').eq('device_id', deviceId).is('user_id', null)
+      myLikesData = data || []
+    }
+
+    const myLikedIds = myLikesData.map(r => r.job_id)
+    setLikedIds(myLikedIds)
+    if (!user?.id) {
+      localStorage.setItem('liked_ids', JSON.stringify(myLikedIds))
+    }
+
     if (jobsData) {
       const counts = {}
-      if (likesData) likesData.forEach(row => { counts[row.job_id] = (counts[row.job_id] || 0) + 1 })
+      if (allLikesData) allLikesData.forEach(row => { counts[row.job_id] = (counts[row.job_id] || 0) + 1 })
       const nicknameMap = {}
       if (profilesData) profilesData.forEach(p => { nicknameMap[p.id] = p.nickname })
 
@@ -46,7 +62,7 @@ export function useJobs() {
     setLoading(false)
   }
 
-  useEffect(() => { fetchJobs() }, [])
+  useEffect(() => { fetchJobs() }, [user?.id])
 
   const addJob = async (jobData) => {
     const { error } = await supabase.from('jobs').insert(jobData)
@@ -62,17 +78,27 @@ export function useJobs() {
 
   const toggleLike = async (jobId) => {
     const alreadyLiked = likedIds.includes(jobId)
+
     if (alreadyLiked) {
-      await supabase.from('likes').delete().eq('job_id', jobId).eq('device_id', deviceId)
+      if (user?.id) {
+        await supabase.from('likes').delete().eq('job_id', jobId).eq('user_id', user.id)
+      } else {
+        await supabase.from('likes').delete().eq('job_id', jobId).eq('device_id', deviceId).is('user_id', null)
+      }
       const newIds = likedIds.filter(id => id !== jobId)
       setLikedIds(newIds)
-      localStorage.setItem('liked_ids', JSON.stringify(newIds))
+      if (!user?.id) localStorage.setItem('liked_ids', JSON.stringify(newIds))
     } else {
-      await supabase.from('likes').insert({ job_id: jobId, device_id: deviceId })
+      if (user?.id) {
+        await supabase.from('likes').insert({ job_id: jobId, user_id: user.id })
+      } else {
+        await supabase.from('likes').insert({ job_id: jobId, device_id: deviceId })
+      }
       const newIds = [...likedIds, jobId]
       setLikedIds(newIds)
-      localStorage.setItem('liked_ids', JSON.stringify(newIds))
+      if (!user?.id) localStorage.setItem('liked_ids', JSON.stringify(newIds))
     }
+
     setJobs(prev => prev.map(job =>
       job.id === jobId
         ? { ...job, likes: alreadyLiked ? job.likes - 1 : job.likes + 1 }

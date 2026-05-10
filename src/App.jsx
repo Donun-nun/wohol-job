@@ -432,14 +432,14 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
 }
 
 export default function App() {
-  const { jobs, loading, likedIds, toggleLike, addJob, updateJob } = useJobs()
+  const [user, setUser]                         = useState(null)
+  const { jobs, loading, likedIds, toggleLike, addJob, updateJob } = useJobs(user)
   const [region, setRegion]       = useState("전체")
   const [type, setType]           = useState("전체")
   const [sort, setSort]           = useState("좋아요순")
   const [photoOnly, setPhotoOnly] = useState(false)
   const [showModal, setShowModal]               = useState(false)
   const [editJob, setEditJob]                   = useState(null)
-  const [user, setUser]                         = useState(null)
   const [profile, setProfile]                   = useState(null)
   const [showNicknameModal, setShowNicknameModal] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt]   = useState(false)
