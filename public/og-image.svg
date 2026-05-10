@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FAF7F2"/>
+      <stop offset="100%" style="stop-color:#F0E8D8"/>
+    </linearGradient>
+    <linearGradient id="badge" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#C8963C"/>
+      <stop offset="100%" style="stop-color:#E0A840"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="1050" cy="100" r="180" fill="#C8963C" opacity="0.07"/>
+  <circle cx="150" cy="530" r="140" fill="#C8963C" opacity="0.06"/>
+  <circle cx="1100" cy="550" r="100" fill="#2C1A00" opacity="0.04"/>
+
+  <!-- Left accent bar -->
+  <rect x="80" y="180" width="6" height="270" rx="3" fill="#C8963C"/>
+
+  <!-- Korea → Australia label -->
+  <text x="108" y="210" font-family="Georgia, serif" font-size="22" fill="#C8963C" letter-spacing="4" font-weight="400">KOREA → AUSTRALIA</text>
+
+  <!-- Main title -->
+  <text x="108" y="300" font-family="Georgia, 'Times New Roman', serif" font-size="74" fill="#2C1A00" font-weight="900" letter-spacing="-1">호주 워킹홀리데이</text>
+  <text x="108" y="385" font-family="Georgia, 'Times New Roman', serif" font-size="74" fill="#2C1A00" font-weight="900" letter-spacing="-1">직업 후기</text>
+
+  <!-- Subtitle -->
+  <text x="108" y="440" font-family="Arial, sans-serif" font-size="26" fill="#8A7060">시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보</text>
+
+  <!-- Kangaroo emoji area (right side) -->
+  <rect x="820" y="160" width="300" height="300" rx="24" fill="#2C1A00" opacity="0.06"/>
+  <text x="970" y="360" font-family="Arial" font-size="160" text-anchor="middle">🦘</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="570" width="1200" height="60" fill="#2C1A00"/>
+  <text x="108" y="608" font-family="Arial, sans-serif" font-size="22" fill="#FFD580" font-weight="700">wohol-job.vercel.app</text>
+  <text x="1092" y="608" font-family="Arial, sans-serif" font-size="22" fill="#C8963C" text-anchor="end">호주잡 🦘</text>
+</svg>
