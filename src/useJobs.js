@@ -42,7 +42,7 @@ export function useJobs() {
         photos: job.photos
           ? job.photos.split(',').map(url => ({ url: url.trim(), caption: '' })).filter(p => p.url)
           : [],
-        tag: inferTag(job.title, job.region),
+        tag: job.tag || inferTag(job.title, job.region),
       }))
       setJobs(parsed)
     }

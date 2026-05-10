@@ -129,7 +129,8 @@ function PhotoUploader({ photos, setPhotos }) {
   )
 }
 
-const EMPTY_FORM = { title:'', company:'', region:'WA (퍼스)', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', stars:4, author:'' }
+const TAGS = ['광산','카페','농장','주방','리테일','건설','서비스','기타']
+const EMPTY_FORM = { title:'', company:'', region:'WA (퍼스)', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', stars:4, author:'', tag:'' }
 
 function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   const isEdit = !!editData
@@ -147,6 +148,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     daily_life: data.daily_life || '',
     stars: data.stars || 4,
     author: data.author || '',
+    tag: data.tag || '',
   } : EMPTY_FORM
 
   const [form, setForm] = useState(() => toForm(editData))
@@ -171,6 +173,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
       ...form,
       hourly: Number(form.hourly),
       photos: photos.map(p => p.url).join(','),
+      tag: form.tag || null,
       ...(!isEdit && user ? { user_id: user.id } : {}),
     }
     const success = isEdit
@@ -230,6 +233,18 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
             <select style={inputStyle} value={form.type} onChange={e => set('type', e.target.value)}>
               {['Casual','Part-time','Full-time'].map(t => <option key={t}>{t}</option>)}
             </select>
+          </div>
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>직종 분류 (선택 — 안 하면 자동 분류)</label>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {TAGS.map(t => (
+              <button key={t} type="button" onClick={() => set('tag', form.tag === t ? '' : t)}
+                style={{ padding:'6px 14px', borderRadius:20, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: form.tag === t ? '#2C1A00' : 'transparent', borderColor: form.tag === t ? '#2C1A00' : '#D4C5A9', color: form.tag === t ? '#FFD580' : '#8A7050' }}>
+                {t}
+              </button>
+            ))}
           </div>
         </div>
 
