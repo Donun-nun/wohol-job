@@ -74,6 +74,7 @@ const TAG_COLORS = {
   "리테일": ["#001A3A", "#80C8FF"],
   "건설": ["#2A0038", "#E080FF"],
   "서비스": ["#1A2A3A", "#80D4FF"],
+  "물류":  ["#1A3A2A", "#80FFB4"],
   "기타":  ["#2A2A2A", "#D0D0D0"],
 }
 
@@ -174,7 +175,7 @@ function PhotoUploader({ photos, setPhotos }) {
   )
 }
 
-const TAGS = ['광산','카페','농장','주방','리테일','건설','서비스','기타']
+const TAGS = ['광산','카페','농장','주방','리테일','건설','서비스','물류','기타']
 const EMPTY_FORM = { title:'', company:'', region:'WA (퍼스)', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tag:'' }
 
 function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
