@@ -373,14 +373,24 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   )
 }
 
-function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
-  const [open, setOpen] = useState(false)
+function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen }) {
+  const [open, setOpen] = useState(!!defaultOpen)
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [posting, setPosting] = useState(false)
   const [replyTo, setReplyTo] = useState(null) // { id, nickname }
   const [replyText, setReplyText] = useState('')
+  const [copied, setCopied] = useState(false)
   const submitting = useRef(false)
+
+  const shareJob = (e) => {
+    e.stopPropagation()
+    const url = `${window.location.origin}?id=${job.id}`
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
   const hasPhotos = job.photos?.length > 0
   const isOwner = user && job.user_id && user.id === job.user_id
 
@@ -491,6 +501,10 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
               <span>💬</span>
               <span>{comments.length}</span>
             </div>
+            <button onClick={shareJob}
+              style={{ display:'flex', alignItems:'center', gap:4, background: copied ? 'rgba(200,150,60,0.1)' : 'transparent', border:`1px solid ${copied ? C.accent : C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:12, color: copied ? C.accent : C.sub, transition:'all 0.15s' }}>
+              {copied ? '✓ 복사됨' : '🔗 공유'}
+            </button>
           </div>
         </div>
       </div>
@@ -607,6 +621,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
 }
 
 export default function App() {
+  const targetId = new URLSearchParams(window.location.search).get('id')
   const [user, setUser]                         = useState(null)
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob } = useJobs(user)
   const [region, setRegion]       = useState("전체")
@@ -736,7 +751,7 @@ export default function App() {
         {/* 카드 목록 */}
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {filtered.map(job => (
-            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} />
+            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} defaultOpen={targetId === String(job.id)} />
           ))}
         </div>
 
