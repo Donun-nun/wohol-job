@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useJobs } from './useJobs'
 import { supabase } from './supabase'
 
@@ -377,6 +377,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
   const [posting, setPosting] = useState(false)
   const [replyTo, setReplyTo] = useState(null) // { id, nickname }
   const [replyText, setReplyText] = useState('')
+  const submitting = useRef(false)
   const hasPhotos = job.photos?.length > 0
   const isOwner = user && job.user_id && user.id === job.user_id
 
@@ -400,22 +401,26 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
 
   const postComment = async (e) => {
     e.stopPropagation()
-    if (!commentText.trim()) return
+    if (!commentText.trim() || submitting.current) return
+    submitting.current = true
     setPosting(true)
     const { error } = await supabase.from('comments')
       .insert({ job_id: job.id, user_id: user.id, content: commentText.trim() })
     if (!error) { setCommentText(''); await fetchComments() }
     setPosting(false)
+    submitting.current = false
   }
 
   const postReply = async (e) => {
     e.stopPropagation()
-    if (!replyText.trim() || !replyTo) return
+    if (!replyText.trim() || !replyTo || submitting.current) return
+    submitting.current = true
     setPosting(true)
     const { error } = await supabase.from('comments')
       .insert({ job_id: job.id, user_id: user.id, content: replyText.trim(), parent_id: replyTo.id })
     if (!error) { setReplyText(''); setReplyTo(null); await fetchComments() }
     setPosting(false)
+    submitting.current = false
   }
 
   const deleteComment = async (e, commentId) => {
