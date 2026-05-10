@@ -89,11 +89,12 @@ export function useJobs() {
 function inferTag(title, region) {
   const t = (title || '').toLowerCase()
   const r = (region || '').toLowerCase()
-  if (t.includes('barista') || t.includes('cafe') || t.includes('coffee')) return '카페'
-  if (t.includes('farm') || t.includes('fruit') || t.includes('harvest')) return '농장'
-  if (t.includes('kitchen') || t.includes('cook') || t.includes('chef')) return '주방'
-  if (t.includes('construction') || t.includes('labour') || t.includes('builder')) return '건설'
-  if (t.includes('retail') || t.includes('shop') || t.includes('store')) return '리테일'
-  if (r.includes('fifo') || r.includes('mine') || r.includes('광산')) return '광산'
+  if (t.includes('barista') || t.includes('cafe') || t.includes('coffee') || t.includes('waiter') || t.includes('waitress') || t.includes('barman') || t.includes('bartender') || t.includes('bar ') || t.includes('pub') || t.includes('restaurant') || t.includes('hospitality')) return '카페'
+  if (t.includes('farm') || t.includes('fruit') || t.includes('harvest') || t.includes('picker') || t.includes('packing') || t.includes('orchard') || t.includes('vineyard') || t.includes('crop')) return '농장'
+  if (t.includes('kitchen') || t.includes('cook') || t.includes('chef') || t.includes('dish') || t.includes('food prep')) return '주방'
+  if (t.includes('construction') || t.includes('labour') || t.includes('builder') || t.includes('carpenter') || t.includes('electrician') || t.includes('plumber') || t.includes('scaffold') || t.includes('labor')) return '건설'
+  if (t.includes('retail') || t.includes('shop') || t.includes('store') || t.includes('cashier') || t.includes('supermarket') || t.includes('checkout') || t.includes('sales')) return '리테일'
+  if (r.includes('fifo') || r.includes('mine') || r.includes('광산') || t.includes('mine') || t.includes('mining') || t.includes('driller') || t.includes('operator')) return '광산'
+  if (t.includes('driver') || t.includes('delivery') || t.includes('rider') || t.includes('courier') || t.includes('truck') || t.includes('forklift') || t.includes('cleaner') || t.includes('cleaning') || t.includes('housekeeper') || t.includes('housekeeping') || t.includes('care') || t.includes('hotel') || t.includes('resort') || t.includes('motel') || t.includes('receptionist') || t.includes('front desk') || t.includes('attendant') || t.includes('service') || t.includes('laundry') || t.includes('pedicab')) return '서비스'
   return '기타'
 }
