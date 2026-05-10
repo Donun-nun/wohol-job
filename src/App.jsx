@@ -362,6 +362,9 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           <PhotoUploader photos={photos} setPhotos={setPhotos} />
         </div>
 
+        <div style={{ background:'#FFF8EC', border:'1px solid #F0D898', borderRadius:8, padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:12, color:'#7A5A10', lineHeight:1.7 }}>
+          ⚠️ 허위 사실이나 과장된 정보는 다른 워홀러에게 피해를 줄 수 있어요. 명백한 허위 글은 운영자에 의해 삭제될 수 있습니다.
+        </div>
         <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1 }}>
           {submitting ? '저장 중...' : (isEdit ? '수정 완료' : '공유하기')}
         </button>
