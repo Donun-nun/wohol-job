@@ -388,7 +388,7 @@ export default function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signIn  = () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } })
+  const signIn  = () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
   const signOut = () => supabase.auth.signOut()
 
   const filtered = jobs
