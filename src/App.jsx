@@ -66,17 +66,6 @@ function LoginPromptModal({ onClose, onLogin }) {
   )
 }
 
-const TAG_COLORS = {
-  "광산": ["#7C4A00", "#FFD580"],
-  "카페": ["#1A3A2A", "#7FFFC4"],
-  "농장": ["#2A3A00", "#C8FF80"],
-  "주방": ["#3A1A00", "#FFA87F"],
-  "리테일": ["#001A3A", "#80C8FF"],
-  "건설": ["#2A0038", "#E080FF"],
-  "서비스": ["#1A2A3A", "#80D4FF"],
-  "물류":  ["#1A3A2A", "#80FFB4"],
-  "기타":  ["#2A2A2A", "#D0D0D0"],
-}
 
 const REGIONS = ["전체", "WA", "VIC", "NSW", "QLD", "SA", "NT"]
 const TYPES   = ["전체", "Casual", "Part-time", "Full-time"]
@@ -355,7 +344,6 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
 
 function JobCard({ job, liked, onLike, user, onEdit }) {
   const [open, setOpen] = useState(false)
-  const [tc, tb] = TAG_COLORS[job.tag] || TAG_COLORS["기타"]
   const hasPhotos = job.photos?.length > 0
   const isOwner = user && job.user_id && user.id === job.user_id
 
@@ -372,7 +360,7 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
               <span style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:'#2C1A00' }}>{job.title}</span>
-              <span style={{ background:tc, color:tb, fontSize:11, padding:'2px 9px', borderRadius:20, fontFamily:'Noto Sans KR', fontWeight:700 }}>{job.tag}</span>
+              <span style={{ fontSize:10, color:'#B8A070', fontFamily:'Noto Sans KR' }}>{job.tag}</span>
               {hasPhotos && <span style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR' }}>📷 {job.photos.length}</span>}
             </div>
             {job.company && (
