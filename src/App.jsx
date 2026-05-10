@@ -360,8 +360,6 @@ export default function App() {
   const [editJob, setEditJob]     = useState(null)
   const [user, setUser]           = useState(null)
 
-  const SHEET_ID = import.meta.env.VITE_SHEET_ID
-
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null))
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
@@ -422,11 +420,8 @@ export default function App() {
               구글로 로그인
             </button>
           )}
-          <button onClick={() => setShowModal(true)} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+          <button onClick={() => user ? setShowModal(true) : signIn()} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
             + 후기 추가하기
-          </button>
-          <button onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${SHEET_ID}`, '_blank')} style={{ background:'transparent', color:'#2C1A00', border:'1.5px solid #2C1A00', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-            📊 시트
           </button>
         </div>
       </div>
@@ -460,7 +455,7 @@ export default function App() {
               다른 워홀러들이 올린 현장 사진도 볼 수 있어요.<br />
               <span style={{ color:'#FFD580', fontWeight:700 }}>{totalPhotos}장의 사진</span>이 기다리고 있어요.
             </div>
-            <button onClick={() => setShowModal(true)} style={{ background:'#C8963C', color:'#fff', border:'none', borderRadius:10, padding:'11px 22px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+            <button onClick={() => user ? setShowModal(true) : signIn()} style={{ background:'#C8963C', color:'#fff', border:'none', borderRadius:10, padding:'11px 22px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
               사진 + 후기 공유하기 →
             </button>
           </div>
@@ -470,7 +465,6 @@ export default function App() {
         <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
           {[
             { label:'등록된 직업', value: loading ? '…' : jobs.length+'개' },
-            { label:'평균 시급',   value: loading ? '…' : '$'+Math.round(jobs.reduce((a,j)=>a+j.hourly,0)/Math.max(jobs.length,1)) },
             { label:'총 좋아요',   value: loading ? '…' : jobs.reduce((a,j)=>a+j.likes,0)+'개' },
           ].map(({ label, value }) => (
             <div key={label} style={{ background:'#FEFAF3', border:'1.5px solid #E0D0B0', borderRadius:12, padding:'12px 18px', flex:1, minWidth:90 }}>
@@ -513,11 +507,8 @@ export default function App() {
           </div>
           <div style={{ fontSize:12, color:'#B8A070', fontFamily:'Noto Sans KR', marginBottom:16 }}>사진은 선택사항이에요</div>
           <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
-            <button onClick={() => setShowModal(true)} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
+            <button onClick={() => user ? setShowModal(true) : signIn()} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
               후기 + 사진 공유하기 →
-            </button>
-            <button onClick={() => window.open(`https://docs.google.com/spreadsheets/d/${SHEET_ID}`, '_blank')} style={{ background:'transparent', color:'#2C1A00', border:'1.5px solid #2C1A00', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
-              📊 시트에서 직접 추가
             </button>
           </div>
         </div>
