@@ -375,6 +375,8 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [posting, setPosting] = useState(false)
+  const [replyTo, setReplyTo] = useState(null) // { id, nickname }
+  const [replyText, setReplyText] = useState('')
   const hasPhotos = job.photos?.length > 0
   const isOwner = user && job.user_id && user.id === job.user_id
 
@@ -402,11 +404,17 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
     setPosting(true)
     const { error } = await supabase.from('comments')
       .insert({ job_id: job.id, user_id: user.id, content: commentText.trim() })
+    if (!error) { setCommentText(''); await fetchComments() }
+    setPosting(false)
+  }
 
-    if (!error) {
-      setCommentText('')
-      await fetchComments()
-    }
+  const postReply = async (e) => {
+    e.stopPropagation()
+    if (!replyText.trim() || !replyTo) return
+    setPosting(true)
+    const { error } = await supabase.from('comments')
+      .insert({ job_id: job.id, user_id: user.id, content: replyText.trim(), parent_id: replyTo.id })
+    if (!error) { setReplyText(''); setReplyTo(null); await fetchComments() }
     setPosting(false)
   }
 
@@ -415,6 +423,9 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
     await supabase.from('comments').delete().eq('id', commentId)
     await fetchComments()
   }
+
+  const topLevel = comments.filter(c => !c.parent_id)
+  const replies = (parentId) => comments.filter(c => c.parent_id === parentId)
 
   return (
     <div onClick={() => setOpen(o => !o)}
@@ -504,19 +515,62 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
           {/* 댓글 섹션 */}
           <div style={{ marginTop:14, borderTop:`1px solid ${C.border}`, paddingTop:14 }} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:10 }}>댓글 {comments.length > 0 ? comments.length : ''}</div>
-            {comments.map(c => (
-              <div key={c.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
-                <div>
-                  <span style={{ fontSize:12, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginRight:6 }}>{c.nickname}</span>
-                  <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginRight:8 }}>{timeAgo(c.created_at)}</span>
-                  <span style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.6 }}>{c.content}</span>
+
+            {topLevel.length === 0 && <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.6, marginBottom:10 }}>첫 댓글을 달아보세요</div>}
+
+            {topLevel.map(c => (
+              <div key={c.id} style={{ marginBottom:12 }}>
+                {/* 댓글 */}
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                  <div style={{ flex:1 }}>
+                    <span style={{ fontSize:12, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginRight:6 }}>{c.nickname}</span>
+                    <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginRight:8 }}>{timeAgo(c.created_at)}</span>
+                    <span style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.6 }}>{c.content}</span>
+                  </div>
+                  <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                    {user && replyTo?.id !== c.id && (
+                      <button onClick={e => { e.stopPropagation(); setReplyTo({ id: c.id, nickname: c.nickname }); setReplyText('') }}
+                        style={{ background:'none', border:'none', color:C.accent, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>답글</button>
+                    )}
+                    {user?.id === c.user_id && (
+                      <button onClick={e => deleteComment(e, c.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>삭제</button>
+                    )}
+                  </div>
                 </div>
-                {user?.id === c.user_id && (
-                  <button onClick={e => deleteComment(e, c.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', flexShrink:0 }}>삭제</button>
+
+                {/* 대댓글 */}
+                {replies(c.id).map(r => (
+                  <div key={r.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginTop:8, paddingLeft:16, borderLeft:`2px solid ${C.border}` }}>
+                    <div style={{ flex:1 }}>
+                      <span style={{ fontSize:12, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginRight:6 }}>{r.nickname}</span>
+                      <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginRight:8 }}>{timeAgo(r.created_at)}</span>
+                      <span style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.6 }}>{r.content}</span>
+                    </div>
+                    {user?.id === r.user_id && (
+                      <button onClick={e => deleteComment(e, r.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>삭제</button>
+                    )}
+                  </div>
+                ))}
+
+                {/* 답글 입력창 */}
+                {replyTo?.id === c.id && (
+                  <div style={{ display:'flex', gap:8, marginTop:8, paddingLeft:16 }}>
+                    <input
+                      autoFocus
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && postReply(e)}
+                      placeholder={`@${replyTo.nickname}에게 답글...`}
+                      style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 11px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none' }}
+                    />
+                    <button onClick={postReply} disabled={posting || !replyText.trim()}
+                      style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'7px 12px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', opacity: (!replyText.trim() || posting) ? 0.5 : 1 }}>등록</button>
+                    <button onClick={e => { e.stopPropagation(); setReplyTo(null) }}
+                      style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 10px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, cursor:'pointer' }}>취소</button>
+                  </div>
                 )}
               </div>
             ))}
-            {comments.length === 0 && <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.6, marginBottom:10 }}>첫 댓글을 달아보세요</div>}
 
             {user ? (
               <div style={{ display:'flex', gap:8, marginTop:4 }}>
@@ -528,7 +582,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
                   style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 12px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none' }}
                 />
                 <button onClick={postComment} disabled={posting || !commentText.trim()}
-                  style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor: posting ? 'default' : 'pointer', opacity: (!commentText.trim() || posting) ? 0.5 : 1 }}>
+                  style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', opacity: (!commentText.trim() || posting) ? 0.5 : 1 }}>
                   등록
                 </button>
               </div>
