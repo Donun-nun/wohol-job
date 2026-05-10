@@ -18,22 +18,18 @@ export function useJobs() {
   })()
 
   const fetchJobs = async () => {
-    const { data: jobsData } = await supabase
-      .from('jobs')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    const { data: likesData } = await supabase
-      .from('likes')
-      .select('job_id')
+    const [{ data: jobsData }, { data: likesData }, { data: profilesData }] = await Promise.all([
+      supabase.from('jobs').select('*').order('created_at', { ascending: false }),
+      supabase.from('likes').select('job_id'),
+      supabase.from('profiles').select('id, nickname'),
+    ])
 
     if (jobsData) {
       const counts = {}
-      if (likesData) {
-        likesData.forEach(row => {
-          counts[row.job_id] = (counts[row.job_id] || 0) + 1
-        })
-      }
+      if (likesData) likesData.forEach(row => { counts[row.job_id] = (counts[row.job_id] || 0) + 1 })
+      const nicknameMap = {}
+      if (profilesData) profilesData.forEach(p => { nicknameMap[p.id] = p.nickname })
+
       const parsed = jobsData.map(job => ({
         ...job,
         likes: counts[job.id] || 0,
@@ -43,6 +39,7 @@ export function useJobs() {
           ? job.photos.split(',').map(url => ({ url: url.trim(), caption: '' })).filter(p => p.url)
           : [],
         tag: job.tag || inferTag(job.title, job.region),
+        author: job.user_id ? (nicknameMap[job.user_id] || '알 수 없음') : (job.author || '익명'),
       }))
       setJobs(parsed)
     }

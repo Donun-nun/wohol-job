@@ -2,6 +2,51 @@ import { useState, useEffect } from 'react'
 import { useJobs } from './useJobs'
 import { supabase } from './supabase'
 
+function NicknameModal({ user, onSave }) {
+  const [nickname, setNickname] = useState('')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    const trimmed = nickname.trim()
+    if (!trimmed) { setError('닉네임을 입력해주세요.'); return }
+    if (trimmed.length < 2) { setError('2자 이상 입력해주세요.'); return }
+    if (trimmed.length > 20) { setError('20자 이하로 입력해주세요.'); return }
+    setSaving(true)
+    const { error: err } = await supabase.from('profiles').insert({ id: user.id, nickname: trimmed })
+    if (err) {
+      setError(err.code === '23505' ? '이미 사용 중인 닉네임이에요.' : '저장 실패. 다시 시도해주세요.')
+      setSaving(false)
+    } else {
+      onSave(trimmed)
+    }
+  }
+
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:'#FEFAF3', borderRadius:20, padding:40, width:'100%', maxWidth:380, textAlign:'center' }}>
+        <div style={{ fontSize:40, marginBottom:16 }}>👤</div>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:'#2C1A00', marginBottom:8 }}>닉네임을 정해줘요</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:'#8A7050', marginBottom:24, lineHeight:1.7 }}>
+          모든 글에 이 닉네임이 표시돼요.<br />나중에 수정하면 기존 글도 자동 반영돼요.
+        </div>
+        <input
+          value={nickname}
+          onChange={e => { setNickname(e.target.value); setError('') }}
+          onKeyDown={e => e.key === 'Enter' && handleSave()}
+          placeholder="예: 퍼스워홀러, 광산킹, Kenny"
+          maxLength={20}
+          style={{ width:'100%', background:'#F5EDD8', border:`1.5px solid ${error ? '#E05050' : '#E0D0B0'}`, borderRadius:8, padding:'11px 14px', color:'#2C1A00', fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box', marginBottom:6 }}
+        />
+        {error && <div style={{ fontSize:12, color:'#E05050', fontFamily:'Noto Sans KR', marginBottom:10 }}>{error}</div>}
+        <button onClick={handleSave} disabled={saving} style={{ width:'100%', background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, marginTop:8 }}>
+          {saving ? '저장 중...' : '닉네임 저장하기'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function LoginPromptModal({ onClose, onLogin }) {
   return (
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
@@ -288,11 +333,6 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           </div>
         </div>
 
-        <div style={{ marginBottom:16 }}>
-          <label style={labelStyle}>닉네임 (선택)</label>
-          <input style={inputStyle} placeholder="익명으로 남겨도 됩니다" value={form.author} onChange={e => set('author', e.target.value)} />
-        </div>
-
         <div style={{ marginBottom:20 }}>
           <label style={labelStyle}>📷 현장 사진 (선택)</label>
           <PhotoUploader photos={photos} setPhotos={setPhotos} />
@@ -391,15 +431,30 @@ export default function App() {
   const [type, setType]           = useState("전체")
   const [sort, setSort]           = useState("좋아요순")
   const [photoOnly, setPhotoOnly] = useState(false)
-  const [showModal, setShowModal]           = useState(false)
-  const [editJob, setEditJob]               = useState(null)
-  const [user, setUser]                     = useState(null)
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [showModal, setShowModal]               = useState(false)
+  const [editJob, setEditJob]                   = useState(null)
+  const [user, setUser]                         = useState(null)
+  const [profile, setProfile]                   = useState(null)
+  const [showNicknameModal, setShowNicknameModal] = useState(false)
+  const [showLoginPrompt, setShowLoginPrompt]   = useState(false)
+
+  const fetchProfile = async (userId) => {
+    const { data } = await supabase.from('profiles').select('nickname').eq('id', userId).single()
+    if (data) setProfile(data)
+    else setShowNicknameModal(true)
+  }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUser(data.session?.user ?? null))
+    supabase.auth.getSession().then(({ data }) => {
+      const u = data.session?.user ?? null
+      setUser(u)
+      if (u) fetchProfile(u.id)
+    })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null)
+      const u = session?.user ?? null
+      setUser(u)
+      if (u) fetchProfile(u.id)
+      else { setProfile(null); setShowNicknameModal(false) }
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -550,6 +605,9 @@ export default function App() {
         </div>
       </div>
 
+      {showNicknameModal && user && (
+        <NicknameModal user={user} onSave={nick => { setProfile({ nickname: nick }); setShowNicknameModal(false) }} />
+      )}
       {showLoginPrompt && (
         <LoginPromptModal onClose={() => setShowLoginPrompt(false)} onLogin={signIn} />
       )}
