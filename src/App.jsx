@@ -39,7 +39,7 @@ function NicknameModal({ user, onSave }) {
     <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:380, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ fontSize:36, marginBottom:14 }}>👤</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>닉네임을 정해줘요</div>
+        <div style={{ fontFamily:"'Noto Sans KR', sans-serif", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>닉네임을 정해줘요</div>
         <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:24, lineHeight:1.7 }}>
           모든 글에 이 닉네임이 표시돼요.<br />나중에 수정하면 기존 글도 자동 반영돼요.
         </div>
@@ -65,7 +65,7 @@ function LoginPromptModal({ onClose, onLogin }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:360, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ fontSize:36, marginBottom:14 }}>🔐</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>로그인이 필요해요</div>
+        <div style={{ fontFamily:"'Noto Sans KR', sans-serif", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>로그인이 필요해요</div>
         <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:28 }}>
           후기를 올리려면 구글 계정으로<br />로그인해주세요.
         </div>
@@ -247,7 +247,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:40, width:'100%', maxWidth:400, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ fontSize:44, marginBottom:16 }}>{isEdit ? '✅' : '🎉'}</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>
+        <div style={{ fontFamily:"'Noto Sans KR', sans-serif", fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>
           {isEdit ? '수정 완료!' : '공유해줘서 고마워요!'}
         </div>
         <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>
@@ -263,7 +263,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
       <div style={{ background:C.card, borderRadius:16, padding:28, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:C.dark }}>
+          <div style={{ fontFamily:"'Noto Sans KR', sans-serif", fontSize:20, fontWeight:700, color:C.dark }}>
             {isEdit ? '후기 수정하기' : '내 경험 공유하기'}
           </div>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'#bbb' }}>✕</button>
@@ -447,7 +447,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3, flexWrap:'wrap' }}>
-              <span style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:C.dark }}>{job.title}</span>
+              <span style={{ fontFamily:"'Noto Sans KR', sans-serif", fontSize:18, fontWeight:700, color:C.dark }}>{job.title}</span>
               <span style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.7 }}>{job.tag}</span>
               {hasPhotos && <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.7 }}>📷 {job.photos.length}</span>}
             </div>
@@ -672,7 +672,7 @@ export default function App() {
       {/* 헤더 */}
       <div style={{ borderBottom:`1px solid ${C.border}`, background:`rgba(250,247,242,0.95)`, backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:900, color:C.dark }}>🦘 호주잡</div>
+          <div style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:22, fontWeight:400, color:C.dark }}>🦘 호주잡</div>
           <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>호주 워홀러들의 직업 후기</div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
@@ -705,7 +705,7 @@ export default function App() {
         {/* 히어로 */}
         <div style={{ padding:'36px 0 24px' }}>
           <div style={{ fontSize:20, marginBottom:10, letterSpacing:'4px' }}>🇰🇷 → 🇦🇺</div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,7vw,44px)', fontWeight:900, color:C.dark, margin:'0 0 12px', lineHeight:1.15 }}>
+          <h1 style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:'clamp(30px,7vw,48px)', fontWeight:400, color:C.dark, margin:'0 0 12px', lineHeight:1.2 }}>
             호주 워킹홀리데이<br />직업 후기
           </h1>
           <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
