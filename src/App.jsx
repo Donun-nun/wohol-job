@@ -2,6 +2,19 @@ import { useState, useEffect } from 'react'
 import { useJobs } from './useJobs'
 import { supabase } from './supabase'
 
+// Design tokens
+const C = {
+  dark:    '#2C1A00',
+  accent:  '#C8963C',
+  gold:    '#FFD580',
+  text:    '#2C1A00',
+  sub:     '#8A7060',
+  border:  '#E8E2D8',
+  bg:      '#FAF7F2',
+  card:    '#ffffff',
+  fill:    '#F5F0E8',
+}
+
 function NicknameModal({ user, onSave }) {
   const [nickname, setNickname] = useState('')
   const [error, setError] = useState('')
@@ -23,11 +36,11 @@ function NicknameModal({ user, onSave }) {
   }
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:'#FEFAF3', borderRadius:20, padding:40, width:'100%', maxWidth:380, textAlign:'center' }}>
-        <div style={{ fontSize:40, marginBottom:16 }}>👤</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:'#2C1A00', marginBottom:8 }}>닉네임을 정해줘요</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:'#8A7050', marginBottom:24, lineHeight:1.7 }}>
+    <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:380, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ fontSize:36, marginBottom:14 }}>👤</div>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>닉네임을 정해줘요</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:24, lineHeight:1.7 }}>
           모든 글에 이 닉네임이 표시돼요.<br />나중에 수정하면 기존 글도 자동 반영돼요.
         </div>
         <input
@@ -36,10 +49,10 @@ function NicknameModal({ user, onSave }) {
           onKeyDown={e => e.key === 'Enter' && handleSave()}
           placeholder="예: 퍼스워홀러, 광산킹, Kenny"
           maxLength={20}
-          style={{ width:'100%', background:'#F5EDD8', border:`1.5px solid ${error ? '#E05050' : '#E0D0B0'}`, borderRadius:8, padding:'11px 14px', color:'#2C1A00', fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box', marginBottom:6 }}
+          style={{ width:'100%', background:C.fill, border:`1.5px solid ${error ? '#E05050' : C.border}`, borderRadius:8, padding:'11px 14px', color:C.dark, fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box', marginBottom:6 }}
         />
         {error && <div style={{ fontSize:12, color:'#E05050', fontFamily:'Noto Sans KR', marginBottom:10 }}>{error}</div>}
-        <button onClick={handleSave} disabled={saving} style={{ width:'100%', background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, marginTop:8 }}>
+        <button onClick={handleSave} disabled={saving} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, marginTop:8 }}>
           {saving ? '저장 중...' : '닉네임 저장하기'}
         </button>
       </div>
@@ -49,18 +62,18 @@ function NicknameModal({ user, onSave }) {
 
 function LoginPromptModal({ onClose, onLogin }) {
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:'#FEFAF3', borderRadius:20, padding:40, width:'100%', maxWidth:380, textAlign:'center' }}>
-        <div style={{ fontSize:40, marginBottom:16 }}>🔐</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:'#2C1A00', marginBottom:8 }}>로그인이 필요해요</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#8A7050', lineHeight:1.7, marginBottom:28 }}>
+    <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:360, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ fontSize:36, marginBottom:14 }}>🔐</div>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>로그인이 필요해요</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:28 }}>
           후기를 올리려면 구글 계정으로<br />로그인해주세요.
         </div>
-        <button onClick={onLogin} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer', marginBottom:10 }}>
+        <button onClick={onLogin} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer', marginBottom:10 }}>
           <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           구글로 로그인하기
         </button>
-        <button onClick={onClose} style={{ width:'100%', background:'transparent', color:'#9A7A50', border:'none', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>취소</button>
+        <button onClick={onClose} style={{ width:'100%', background:'transparent', color:C.sub, border:'none', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>취소</button>
       </div>
     </div>
   )
@@ -88,7 +101,7 @@ function Stars({ n }) {
   return (
     <div style={{ display:'flex', gap:2 }}>
       {[1,2,3,4,5].map(i => (
-        <span key={i} style={{ fontSize:13, color: i<=n ? '#F5A623' : '#D4C5A9' }}>★</span>
+        <span key={i} style={{ fontSize:13, color: i<=n ? '#F5A623' : C.border }}>★</span>
       ))}
     </div>
   )
@@ -102,16 +115,16 @@ function PhotoGallery({ photos }) {
       <div style={{ display:'flex', gap:8, overflowX:'auto', padding:'0 20px 14px', scrollbarWidth:'none' }}>
         {photos.map((p, i) => (
           <div key={i} onClick={e => { e.stopPropagation(); setActive(i) }}
-            style={{ flexShrink:0, width: photos.length===1 ? '100%' : 160, height:110, borderRadius:10, overflow:'hidden', cursor:'zoom-in', position:'relative', border:'1.5px solid #E0D0B0' }}>
+            style={{ flexShrink:0, width: photos.length===1 ? '100%' : 160, height:110, borderRadius:10, overflow:'hidden', cursor:'zoom-in', position:'relative', border:`1px solid ${C.border}` }}>
             <img src={p.url} alt={p.caption} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
           </div>
         ))}
       </div>
       {active !== null && (
         <div onClick={e => { e.stopPropagation(); setActive(null) }}
-          style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.9)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+          style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
           <div style={{ position:'relative', maxWidth:600, width:'100%' }}>
-            <img src={photos[active].url} style={{ width:'100%', borderRadius:14, maxHeight:'70vh', objectFit:'contain' }} />
+            <img src={photos[active].url} style={{ width:'100%', borderRadius:12, maxHeight:'70vh', objectFit:'contain' }} />
             {photos.length > 1 && (
               <div style={{ display:'flex', justifyContent:'center', gap:12, marginTop:16 }}>
                 <button onClick={e => { e.stopPropagation(); setActive(a => (a-1+photos.length)%photos.length) }}
@@ -122,7 +135,7 @@ function PhotoGallery({ photos }) {
               </div>
             )}
             <button onClick={e => { e.stopPropagation(); setActive(null) }}
-              style={{ position:'absolute', top:-14, right:-14, background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              style={{ position:'absolute', top:-14, right:-14, background:C.dark, color:C.gold, border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
           </div>
         </div>
       )}
@@ -148,18 +161,18 @@ function PhotoUploader({ photos, setPhotos }) {
         <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:10 }}>
           {photos.map((p, i) => (
             <div key={i} style={{ position:'relative', width:80, height:80 }}>
-              <img src={p.url} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:8, border:'1.5px solid #E0D0B0' }} />
+              <img src={p.url} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:8, border:`1px solid ${C.border}` }} />
               <button onClick={() => setPhotos(prev => prev.filter((_,idx) => idx !== i))}
-                style={{ position:'absolute', top:-6, right:-6, background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:'50%', width:20, height:20, cursor:'pointer', fontSize:11, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+                style={{ position:'absolute', top:-6, right:-6, background:C.dark, color:C.gold, border:'none', borderRadius:'50%', width:20, height:20, cursor:'pointer', fontSize:11, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
             </div>
           ))}
         </div>
       )}
-      <label style={{ display:'inline-block', cursor:'pointer', background: uploading ? 'rgba(0,0,0,0.04)' : 'rgba(200,150,60,0.08)', border:'1.5px dashed #C8963C', borderRadius:10, padding:'10px 20px', fontFamily:'Noto Sans KR', fontSize:13, color:'#C8963C' }}>
+      <label style={{ display:'inline-block', cursor:'pointer', background: uploading ? 'rgba(0,0,0,0.03)' : 'rgba(200,150,60,0.07)', border:`1.5px dashed ${C.accent}`, borderRadius:10, padding:'10px 20px', fontFamily:'Noto Sans KR', fontSize:13, color:C.accent }}>
         {uploading ? '업로드 중...' : '📷 사진 선택하기'}
         <input type="file" accept="image/*" multiple onChange={handleFiles} style={{ display:'none' }} disabled={uploading} />
       </label>
-      <div style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR', marginTop:6 }}>여러 장 동시 선택 가능</div>
+      <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginTop:6 }}>여러 장 동시 선택 가능</div>
     </div>
   )
 }
@@ -197,8 +210,8 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  const inputStyle = { width:'100%', background:'#F5EDD8', border:'1.5px solid #E0D0B0', borderRadius:8, padding:'10px 12px', color:'#2C1A00', fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box' }
-  const labelStyle = { fontSize:12, color:'#9A7A50', fontFamily:'Noto Sans KR', marginBottom:6, display:'block' }
+  const inputStyle = { width:'100%', background:C.fill, border:`1.5px solid ${C.border}`, borderRadius:8, padding:'10px 12px', color:C.dark, fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box' }
+  const labelStyle = { fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:6, display:'block' }
 
   const handleSubmit = async () => {
     if (!form.title || !form.hourly || !form.review) {
@@ -222,29 +235,29 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   }
 
   if (done) return (
-    <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:'#FEFAF3', borderRadius:20, padding:40, width:'100%', maxWidth:400, textAlign:'center' }}>
-        <div style={{ fontSize:48, marginBottom:16 }}>{isEdit ? '✅' : '🎉'}</div>
-        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:'#2C1A00', marginBottom:8 }}>
+    <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.card, borderRadius:16, padding:40, width:'100%', maxWidth:400, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ fontSize:44, marginBottom:16 }}>{isEdit ? '✅' : '🎉'}</div>
+        <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>
           {isEdit ? '수정 완료!' : '공유해줘서 고마워요!'}
         </div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#8A7050', lineHeight:1.7, marginBottom:24 }}>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>
           {isEdit ? '변경사항이 저장됐어요.' : '다음 워홀러에게 큰 도움이 될 거예요.'}
         </div>
-        <button onClick={onClose} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
+        <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
       </div>
     </div>
   )
 
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.7)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:'#FEFAF3', borderRadius:20, padding:28, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto' }}>
+    <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.card, borderRadius:16, padding:28, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:'#2C1A00' }}>
+          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:C.dark }}>
             {isEdit ? '후기 수정하기' : '내 경험 공유하기'}
           </div>
-          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'#999' }}>✕</button>
+          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'#bbb' }}>✕</button>
         </div>
 
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
@@ -283,7 +296,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             {TAGS.map(t => (
               <button key={t} type="button" onClick={() => set('tag', form.tag === t ? '' : t)}
-                style={{ padding:'6px 14px', borderRadius:20, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: form.tag === t ? '#2C1A00' : 'transparent', borderColor: form.tag === t ? '#2C1A00' : '#D4C5A9', color: form.tag === t ? '#FFD580' : '#8A7050' }}>
+                style={{ padding:'5px 12px', borderRadius:20, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: form.tag === t ? C.dark : 'transparent', borderColor: form.tag === t ? C.dark : C.border, color: form.tag === t ? C.gold : C.sub }}>
                 {t}
               </button>
             ))}
@@ -330,7 +343,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           <label style={labelStyle}>추천 점수</label>
           <div style={{ display:'flex', gap:8 }}>
             {[1,2,3,4,5].map(n => (
-              <button key={n} onClick={() => set('stars', n)} style={{ background: n <= form.stars ? 'rgba(245,166,35,0.15)' : 'transparent', border:`1.5px solid ${n <= form.stars ? '#F5A623' : '#E0D0B0'}`, borderRadius:8, padding:'8px 14px', cursor:'pointer', color: n <= form.stars ? '#F5A623' : '#C0A880', fontSize:18 }}>★</button>
+              <button key={n} onClick={() => set('stars', n)} style={{ background: n <= form.stars ? 'rgba(245,166,35,0.12)' : 'transparent', border:`1.5px solid ${n <= form.stars ? '#F5A623' : C.border}`, borderRadius:8, padding:'8px 14px', cursor:'pointer', color: n <= form.stars ? '#F5A623' : C.border, fontSize:18 }}>★</button>
             ))}
           </div>
         </div>
@@ -340,8 +353,8 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           <PhotoUploader photos={photos} setPhotos={setPhotos} />
         </div>
 
-        <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1 }}>
-          {submitting ? '저장 중...' : (isEdit ? '수정 완료 ✅' : '공유하기 🎉')}
+        <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.7 : 1 }}>
+          {submitting ? '저장 중...' : (isEdit ? '수정 완료' : '공유하기')}
         </button>
       </div>
     </div>
@@ -355,51 +368,53 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
 
   return (
     <div onClick={() => setOpen(o => !o)}
-      style={{ background:'#FEFAF3', border:'1.5px solid #E8DCC8', borderRadius:16, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s, transform 0.18s', boxShadow:'0 2px 8px rgba(120,90,40,0.07)' }}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow='0 8px 28px rgba(120,90,40,0.15)'; e.currentTarget.style.transform='translateY(-2px)' }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow='0 2px 8px rgba(120,90,40,0.07)'; e.currentTarget.style.transform='none' }}
+      style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s, transform 0.18s', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.1)'; e.currentTarget.style.transform='translateY(-1px)' }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'; e.currentTarget.style.transform='none' }}
     >
       {hasPhotos && <div style={{ paddingTop:14 }}><PhotoGallery photos={job.photos} /></div>}
 
       <div style={{ padding:'16px 20px' }}>
-        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:12 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
           <div style={{ flex:1, minWidth:0 }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:4, flexWrap:'wrap' }}>
-              <span style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:'#2C1A00' }}>{job.title}</span>
-              <span style={{ fontSize:10, color:'#B8A070', fontFamily:'Noto Sans KR' }}>{job.tag}</span>
-              {hasPhotos && <span style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR' }}>📷 {job.photos.length}</span>}
+            <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3, flexWrap:'wrap' }}>
+              <span style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:C.dark }}>{job.title}</span>
+              <span style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.7 }}>{job.tag}</span>
+              {hasPhotos && <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.7 }}>📷 {job.photos.length}</span>}
             </div>
             {job.company && (
-              <div style={{ fontSize:14, fontWeight:700, color:'#5A3E1B', fontFamily:'Noto Sans KR', marginBottom:4 }}>{job.company}</div>
+              <div style={{ fontSize:14, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginBottom:4, opacity:0.75 }}>{job.company}</div>
             )}
-            <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
-              {isOwner && (
-                <button
-                  onClick={e => { e.stopPropagation(); onEdit(job) }}
-                  style={{ background:'rgba(200,150,60,0.1)', border:'1.5px solid #C8963C', borderRadius:8, padding:'2px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:11, color:'#C8963C' }}
-                >
-                  ✏️ 수정
-                </button>
-              )}
+            <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>
+              {job.region}{job.location ? ` · ${job.location}` : ''} · {job.type}
             </div>
-            <div style={{ fontSize:12, color:'#9A7A50', fontFamily:'Noto Sans KR' }}>{job.region}{job.location ? ` · ${job.location}` : ''} · {job.type}</div>
           </div>
-          <div style={{ background:'#2C1A00', color:'#FFD580', borderRadius:12, padding:'8px 14px', textAlign:'center', minWidth:58, flexShrink:0, marginLeft:12 }}>
+          <div style={{ background:C.dark, color:C.gold, borderRadius:10, padding:'8px 14px', textAlign:'center', minWidth:56, flexShrink:0, marginLeft:14 }}>
             <div style={{ fontFamily:'monospace', fontWeight:800, fontSize:20, lineHeight:1 }}>${job.hourly}</div>
-            <div style={{ fontSize:10, opacity:0.7, marginTop:2 }}>/hr AUD</div>
+            <div style={{ fontSize:10, opacity:0.6, marginTop:2 }}>/hr AUD</div>
           </div>
         </div>
 
-        <div style={{ background:'#F5EDD8', borderLeft:'3px solid #C8963C', borderRadius:'0 8px 8px 0', padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:13, color:'#4A3010', fontStyle:'italic', lineHeight:1.6 }}>
+        <div style={{ background:C.fill, borderLeft:`3px solid ${C.accent}`, borderRadius:'0 8px 8px 0', padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:13, color:C.dark, fontStyle:'italic', lineHeight:1.6, opacity:0.85 }}>
           "{job.review}"
         </div>
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-          <Stars n={job.stars} />
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-            <div style={{ fontSize:11, color:'#B8A080', fontFamily:'Noto Sans KR' }}>{job.shift} · {job.author || '익명'} · {job.date}</div>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <Stars n={job.stars} />
+            {isOwner && (
+              <button
+                onClick={e => { e.stopPropagation(); onEdit(job) }}
+                style={{ background:'transparent', border:`1px solid ${C.accent}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:11, color:C.accent }}
+              >
+                수정
+              </button>
+            )}
+          </div>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.8 }}>{job.author || '익명'}</div>
             <button onClick={e => { e.stopPropagation(); onLike(job.id) }}
-              style={{ display:'flex', alignItems:'center', gap:4, background: liked ? 'rgba(200,150,60,0.15)' : 'rgba(0,0,0,0.04)', border:`1.5px solid ${liked ? '#C8963C' : '#E0D0B0'}`, borderRadius:20, padding:'4px 12px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:13, color: liked ? '#C8963C' : '#A08060', transition:'all 0.15s' }}>
+              style={{ display:'flex', alignItems:'center', gap:4, background: liked ? 'rgba(200,150,60,0.1)' : 'transparent', border:`1px solid ${liked ? C.accent : C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:13, color: liked ? C.accent : C.sub, transition:'all 0.15s' }}>
               <span>{liked ? '❤️' : '🤍'}</span>
               <span>{job.likes}</span>
             </button>
@@ -408,25 +423,25 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
       </div>
 
       {open && (
-        <div style={{ borderTop:'1.5px solid #E8DCC8', padding:'16px 20px 20px', background:'#FFFDF8' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom: job.daily_life ? 12 : 0 }}>
-            <div style={{ background:'#F0F9F0', borderRadius:10, padding:14 }}>
+        <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 20px 20px', background:C.bg }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom: (job.daily_life || job.interview_tips) ? 10 : 0 }}>
+            <div style={{ background:'#F3FAF3', borderRadius:10, padding:14 }}>
               <div style={{ fontSize:11, color:'#3A7A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👍 장점</div>
               {job.pros.map((p,i) => <div key={i} style={{ fontSize:13, color:'#2A5A2A', fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {p}</div>)}
             </div>
-            <div style={{ background:'#FDF0F0', borderRadius:10, padding:14 }}>
+            <div style={{ background:'#FAF3F3', borderRadius:10, padding:14 }}>
               <div style={{ fontSize:11, color:'#8A3A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👎 단점</div>
               {job.cons.map((c,i) => <div key={i} style={{ fontSize:13, color:'#6A2A2A', fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {c}</div>)}
             </div>
           </div>
           {job.daily_life && (
-            <div style={{ background:'#F5EDD8', borderRadius:10, padding:14 }}>
-              <div style={{ fontSize:11, color:'#8A6A30', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>🌅 A day in the life</div>
-              <div style={{ fontSize:13, color:'#4A3010', fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.daily_life}</div>
+            <div style={{ background:C.fill, borderRadius:10, padding:14, marginBottom: job.interview_tips ? 10 : 0 }}>
+              <div style={{ fontSize:11, color:C.accent, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>🌅 A day in the life</div>
+              <div style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line', opacity:0.85 }}>{job.daily_life}</div>
             </div>
           )}
           {job.interview_tips && (
-            <div style={{ background:'#F0F4FF', borderRadius:10, padding:14, marginTop:12 }}>
+            <div style={{ background:'#F0F4FF', borderRadius:10, padding:14 }}>
               <div style={{ fontSize:11, color:'#3A4A8A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>💡 면접 꿀팁</div>
               <div style={{ fontSize:13, color:'#2A3060', fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.interview_tips}</div>
             </div>
@@ -446,14 +461,12 @@ export default function App() {
   const [photoOnly, setPhotoOnly] = useState(false)
   const [showModal, setShowModal]               = useState(false)
   const [editJob, setEditJob]                   = useState(null)
-  const [profile, setProfile]                   = useState(null)
   const [showNicknameModal, setShowNicknameModal] = useState(false)
   const [showLoginPrompt, setShowLoginPrompt]   = useState(false)
 
   const fetchProfile = async (userId) => {
     const { data } = await supabase.from('profiles').select('nickname').eq('id', userId).single()
-    if (data) setProfile(data)
-    else setShowNicknameModal(true)
+    if (!data) setShowNicknameModal(true)
   }
 
   useEffect(() => {
@@ -466,7 +479,7 @@ export default function App() {
       const u = session?.user ?? null
       setUser(u)
       if (u) fetchProfile(u.id)
-      else { setProfile(null); setShowNicknameModal(false) }
+      else setShowNicknameModal(false)
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -484,24 +497,29 @@ export default function App() {
       sort === "시급순"   ? b.hourly - a.hourly : b.id - a.id
     )
 
-  const chip = (active, accent) => ({
-    padding:'6px 14px', borderRadius:20, cursor:'pointer',
-    fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid',
+  const chip = (active) => ({
+    padding:'5px 12px', borderRadius:20, cursor:'pointer',
+    fontSize:12, fontFamily:'Noto Sans KR', border:'1px solid',
     transition:'all 0.15s',
-    background: active ? (accent || '#2C1A00') : 'transparent',
-    borderColor: active ? (accent || '#2C1A00') : '#D4C5A9',
-    color: active ? (accent ? '#fff' : '#FFD580') : '#8A7050',
+    background: active ? C.dark : 'transparent',
+    borderColor: active ? C.dark : C.border,
+    color: active ? C.gold : C.sub,
   })
 
+  const selectStyle = {
+    background: C.card, border:`1px solid ${C.border}`, borderRadius:8,
+    padding:'5px 10px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub,
+    cursor:'pointer', outline:'none',
+  }
 
   return (
-    <div style={{ minHeight:'100vh', background:'#F7F0E3', backgroundImage:'radial-gradient(ellipse at 0% 0%,rgba(200,150,60,0.12) 0%,transparent 50%),radial-gradient(ellipse at 100% 100%,rgba(160,120,40,0.1) 0%,transparent 50%)' }}>
+    <div style={{ minHeight:'100vh', background:C.bg }}>
 
       {/* 헤더 */}
-      <div style={{ borderBottom:'1.5px solid #E0D0B0', background:'rgba(247,240,227,0.95)', backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'14px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+      <div style={{ borderBottom:`1px solid ${C.border}`, background:`rgba(250,247,242,0.95)`, backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div>
-          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:900, color:'#2C1A00' }}>🦘 호주잡</div>
-          <div style={{ fontSize:10, color:'#B8A070', fontFamily:'Noto Sans KR', marginTop:2 }}>호주 워홀러들의 직업 후기</div>
+          <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:900, color:C.dark }}>🦘 호주잡</div>
+          <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>호주 워홀러들의 직업 후기</div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           {user ? (
@@ -509,21 +527,21 @@ export default function App() {
               <img
                 src={user.user_metadata?.avatar_url}
                 alt="프로필"
-                style={{ width:30, height:30, borderRadius:'50%', border:'2px solid #C8963C', objectFit:'cover' }}
+                style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${C.accent}`, objectFit:'cover' }}
                 onError={e => { e.target.style.display='none' }}
               />
-              <button onClick={signOut} style={{ background:'transparent', color:'#8A7050', border:'1.5px solid #D4C5A9', borderRadius:10, padding:'7px 14px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
+              <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
                 로그아웃
               </button>
             </>
           ) : (
-            <button onClick={signIn} style={{ background:'transparent', color:'#2C1A00', border:'1.5px solid #2C1A00', borderRadius:10, padding:'7px 14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+            <button onClick={signIn} style={{ background:'transparent', color:C.dark, border:`1.5px solid ${C.dark}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
               <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
               구글로 로그인
             </button>
           )}
-          <button onClick={() => user ? setShowModal(true) : setShowLoginPrompt(true)} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'9px 18px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-            + 후기 추가하기
+          <button onClick={() => user ? setShowModal(true) : setShowLoginPrompt(true)} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+            + 후기 쓰기
           </button>
         </div>
       </div>
@@ -531,28 +549,14 @@ export default function App() {
       <div style={{ maxWidth:680, margin:'0 auto', padding:'0 16px 80px' }}>
 
         {/* 히어로 */}
-        <div style={{ padding:'36px 0 28px' }}>
-          <div style={{ fontSize:11, letterSpacing:'3px', color:'#C8963C', fontFamily:'Noto Sans KR', marginBottom:10, textTransform:'uppercase' }}>KOREA → AUSTRALIA</div>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,7vw,44px)', fontWeight:900, color:'#2C1A00', margin:'0 0 12px', lineHeight:1.15 }}>
+        <div style={{ padding:'36px 0 24px' }}>
+          <div style={{ fontSize:11, letterSpacing:'3px', color:C.accent, fontFamily:'Noto Sans KR', marginBottom:10, textTransform:'uppercase' }}>KOREA → AUSTRALIA</div>
+          <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,7vw,44px)', fontWeight:900, color:C.dark, margin:'0 0 12px', lineHeight:1.15 }}>
             호주 워홀러를 위한<br />직업 리얼 후기
           </h1>
-          <p style={{ color:'#8A7050', fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
+          <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
             시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보.
           </p>
-        </div>
-
-
-        {/* 통계 */}
-        <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
-          {[
-            { label:'등록된 직업', value: loading ? '…' : jobs.length+'개' },
-            { label:'총 좋아요',   value: loading ? '…' : jobs.reduce((a,j)=>a+j.likes,0)+'개' },
-          ].map(({ label, value }) => (
-            <div key={label} style={{ background:'#FEFAF3', border:'1.5px solid #E0D0B0', borderRadius:12, padding:'12px 18px', flex:1, minWidth:90 }}>
-              <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:'#2C1A00' }}>{value}</div>
-              <div style={{ fontSize:11, color:'#A08060', fontFamily:'Noto Sans KR' }}>{label}</div>
-            </div>
-          ))}
         </div>
 
         {/* 필터 */}
@@ -560,43 +564,37 @@ export default function App() {
           <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
             {REGIONS.map(r => <button key={r} onClick={() => setRegion(r)} style={chip(region===r)}>{r}</button>)}
           </div>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
+          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
             {TYPES.map(t => <button key={t} onClick={() => setType(t)} style={chip(type===t)}>{t}</button>)}
-            <button onClick={() => setPhotoOnly(p=>!p)} style={chip(photoOnly, '#C8963C')}>📷 사진만</button>
-            <div style={{ marginLeft:'auto', display:'flex', gap:6 }}>
-              {["좋아요순","별점순","시급순","최신순"].map(s => <button key={s} onClick={() => setSort(s)} style={{ ...chip(sort===s), fontSize:11 }}>{s}</button>)}
+            <button onClick={() => setPhotoOnly(p=>!p)} style={{ ...chip(photoOnly), borderColor: photoOnly ? C.accent : C.border, background: photoOnly ? 'rgba(200,150,60,0.12)' : 'transparent', color: photoOnly ? C.accent : C.sub }}>📷 사진만</button>
+            <div style={{ marginLeft:'auto' }}>
+              <select value={sort} onChange={e => setSort(e.target.value)} style={selectStyle}>
+                {["좋아요순","별점순","시급순","최신순"].map(s => <option key={s}>{s}</option>)}
+              </select>
             </div>
           </div>
         </div>
 
-        <div style={{ fontSize:12, color:'#B8A070', fontFamily:'Noto Sans KR', marginBottom:16 }}>
-          {loading ? '불러오는 중…' : `${filtered.length}개 결과 · 카드 클릭하면 장단점 펼쳐져요`}
+        <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:16, opacity:0.7 }}>
+          {loading ? '불러오는 중…' : `${filtered.length}개 결과`}
         </div>
 
         {/* 카드 목록 */}
-        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {filtered.map(job => (
             <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} />
           ))}
         </div>
 
-        {/* 하단 CTA */}
-        <div style={{ marginTop:32, textAlign:'center', background:'#FEFAF3', border:'1.5px dashed #D4C5A9', borderRadius:16, padding:'28px 24px' }}>
-          <div style={{ fontSize:22, marginBottom:8 }}>✍️</div>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#6A5030', marginBottom:6, lineHeight:1.7 }}>
-            직업 후기 + 현장 사진으로<br />다음 워홀러 도와주기
+        {!loading && filtered.length === 0 && (
+          <div style={{ textAlign:'center', padding:'60px 20px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:14 }}>
+            아직 후기가 없어요. 첫 번째로 공유해보세요!
           </div>
-          <div style={{ fontSize:12, color:'#B8A070', fontFamily:'Noto Sans KR', marginBottom:16 }}>사진은 선택사항이에요</div>
-          <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
-            <button onClick={() => user ? setShowModal(true) : setShowLoginPrompt(true)} style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:10, padding:'11px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>
-              후기 + 사진 공유하기 →
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
       {showNicknameModal && user && (
-        <NicknameModal user={user} onSave={nick => { setProfile({ nickname: nick }); setShowNicknameModal(false) }} />
+        <NicknameModal user={user} onSave={() => setShowNicknameModal(false)} />
       )}
       {showLoginPrompt && (
         <LoginPromptModal onClose={() => setShowLoginPrompt(false)} onLogin={signIn} />
@@ -615,6 +613,7 @@ export default function App() {
           addJob={addJob}
           updateJob={updateJob}
           editData={editJob}
+          user={user}
         />
       )}
     </div>
