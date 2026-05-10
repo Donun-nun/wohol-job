@@ -371,24 +371,26 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
 
   useEffect(() => {
     if (!open) return
-    supabase.from('comments')
+    fetchComments()
+  }, [open, job.id])
+
+  const fetchComments = async () => {
+    const { data } = await supabase.from('comments')
       .select('*, profiles(nickname)')
       .eq('job_id', job.id)
       .order('created_at')
-      .then(({ data }) => setComments(data || []))
-  }, [open, job.id])
+    setComments(data || [])
+  }
 
   const postComment = async (e) => {
     e.stopPropagation()
     if (!commentText.trim()) return
     setPosting(true)
-    const { data, error } = await supabase.from('comments')
+    const { error } = await supabase.from('comments')
       .insert({ job_id: job.id, user_id: user.id, content: commentText.trim() })
-      .select('*, profiles(nickname)')
-      .single()
-    if (!error && data) {
-      setComments(prev => [...prev, data])
+    if (!error) {
       setCommentText('')
+      await fetchComments()
     }
     setPosting(false)
   }
@@ -396,7 +398,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
   const deleteComment = async (e, commentId) => {
     e.stopPropagation()
     await supabase.from('comments').delete().eq('id', commentId)
-    setComments(prev => prev.filter(c => c.id !== commentId))
+    await fetchComments()
   }
 
   return (
