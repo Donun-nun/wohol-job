@@ -494,7 +494,6 @@ export default function App() {
     color: active ? (accent ? '#fff' : '#FFD580') : '#8A7050',
   })
 
-  const totalPhotos = jobs.filter(j=>j.photos?.length).reduce((a,j)=>a+j.photos.length,0)
 
   return (
     <div style={{ minHeight:'100vh', background:'#F7F0E3', backgroundImage:'radial-gradient(ellipse at 0% 0%,rgba(200,150,60,0.12) 0%,transparent 50%),radial-gradient(ellipse at 100% 100%,rgba(160,120,40,0.1) 0%,transparent 50%)' }}>
@@ -539,31 +538,10 @@ export default function App() {
             다음 워홀러를 위한<br />직업 리얼 후기
           </h1>
           <p style={{ color:'#8A7050', fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
-            시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보.<br />
-            <span style={{ color:'#C8963C', fontWeight:700 }}>일터 사진을 올리면 다른 사람 사진도 볼 수 있어요 📷</span>
+            시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보.
           </p>
         </div>
 
-        {/* 사진 유도 배너 */}
-        {totalPhotos > 0 && (
-          <div style={{ background:'#2C1A00', borderRadius:16, padding:24, marginBottom:24 }}>
-            <div style={{ display:'flex', gap:6, marginBottom:18, height:80, opacity:0.55 }}>
-              {jobs.filter(j=>j.photos?.length).slice(0,3).map((j,i) => (
-                <div key={i} style={{ flex:1, overflow:'hidden', borderRadius:8 }}>
-                  <img src={j.photos[0].url} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
-                </div>
-              ))}
-            </div>
-            <div style={{ color:'#FFD580', fontWeight:700, fontSize:15, fontFamily:'Noto Sans KR', marginBottom:6 }}>📷 일터에서 찍은 사진을 올리면</div>
-            <div style={{ color:'#E0C890', fontSize:13, fontFamily:'Noto Sans KR', lineHeight:1.7, marginBottom:18 }}>
-              다른 워홀러들이 올린 현장 사진도 볼 수 있어요.<br />
-              <span style={{ color:'#FFD580', fontWeight:700 }}>{totalPhotos}장의 사진</span>이 기다리고 있어요.
-            </div>
-            <button onClick={() => user ? setShowModal(true) : setShowLoginPrompt(true)} style={{ background:'#C8963C', color:'#fff', border:'none', borderRadius:10, padding:'11px 22px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-              사진 + 후기 공유하기 →
-            </button>
-          </div>
-        )}
 
         {/* 통계 */}
         <div style={{ display:'flex', gap:12, marginBottom:20, flexWrap:'wrap' }}>
