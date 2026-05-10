@@ -123,7 +123,7 @@ function PhotoUploader({ photos, setPhotos }) {
         {uploading ? '업로드 중...' : '📷 사진 선택하기'}
         <input type="file" accept="image/*" multiple onChange={handleFiles} style={{ display:'none' }} disabled={uploading} />
       </label>
-      <div style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR', marginTop:6 }}>여러 장 동시 선택 가능 · 로그인 불필요</div>
+      <div style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR', marginTop:6 }}>여러 장 동시 선택 가능</div>
     </div>
   )
 }
