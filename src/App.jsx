@@ -67,7 +67,7 @@ function LoginPromptModal({ onClose, onLogin }) {
 }
 
 
-const REGIONS = ["전체", "WA", "VIC", "NSW", "QLD", "SA", "NT"]
+const REGIONS = ["전체", "WA", "NSW", "VIC", "QLD", "SA", "NT", "TAS", "ACT"]
 const TYPES   = ["전체", "Casual", "Part-time", "Full-time"]
 
 const CLOUDINARY_CLOUD  = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
@@ -165,7 +165,7 @@ function PhotoUploader({ photos, setPhotos }) {
 }
 
 const TAGS = ['광산','카페','농장','주방','리테일','건설','서비스','물류','기타']
-const EMPTY_FORM = { title:'', company:'', region:'WA (퍼스)', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tag:'' }
+const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tag:'' }
 
 function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   const isEdit = !!editData
@@ -173,7 +173,8 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   const toForm = (data) => data ? {
     title: data.title || '',
     company: data.company || '',
-    region: data.region || 'WA (퍼스)',
+    region: data.region || 'WA',
+    location: data.location || '',
     type: data.type || 'Casual',
     hourly: data.hourly || '',
     shift: data.shift || '',
@@ -259,9 +260,9 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
 
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
           <div>
-            <label style={labelStyle}>지역 *</label>
+            <label style={labelStyle}>주(State) *</label>
             <select style={inputStyle} value={form.region} onChange={e => set('region', e.target.value)}>
-              {['WA (퍼스)','WA (FIFO 광산)','NSW (시드니)','VIC (멜버른)','QLD (브리즈번)','QLD (번다버그 농장)','SA (애들레이드)','NT (다윈)','기타'].map(r => <option key={r}>{r}</option>)}
+              {['WA','NSW','VIC','QLD','SA','NT','TAS','ACT'].map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
           <div>
@@ -270,6 +271,11 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
               {['Casual','Part-time','Full-time'].map(t => <option key={t}>{t}</option>)}
             </select>
           </div>
+        </div>
+
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>세부 위치 (선택 — 예: 퍼스 노스, 번다버그, 시드니 CBD)</label>
+          <input style={inputStyle} placeholder="도시 또는 지역명" value={form.location} onChange={e => set('location', e.target.value)} />
         </div>
 
         <div style={{ marginBottom:12 }}>
@@ -376,7 +382,7 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
                 </button>
               )}
             </div>
-            <div style={{ fontSize:12, color:'#9A7A50', fontFamily:'Noto Sans KR' }}>{job.region} · {job.type}</div>
+            <div style={{ fontSize:12, color:'#9A7A50', fontFamily:'Noto Sans KR' }}>{job.region}{job.location ? ` · ${job.location}` : ''} · {job.type}</div>
           </div>
           <div style={{ background:'#2C1A00', color:'#FFD580', borderRadius:12, padding:'8px 14px', textAlign:'center', minWidth:58, flexShrink:0, marginLeft:12 }}>
             <div style={{ fontFamily:'monospace', fontWeight:800, fontSize:20, lineHeight:1 }}>${job.hourly}</div>
