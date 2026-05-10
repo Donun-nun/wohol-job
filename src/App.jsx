@@ -393,6 +393,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
     setPosting(true)
     const { error } = await supabase.from('comments')
       .insert({ job_id: job.id, user_id: user.id, content: commentText.trim() })
+    console.log('comment insert result:', { error, job_id: job.id, user_id: user.id })
     if (!error) {
       setCommentText('')
       await fetchComments()
