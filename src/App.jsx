@@ -175,7 +175,7 @@ function PhotoUploader({ photos, setPhotos }) {
 }
 
 const TAGS = ['광산','카페','농장','주방','리테일','건설','서비스','기타']
-const EMPTY_FORM = { title:'', company:'', region:'WA (퍼스)', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', stars:4, author:'', tag:'' }
+const EMPTY_FORM = { title:'', company:'', region:'WA (퍼스)', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tag:'' }
 
 function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   const isEdit = !!editData
@@ -191,6 +191,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     pros: Array.isArray(data.pros) ? data.pros.join('\n') : (data.pros || ''),
     cons: Array.isArray(data.cons) ? data.cons.join('\n') : (data.cons || ''),
     daily_life: data.daily_life || '',
+    interview_tips: data.interview_tips || '',
     stars: data.stars || 4,
     author: data.author || '',
     tag: data.tag || '',
@@ -324,6 +325,11 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           <textarea style={{ ...inputStyle, height:100, resize:'vertical' }} placeholder="예: 6시 기상 → 7시 브렉퍼스트 룸 세팅 → 9시 청소 시작 → 12시 점심 → 오후 청소 마무리 → 6시 퇴근" value={form.daily_life} onChange={e => set('daily_life', e.target.value)} />
         </div>
 
+        <div style={{ marginBottom:12 }}>
+          <label style={labelStyle}>면접 꿀팁 (선택)</label>
+          <textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder="예: 경력 없어도 됨, 복장은 캐주얼 OK, 영어 인터뷰 5분 정도" value={form.interview_tips} onChange={e => set('interview_tips', e.target.value)} />
+        </div>
+
         <div style={{ marginBottom:16 }}>
           <label style={labelStyle}>추천 점수</label>
           <div style={{ display:'flex', gap:8 }}>
@@ -417,6 +423,12 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
             <div style={{ background:'#F5EDD8', borderRadius:10, padding:14 }}>
               <div style={{ fontSize:11, color:'#8A6A30', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>🌅 A day in the life</div>
               <div style={{ fontSize:13, color:'#4A3010', fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.daily_life}</div>
+            </div>
+          )}
+          {job.interview_tips && (
+            <div style={{ background:'#F0F4FF', borderRadius:10, padding:14, marginTop:12 }}>
+              <div style={{ fontSize:11, color:'#3A4A8A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>💡 면접 꿀팁</div>
+              <div style={{ fontSize:13, color:'#2A3060', fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.interview_tips}</div>
             </div>
           )}
         </div>
