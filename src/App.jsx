@@ -559,7 +559,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
                       autoFocus
                       value={replyText}
                       onChange={e => setReplyText(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && !e.shiftKey && postReply(e)}
+                      onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postReply(e) } }}
                       placeholder={`@${replyTo.nickname}에게 답글...`}
                       style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 11px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none' }}
                     />
@@ -577,7 +577,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
                 <input
                   value={commentText}
                   onChange={e => setCommentText(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && postComment(e)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postComment(e) } }}
                   placeholder="댓글 달기..."
                   style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 12px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none' }}
                 />
