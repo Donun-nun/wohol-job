@@ -534,7 +534,7 @@ export default function App() {
         <div style={{ padding:'36px 0 28px' }}>
           <div style={{ fontSize:11, letterSpacing:'3px', color:'#C8963C', fontFamily:'Noto Sans KR', marginBottom:10, textTransform:'uppercase' }}>KOREA → AUSTRALIA</div>
           <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:'clamp(28px,7vw,44px)', fontWeight:900, color:'#2C1A00', margin:'0 0 12px', lineHeight:1.15 }}>
-            다음 워홀러를 위한<br />직업 리얼 후기
+            호주 워홀러를 위한<br />직업 리얼 후기
           </h1>
           <p style={{ color:'#8A7050', fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
             시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보.
