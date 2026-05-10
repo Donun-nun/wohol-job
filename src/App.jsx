@@ -4,15 +4,15 @@ import { supabase } from './supabase'
 
 // Design tokens
 const C = {
-  dark:    '#111111',
+  dark:    '#2C1A00',
   accent:  '#C8963C',
-  gold:    '#C8963C',
-  text:    '#111111',
-  sub:     '#888888',
-  border:  '#E8E8E8',
-  bg:      '#ffffff',
+  gold:    '#FFD580',
+  text:    '#2C1A00',
+  sub:     '#8A7060',
+  border:  '#E8E2D8',
+  bg:      '#FAF7F2',
   card:    '#ffffff',
-  fill:    '#F6F6F6',
+  fill:    '#F5F0E8',
 }
 
 function NicknameModal({ user, onSave }) {
@@ -425,13 +425,13 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
       {open && (
         <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 20px 20px', background:C.bg }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom: (job.daily_life || job.interview_tips) ? 10 : 0 }}>
-            <div style={{ background:C.fill, borderRadius:10, padding:14 }}>
-              <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👍 장점</div>
-              {job.pros.map((p,i) => <div key={i} style={{ fontSize:13, color:C.text, fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {p}</div>)}
+            <div style={{ background:'#F3FAF3', borderRadius:10, padding:14 }}>
+              <div style={{ fontSize:11, color:'#3A7A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👍 장점</div>
+              {job.pros.map((p,i) => <div key={i} style={{ fontSize:13, color:'#2A5A2A', fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {p}</div>)}
             </div>
-            <div style={{ background:C.fill, borderRadius:10, padding:14 }}>
-              <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👎 단점</div>
-              {job.cons.map((c,i) => <div key={i} style={{ fontSize:13, color:C.text, fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {c}</div>)}
+            <div style={{ background:'#FAF3F3', borderRadius:10, padding:14 }}>
+              <div style={{ fontSize:11, color:'#8A3A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👎 단점</div>
+              {job.cons.map((c,i) => <div key={i} style={{ fontSize:13, color:'#6A2A2A', fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {c}</div>)}
             </div>
           </div>
           {job.daily_life && (
@@ -441,9 +441,9 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
             </div>
           )}
           {job.interview_tips && (
-            <div style={{ background:C.fill, borderRadius:10, padding:14 }}>
-              <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>💡 면접 꿀팁</div>
-              <div style={{ fontSize:13, color:C.text, fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.interview_tips}</div>
+            <div style={{ background:'#F0F4FF', borderRadius:10, padding:14 }}>
+              <div style={{ fontSize:11, color:'#3A4A8A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>💡 면접 꿀팁</div>
+              <div style={{ fontSize:13, color:'#2A3060', fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.interview_tips}</div>
             </div>
           )}
         </div>
@@ -516,7 +516,7 @@ export default function App() {
     <div style={{ minHeight:'100vh', background:C.bg }}>
 
       {/* 헤더 */}
-      <div style={{ borderBottom:`1px solid ${C.border}`, background:`rgba(255,255,255,0.95)`, backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+      <div style={{ borderBottom:`1px solid ${C.border}`, background:`rgba(250,247,242,0.95)`, backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div>
           <div style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:900, color:C.dark }}>🦘 호주잡</div>
           <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>호주 워홀러들의 직업 후기</div>
