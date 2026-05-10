@@ -86,6 +86,15 @@ const TYPES   = ["전체", "Casual", "Part-time", "Full-time"]
 const CLOUDINARY_CLOUD  = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
+function timeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000)
+  if (diff < 60) return '방금'
+  if (diff < 3600) return `${Math.floor(diff/60)}분 전`
+  if (diff < 86400) return `${Math.floor(diff/3600)}시간 전`
+  if (diff < 2592000) return `${Math.floor(diff/86400)}일 전`
+  return `${Math.floor(diff/2592000)}개월 전`
+}
+
 async function uploadPhoto(file) {
   const formData = new FormData()
   formData.append('file', file)
@@ -393,7 +402,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
     setPosting(true)
     const { error } = await supabase.from('comments')
       .insert({ job_id: job.id, user_id: user.id, content: commentText.trim() })
-    console.log('comment insert result:', { error, job_id: job.id, user_id: user.id })
+
     if (!error) {
       setCommentText('')
       await fetchComments()
@@ -499,6 +508,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
               <div key={c.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
                 <div>
                   <span style={{ fontSize:12, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginRight:6 }}>{c.nickname}</span>
+                  <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginRight:8 }}>{timeAgo(c.created_at)}</span>
                   <span style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.6 }}>{c.content}</span>
                 </div>
                 {user?.id === c.user_id && (
