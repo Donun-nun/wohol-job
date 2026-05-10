@@ -724,7 +724,7 @@ export default function App() {
             호주 워킹홀리데이<br />경험담
           </h1>
           <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
-            시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보.
+            시급, 장단점, 면접 꿀팁까지 — 직접 겪은 사람만 아는 정보.
           </p>
         </div>
 
