@@ -688,7 +688,7 @@ export default function App() {
       <div style={{ borderBottom:`1px solid ${C.border}`, background:`rgba(250,247,242,0.95)`, backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div>
           <div style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:22, fontWeight:400, color:C.dark }}>🦘 호주잡</div>
-          <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>호주 워홀러들의 직업 후기</div>
+          <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>호주 워홀러들의 경험담</div>
         </div>
         <div style={{ display:'flex', gap:8, alignItems:'center' }}>
           {user ? (
@@ -721,7 +721,7 @@ export default function App() {
         <div style={{ padding:'36px 0 24px' }}>
           <div style={{ fontSize:20, marginBottom:10, letterSpacing:'4px' }}>🇰🇷 → 🇦🇺</div>
           <h1 style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:'clamp(30px,7vw,48px)', fontWeight:400, color:C.dark, margin:'0 0 12px', lineHeight:1.2 }}>
-            호주 워킹홀리데이<br />직업 후기
+            호주 워킹홀리데이<br />경험담
           </h1>
           <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
             시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보.
