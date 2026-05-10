@@ -375,11 +375,16 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
   }, [open, job.id])
 
   const fetchComments = async () => {
-    const { data } = await supabase.from('comments')
-      .select('*, profiles(nickname)')
+    const { data: commentsData } = await supabase.from('comments')
+      .select('*')
       .eq('job_id', job.id)
       .order('created_at')
-    setComments(data || [])
+    if (!commentsData?.length) { setComments([]); return }
+    const userIds = [...new Set(commentsData.map(c => c.user_id).filter(Boolean))]
+    const { data: profilesData } = await supabase.from('profiles').select('id, nickname').in('id', userIds)
+    const nickMap = {}
+    if (profilesData) profilesData.forEach(p => { nickMap[p.id] = p.nickname })
+    setComments(commentsData.map(c => ({ ...c, nickname: nickMap[c.user_id] || '익명' })))
   }
 
   const postComment = async (e) => {
@@ -492,7 +497,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt }) {
             {comments.map(c => (
               <div key={c.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
                 <div>
-                  <span style={{ fontSize:12, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginRight:6 }}>{c.profiles?.nickname || '익명'}</span>
+                  <span style={{ fontSize:12, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginRight:6 }}>{c.nickname}</span>
                   <span style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.6 }}>{c.content}</span>
                 </div>
                 {user?.id === c.user_id && (
