@@ -374,6 +374,11 @@ function JobCard({ job, liked, onLike, user, onEdit }) {
               <span style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:'#2C1A00' }}>{job.title}</span>
               <span style={{ background:tc, color:tb, fontSize:11, padding:'2px 9px', borderRadius:20, fontFamily:'Noto Sans KR', fontWeight:700 }}>{job.tag}</span>
               {hasPhotos && <span style={{ fontSize:11, color:'#B8A070', fontFamily:'Noto Sans KR' }}>📷 {job.photos.length}</span>}
+            </div>
+            {job.company && (
+              <div style={{ fontSize:14, fontWeight:700, color:'#5A3E1B', fontFamily:'Noto Sans KR', marginBottom:4 }}>{job.company}</div>
+            )}
+            <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
               {isOwner && (
                 <button
                   onClick={e => { e.stopPropagation(); onEdit(job) }}
