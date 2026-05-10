@@ -124,8 +124,9 @@ function PhotoGallery({ photos }) {
       <div style={{ display:'flex', gap:8, overflowX:'auto', padding:'0 20px 14px', scrollbarWidth:'none' }}>
         {photos.map((p, i) => (
           <div key={i} onClick={e => { e.stopPropagation(); setActive(i) }}
-            style={{ flexShrink:0, width: photos.length===1 ? '100%' : 160, height:110, borderRadius:10, overflow:'hidden', cursor:'zoom-in', position:'relative', border:`1px solid ${C.border}` }}>
-            <img src={p.url} alt={p.caption} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+            style={{ flexShrink:0, width: photos.length===1 ? '100%' : 160, borderRadius:10, overflow:'hidden', cursor:'zoom-in', position:'relative', border:`1px solid ${C.border}` }}>
+            <img src={p.url} alt={p.caption} style={{ width:'100%', height: photos.length===1 ? 180 : 110, objectFit:'cover', display:'block' }} />
+            {p.caption && <div style={{ padding:'4px 8px', fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', background:C.card, lineHeight:1.4 }}>{p.caption}</div>}
           </div>
         ))}
       </div>
@@ -167,12 +168,21 @@ function PhotoUploader({ photos, setPhotos }) {
   return (
     <div>
       {photos.length > 0 && (
-        <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:10 }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:10 }}>
           {photos.map((p, i) => (
-            <div key={i} style={{ position:'relative', width:80, height:80 }}>
-              <img src={p.url} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:8, border:`1px solid ${C.border}` }} />
-              <button onClick={() => setPhotos(prev => prev.filter((_,idx) => idx !== i))}
-                style={{ position:'absolute', top:-6, right:-6, background:C.dark, color:C.gold, border:'none', borderRadius:'50%', width:20, height:20, cursor:'pointer', fontSize:11, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+            <div key={i} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+              <div style={{ position:'relative', flexShrink:0, width:72, height:72 }}>
+                <img src={p.url} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:8, border:`1px solid ${C.border}` }} />
+                <button onClick={() => setPhotos(prev => prev.filter((_,idx) => idx !== i))}
+                  style={{ position:'absolute', top:-6, right:-6, background:C.dark, color:C.gold, border:'none', borderRadius:'50%', width:20, height:20, cursor:'pointer', fontSize:11, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              </div>
+              <input
+                value={p.caption}
+                onChange={e => setPhotos(prev => prev.map((ph, idx) => idx === i ? { ...ph, caption: e.target.value } : ph))}
+                placeholder="사진 설명 (예: 점심시간, 작업 현장)"
+                maxLength={60}
+                style={{ flex:1, background:'#FAF7F2', border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 10px', fontSize:12, fontFamily:'Noto Sans KR', color:C.dark, outline:'none', alignSelf:'center' }}
+              />
             </div>
           ))}
         </div>
@@ -231,7 +241,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     const payload = {
       ...form,
       hourly: Number(form.hourly),
-      photos: photos.map(p => p.url).join(','),
+      photos: JSON.stringify(photos.map(p => ({ url: p.url, caption: p.caption || '' }))),
       tag: form.tag || null,
       ...(!isEdit && user ? { user_id: user.id } : {}),
     }

@@ -51,9 +51,14 @@ export function useJobs(user) {
         likes: counts[job.id] || 0,
         pros: (job.pros || '').split('\n').filter(Boolean),
         cons: (job.cons || '').split('\n').filter(Boolean),
-        photos: job.photos
-          ? job.photos.split(',').map(url => ({ url: url.trim(), caption: '' })).filter(p => p.url)
-          : [],
+        photos: (() => {
+          if (!job.photos) return []
+          const s = job.photos.trim()
+          if (s.startsWith('[')) {
+            try { return JSON.parse(s) } catch {}
+          }
+          return s.split(',').map(url => ({ url: url.trim(), caption: '' })).filter(p => p.url)
+        })(),
         tag: job.tag || inferTag(job.title, job.region),
         author: job.user_id ? (nicknameMap[job.user_id] || '알 수 없음') : (job.author || '익명'),
       }))
