@@ -504,7 +504,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   )
 }
 
-function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen, updateJob, incrementView }) {
+function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen, updateJob, incrementView, onAuthorClick }) {
   const [open, setOpen] = useState(!!defaultOpen)
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
@@ -639,7 +639,10 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
             )}
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-            <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.8 }}>{job.author || '익명'}</div>
+            <div onClick={e => { e.stopPropagation(); onAuthorClick(job.author || '익명') }}
+              style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.8, cursor:'pointer', textDecoration:'underline', textDecorationStyle:'dotted', textUnderlineOffset:2 }}>
+              {job.author || '익명'}
+            </div>
             <button onClick={e => { e.stopPropagation(); onLike(job.id) }}
               style={{ display:'flex', alignItems:'center', gap:4, background: liked ? 'rgba(200,150,60,0.1)' : 'transparent', border:`1px solid ${liked ? C.accent : C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:13, color: liked ? C.accent : C.sub, transition:'all 0.15s' }}>
               <span>{liked ? '❤️' : '🤍'}</span>
@@ -784,6 +787,7 @@ export default function App() {
   const [sort, setSort]           = useState("좋아요순")
   const [photoOnly, setPhotoOnly] = useState(false)
   const [myPostsOnly, setMyPostsOnly] = useState(false)
+  const [authorFilter, setAuthorFilter] = useState('')
   const [selectedTags, setSelectedTags] = useState(params.get('tags') ? params.get('tags').split(',') : [])
   const [search, setSearch] = useState("")
   const [minHourly, setMinHourly] = useState(0)
@@ -836,6 +840,7 @@ export default function App() {
     .filter(j => type === "전체"    || j.type === type)
     .filter(j => !photoOnly         || j.photos?.length > 0)
     .filter(j => !myPostsOnly       || j.user_id === user?.id)
+    .filter(j => !authorFilter      || (j.author || '익명') === authorFilter)
     .filter(j => selectedTags.length === 0 || j.tags?.some(t => selectedTags.includes(t)))
     .filter(j => j.hourly >= minHourly)
     .filter(j => !secondVisaOnly    || j.second_visa === true)
@@ -843,8 +848,17 @@ export default function App() {
     .sort((a,b) =>
       sort === "좋아요순" ? b.likes - a.likes :
       sort === "별점순"   ? b.stars - a.stars :
-      sort === "시급순"   ? b.hourly - a.hourly : b.id - a.id
+      sort === "시급순"   ? b.hourly - a.hourly :
+      sort === "조회순"   ? (b.views||0) - (a.views||0) : b.id - a.id
     )
+
+  const stats = !loading && jobs.length > 0 ? (() => {
+    const avgHourly = Math.round(jobs.reduce((s, j) => s + j.hourly, 0) / jobs.length)
+    const tagCount = {}
+    jobs.forEach(j => j.tags?.forEach(t => { tagCount[t] = (tagCount[t] || 0) + 1 }))
+    const topTag = Object.entries(tagCount).sort((a,b) => b[1]-a[1])[0]?.[0] || ''
+    return { total: jobs.length, avgHourly, topTag }
+  })() : null
 
   const chip = (active) => ({
     padding:'5px 12px', borderRadius:20, cursor:'pointer',
@@ -914,6 +928,22 @@ export default function App() {
           </p>
         </div>
 
+        {/* 통계 배너 */}
+        {stats && (
+          <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
+            {[
+              { label:'총 후기', value:`${stats.total}개` },
+              { label:'평균 시급', value:`$${stats.avgHourly}/hr` },
+              { label:'인기 직종', value:stats.topTag },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ flex:1, minWidth:90, background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'10px 14px', textAlign:'center' }}>
+                <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:4 }}>{label}</div>
+                <div style={{ fontSize:16, fontWeight:700, color:C.dark, fontFamily:"'Jua', sans-serif" }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* 검색 */}
         <div style={{ marginBottom:12, position:'relative' }}>
           <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:15, pointerEvents:'none' }}>🔍</span>
@@ -965,21 +995,43 @@ export default function App() {
             <button onClick={() => setPhotoOnly(p=>!p)} style={{ ...chip(photoOnly), borderColor: photoOnly ? C.accent : C.border, background: photoOnly ? 'rgba(200,150,60,0.12)' : 'transparent', color: photoOnly ? C.accent : C.sub }}>📷 사진만</button>
             <div style={{ marginLeft:'auto' }}>
               <select value={sort} onChange={e => setSort(e.target.value)} style={selectStyle}>
-                {["좋아요순","별점순","시급순","최신순"].map(s => <option key={s}>{s}</option>)}
+                {["좋아요순","별점순","시급순","조회순","최신순"].map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
           </div>
         </div>
 
+        {authorFilter && (
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, background:'rgba(200,150,60,0.08)', border:`1px solid ${C.accent}`, borderRadius:10, padding:'8px 14px' }}>
+            <span style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.dark }}>
+              <b>{authorFilter}</b>님의 후기만 보는 중
+            </span>
+            <button onClick={() => setAuthorFilter('')} style={{ marginLeft:'auto', background:'none', border:'none', color:C.sub, cursor:'pointer', fontSize:13 }}>✕ 해제</button>
+          </div>
+        )}
         <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:16, opacity:0.7 }}>
           {loading ? '불러오는 중…' : `${filtered.length}개 결과`}
         </div>
 
         {/* 카드 목록 */}
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          {filtered.map(job => (
-            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} defaultOpen={targetId === String(job.id)} updateJob={updateJob} incrementView={incrementView} />
-          ))}
+          {loading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:'20px', overflow:'hidden' }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ height:18, width:'55%', background:'#EDE8E0', borderRadius:6, marginBottom:8, animation:'pulse 1.4s ease-in-out infinite' }} />
+                      <div style={{ height:13, width:'35%', background:'#EDE8E0', borderRadius:6, animation:'pulse 1.4s ease-in-out infinite' }} />
+                    </div>
+                    <div style={{ width:56, height:48, background:'#EDE8E0', borderRadius:10, animation:'pulse 1.4s ease-in-out infinite' }} />
+                  </div>
+                  <div style={{ height:40, background:'#EDE8E0', borderRadius:8, animation:'pulse 1.4s ease-in-out infinite' }} />
+                </div>
+              ))
+            : filtered.map(job => (
+                <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} defaultOpen={targetId === String(job.id)} updateJob={updateJob} incrementView={incrementView} onAuthorClick={setAuthorFilter} />
+              ))
+          }
         </div>
 
         {!loading && filtered.length === 0 && (
