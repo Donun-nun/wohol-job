@@ -263,7 +263,7 @@ function PhotoUploader({ photos, setPhotos }) {
   )
 }
 
-const TAGS = ['광산','카페','농장','주방','리테일','건설','서비스','물류','기타']
+const TAGS = ['광산','카페','농장','주방','건설','서비스','물류','기타']
 const ENG_LABELS = { 하:'下', 중:'中', 상:'上' }
 const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tags:[], second_visa:null, english_level:'' }
 
