@@ -132,6 +132,17 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
     setEditing(false)
   }
 
+  useEffect(() => {
+    if (active === null || photos.length <= 1) return
+    const onKey = (e) => {
+      if (e.key === 'ArrowLeft')  navigate(-1)
+      if (e.key === 'ArrowRight') navigate(1)
+      if (e.key === 'Escape')     setActive(null)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [active, photos.length])
+
   if (!photos?.length) return null
   return (
     <>
@@ -148,7 +159,20 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
         <div onClick={e => { e.stopPropagation(); setActive(null) }}
           style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ position:'relative', maxWidth:600, width:'100%' }}>
-            <img src={photos[active].url} style={{ width:'100%', borderRadius:12, maxHeight:'60vh', objectFit:'contain' }} />
+            <div style={{ position:'relative' }}>
+              <img src={photos[active].url} style={{ width:'100%', borderRadius:12, maxHeight:'60vh', objectFit:'contain', display:'block' }} />
+              {photos.length > 1 && (<>
+                <button onClick={e => { e.stopPropagation(); navigate(-1) }}
+                  style={{ position:'absolute', left:0, top:'50%', transform:'translateY(-50%)', background:'rgba(0,0,0,0.25)', border:'none', color:'rgba(255,255,255,0.75)', borderRadius:'0 8px 8px 0', width:40, height:64, cursor:'pointer', fontSize:22, display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background='rgba(0,0,0,0.5)'}
+                  onMouseLeave={e => e.currentTarget.style.background='rgba(0,0,0,0.25)'}>‹</button>
+                <button onClick={e => { e.stopPropagation(); navigate(1) }}
+                  style={{ position:'absolute', right:0, top:'50%', transform:'translateY(-50%)', background:'rgba(0,0,0,0.25)', border:'none', color:'rgba(255,255,255,0.75)', borderRadius:'8px 0 0 8px', width:40, height:64, cursor:'pointer', fontSize:22, display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.15s' }}
+                  onMouseEnter={e => e.currentTarget.style.background='rgba(0,0,0,0.5)'}
+                  onMouseLeave={e => e.currentTarget.style.background='rgba(0,0,0,0.25)'}>›</button>
+                <div style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', background:'rgba(0,0,0,0.4)', borderRadius:10, padding:'2px 10px', color:'rgba(255,255,255,0.7)', fontSize:11, fontFamily:'Noto Sans KR' }}>{active+1} / {photos.length}</div>
+              </>)}
+            </div>
 
             {/* 캡션 영역 */}
             <div style={{ marginTop:12, minHeight:36 }}>
@@ -183,15 +207,6 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
               )}
             </div>
 
-            {photos.length > 1 && (
-              <div style={{ display:'flex', justifyContent:'center', gap:12, marginTop:14 }}>
-                <button onClick={e => { e.stopPropagation(); navigate(-1) }}
-                  style={{ background:'rgba(255,255,255,0.12)', border:'none', color:'#fff', borderRadius:8, padding:'8px 18px', cursor:'pointer', fontSize:16 }}>‹</button>
-                <span style={{ color:'#999', fontFamily:'Noto Sans KR', fontSize:13, alignSelf:'center' }}>{active+1} / {photos.length}</span>
-                <button onClick={e => { e.stopPropagation(); navigate(1) }}
-                  style={{ background:'rgba(255,255,255,0.12)', border:'none', color:'#fff', borderRadius:8, padding:'8px 18px', cursor:'pointer', fontSize:16 }}>›</button>
-              </div>
-            )}
             <button onClick={e => { e.stopPropagation(); setActive(null) }}
               style={{ position:'absolute', top:-14, right:-14, background:C.dark, color:C.gold, border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
           </div>
