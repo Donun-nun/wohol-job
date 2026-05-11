@@ -33,8 +33,9 @@ export function useCampReviews(user) {
 
   const addReview = async (formData) => {
     const { error } = await supabase.from('camp_reviews').insert({ ...formData, user_id: user?.id || null })
-    if (!error) await fetchReviews()
-    return !error
+    if (error) { console.error('camp_reviews insert error:', error); return error.message }
+    await fetchReviews()
+    return null
   }
 
   const deleteReview = async (id) => {

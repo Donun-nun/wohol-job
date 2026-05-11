@@ -1027,10 +1027,10 @@ function CampReviewModal({ onClose, addReview, user }) {
     setSubmitting(true)
     const finalPosition = form.position === '기타' ? (form.position_custom || '기타') : form.position
     const { position_custom, ...rest } = form
-    const ok = await addReview({ ...rest, position: finalPosition })
+    const errMsg = await addReview({ ...rest, position: finalPosition })
     setSubmitting(false)
-    if (ok) setDone(true)
-    else alert('저장 실패. 다시 시도해주세요.')
+    if (!errMsg) setDone(true)
+    else alert(`저장 실패: ${errMsg}`)
   }
 
   const inputStyle = { width:'100%', background:C.fill, border:`1.5px solid ${C.border}`, borderRadius:8, padding:'10px 12px', color:C.dark, fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box' }
