@@ -629,10 +629,18 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
 
   return (
     <div onClick={() => setOpen(o => !o)}
-      style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}
+      style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s', boxShadow:'0 1px 4px rgba(0,0,0,0.06)', position:'relative' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.1)' }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)' }}
     >
+      {/* F5: Bookmark button — 우상단 고정 */}
+      <button onClick={e => { e.stopPropagation(); onBookmark(job.id) }}
+        title={isBookmarked ? '북마크 해제' : '북마크'}
+        style={{ position:'absolute', top:10, right:10, zIndex:10, background: isBookmarked ? C.accent : 'rgba(0,0,0,0.18)', border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.18s', backdropFilter:'blur(4px)' }}
+        onMouseEnter={e => e.currentTarget.style.background = isBookmarked ? '#B07830' : 'rgba(0,0,0,0.35)'}
+        onMouseLeave={e => e.currentTarget.style.background = isBookmarked ? C.accent : 'rgba(0,0,0,0.18)'}>
+        🔖
+      </button>
       {hasPhotos && <div style={{ paddingTop:14 }}><PhotoGallery photos={job.photos} isOwner={isOwner} onCaptionSave={handleCaptionSave} /></div>}
 
       <div style={{ padding:'16px 20px' }}>
@@ -682,12 +690,6 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
               style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.8, cursor:'pointer', textDecoration:'underline', textDecorationStyle:'dotted', textUnderlineOffset:2 }}>
               {job.author || '익명'}
             </div>
-            {/* F5: Bookmark button */}
-            <button onClick={e => { e.stopPropagation(); onBookmark(job.id) }}
-              title={isBookmarked ? '북마크 해제' : '북마크'}
-              style={{ display:'flex', alignItems:'center', background: isBookmarked ? 'rgba(200,150,60,0.12)' : 'transparent', border:`1px solid ${isBookmarked ? C.accent : C.border}`, borderRadius:20, padding:'4px 8px', cursor:'pointer', fontSize:14, color: isBookmarked ? C.accent : C.sub, transition:'all 0.15s' }}>
-              {isBookmarked ? '🔖' : '🏷️'}
-            </button>
             <button onClick={e => { e.stopPropagation(); onLike(job.id) }}
               style={{ display:'flex', alignItems:'center', gap:4, background: liked ? 'rgba(200,150,60,0.1)' : 'transparent', border:`1px solid ${liked ? C.accent : C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:13, color: liked ? C.accent : C.sub, transition:'all 0.15s' }}>
               <span>{liked ? '❤️' : '🤍'}</span>
@@ -869,21 +871,6 @@ export default function App() {
 
   // F8: View mode (list / map)
   const [viewMode, setViewMode] = useState('list')
-
-  // F10: Filter collapse on scroll
-  const [filtersCollapsed, setFiltersCollapsed] = useState(false)
-  const lastScrollY = useRef(0)
-
-  useEffect(() => {
-    const onScroll = () => {
-      const y = window.scrollY
-      if (y > 80 && y > lastScrollY.current + 12) setFiltersCollapsed(true)
-      else if (y < lastScrollY.current - 12) setFiltersCollapsed(false)
-      lastScrollY.current = y
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   // Persist dark mode preference
   useEffect(() => {
@@ -1087,9 +1074,8 @@ export default function App() {
             <button onClick={() => setViewMode('map')} style={chip(viewMode === 'map')}>🗺️ 지도</button>
           </div>
 
-          {/* F10: Collapsible filters */}
-          <div style={{ overflow:'hidden', maxHeight: filtersCollapsed ? 0 : 600, opacity: filtersCollapsed ? 0 : 1, transition:'max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease', pointerEvents: filtersCollapsed ? 'none' : 'auto' }}>
-            <div style={{ marginBottom:20, display:'flex', flexDirection:'column', gap:8 }}>
+          {/* 필터 */}
+          <div style={{ marginBottom:20, display:'flex', flexDirection:'column', gap:8 }}>
               <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
                 {REGIONS.map(r => <button key={r} onClick={() => setRegion(r)} style={chip(region===r)}>{r}</button>)}
               </div>
@@ -1134,16 +1120,7 @@ export default function App() {
                   </select>
                 </div>
               </div>
-            </div>
           </div>
-
-          {/* F10: Expand button when filters are collapsed */}
-          {filtersCollapsed && (
-            <button onClick={() => { setFiltersCollapsed(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
-              style={{ width:'100%', marginBottom:10, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, transition:'all 0.15s' }}>
-              필터 펼치기 ∨
-            </button>
-          )}
 
           {authorFilter && (
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, background:'rgba(200,150,60,0.08)', border:`1px solid ${C.accent}`, borderRadius:10, padding:'8px 14px' }}>
