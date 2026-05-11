@@ -1010,7 +1010,7 @@ const CAMP_POSITIONS = ['Kitchen Hand','Housekeeping','Utility','Bar','Retail','
 // ─── CampReviewModal ──────────────────────────────────────────────────────────
 function CampReviewModal({ onClose, addReview, user }) {
   const C = useC()
-  const EMPTY = { camp_name:'', catering_company:'', position:'Kitchen Hand', position_custom:'', review:'', pros:'', cons:'', daily_life:'', swing_satisfaction:null }
+  const EMPTY = { camp_name:'', catering_company:'', position:'Kitchen Hand', position_custom:'', review:'', pros:'', cons:'', daily_life:'', food_satisfaction:null, accommodation_satisfaction:null, work_satisfaction:null, swing_satisfaction:null }
   const [form, setForm] = useState(EMPTY)
   const [campInput, setCampInput] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -1124,29 +1124,36 @@ function CampReviewModal({ onClose, addReview, user }) {
           <textarea style={{ ...inputStyle, height:100, resize:'vertical' }} placeholder="예: 5:30 기상 → 6시 브렉퍼스트 서비스 → 8시 룸 서비스 → ..." value={form.daily_life} onChange={e => set('daily_life', e.target.value)} />
         </div>
 
-        {/* 스윙 만족도 1-10 */}
-        <div style={{ marginBottom:20 }}>
-          <label style={labelStyle}>스윙 만족도 (1-10점) {form.swing_satisfaction ? `— ${form.swing_satisfaction}점` : ''}</label>
-          <div style={{ display:'flex', gap:4 }}>
-            {[1,2,3,4,5,6,7,8,9,10].map(n => {
-              const color = n <= 3 ? '#E53935' : n <= 6 ? '#FF9800' : '#43A047'
-              const active = form.swing_satisfaction === n
-              return (
-                <button key={n} onClick={() => set('swing_satisfaction', active ? null : n)}
-                  style={{ flex:1, padding:'8px 0', borderRadius:8, cursor:'pointer', fontSize:13, fontWeight:700, fontFamily:'Noto Sans KR', border:`1.5px solid`, transition:'all 0.15s',
-                    background: active ? color : 'transparent',
-                    borderColor: active ? color : C.border,
-                    color: active ? '#fff' : C.sub }}>
-                  {n}
-                </button>
-              )
-            })}
+        {/* 만족도 4개 */}
+        {[
+          { key:'food_satisfaction', label:'🍽️ 음식 만족도' },
+          { key:'accommodation_satisfaction', label:'🛏️ 숙소 만족도' },
+          { key:'work_satisfaction', label:'💼 일 만족도' },
+          { key:'swing_satisfaction', label:'⛏️ 스윙 종합 만족도' },
+        ].map(({ key, label }) => (
+          <div key={key} style={{ marginBottom:14 }}>
+            <label style={labelStyle}>{label} (1-10점) {form[key] ? `— ${form[key]}점` : ''}</label>
+            <div style={{ display:'flex', gap:4 }}>
+              {[1,2,3,4,5,6,7,8,9,10].map(n => {
+                const color = n <= 3 ? '#E53935' : n <= 6 ? '#FF9800' : '#43A047'
+                const active = form[key] === n
+                return (
+                  <button key={n} onClick={() => set(key, active ? null : n)}
+                    style={{ flex:1, padding:'7px 0', borderRadius:8, cursor:'pointer', fontSize:12, fontWeight:700, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s',
+                      background: active ? color : 'transparent',
+                      borderColor: active ? color : C.border,
+                      color: active ? '#fff' : C.sub }}>
+                    {n}
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ display:'flex', justifyContent:'space-between', marginTop:3 }}>
+              <span style={{ fontSize:10, color:'#E53935', fontFamily:'Noto Sans KR' }}>별로</span>
+              <span style={{ fontSize:10, color:'#43A047', fontFamily:'Noto Sans KR' }}>최고</span>
+            </div>
           </div>
-          <div style={{ display:'flex', justifyContent:'space-between', marginTop:4 }}>
-            <span style={{ fontSize:10, color:'#E53935', fontFamily:'Noto Sans KR' }}>힘들었다</span>
-            <span style={{ fontSize:10, color:'#43A047', fontFamily:'Noto Sans KR' }}>최고였다</span>
-          </div>
-        </div>
+        ))}
 
         <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting?'default':'pointer', opacity: submitting?0.7:1 }}>
           {submitting ? '저장 중...' : '후기 등록하기'}
@@ -1180,14 +1187,22 @@ function CampReviewCard({ review, user, onDelete }) {
             <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
               <Stars n={review.stars} />
               {review.hourly && <span style={{ fontFamily:'monospace', fontWeight:800, fontSize:13, color:C.dark }}>${review.hourly}/hr</span>}
-              {review.swing_satisfaction != null && (
-                <span style={{ fontSize:11, fontFamily:'Noto Sans KR', fontWeight:700, padding:'1px 8px', borderRadius:10, border:'1px solid',
-                  background: review.swing_satisfaction <= 3 ? '#FFEBEE' : review.swing_satisfaction <= 6 ? '#FFF8E1' : '#E8F5E9',
-                  color: review.swing_satisfaction <= 3 ? '#C62828' : review.swing_satisfaction <= 6 ? '#FF8F00' : '#2E7D32',
-                  borderColor: review.swing_satisfaction <= 3 ? '#EF9A9A' : review.swing_satisfaction <= 6 ? '#FFD54F' : '#A5D6A7' }}>
-                  스윙 {review.swing_satisfaction}/10
-                </span>
-              )}
+              {[
+                { key:'food_satisfaction', label:'🍽️' },
+                { key:'accommodation_satisfaction', label:'🛏️' },
+                { key:'work_satisfaction', label:'💼' },
+                { key:'swing_satisfaction', label:'⛏️' },
+              ].filter(({ key }) => review[key] != null).map(({ key, label }) => {
+                const n = review[key]
+                return (
+                  <span key={key} style={{ fontSize:11, fontFamily:'Noto Sans KR', fontWeight:700, padding:'1px 7px', borderRadius:10, border:'1px solid',
+                    background: n <= 3 ? '#FFEBEE' : n <= 6 ? '#FFF8E1' : '#E8F5E9',
+                    color: n <= 3 ? '#C62828' : n <= 6 ? '#FF8F00' : '#2E7D32',
+                    borderColor: n <= 3 ? '#EF9A9A' : n <= 6 ? '#FFD54F' : '#A5D6A7' }}>
+                    {label} {n}
+                  </span>
+                )
+              })}
               <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginLeft:'auto' }}>{review.nickname} · {timeAgo(review.created_at)}</span>
               {user?.id === review.user_id && (
                 <button onClick={e => { e.stopPropagation(); onDelete(review.id) }}
