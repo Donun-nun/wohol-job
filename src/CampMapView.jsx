@@ -3,7 +3,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 export const CAMP_COORDS = {
-  'Punurrunha':     [-23.37, 119.73],
+  'Punurunha':     [-23.37, 119.73],
   'Hope Downs 1':   [-23.14, 119.38],
   'Hope Downs 4':   [-22.87, 119.32],
   'Newman Camp':    [-23.36, 119.74],

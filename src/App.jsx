@@ -1003,7 +1003,7 @@ function ReviewTypeModal({ onClose, onSelect }) {
 }
 
 // ─── FIFO 상수 ────────────────────────────────────────────────────────────────
-const KNOWN_CAMPS = ['Punurrunha','Hope Downs 1','Hope Downs 4','Newman Camp','Yandi','Mining Area C','Cloudbreak','Christmas Creek','Karara','Sino Iron','Yandicoogina','Tom Price','Paraburdoo','Pannawonica','South Flank','Jimblebar','Wheelarra']
+const KNOWN_CAMPS = ['Punurunha','Hope Downs 1','Hope Downs 4','Newman Camp','Yandi','Mining Area C','Cloudbreak','Christmas Creek','Karara','Sino Iron','Yandicoogina','Tom Price','Paraburdoo','Pannawonica','South Flank','Jimblebar','Wheelarra']
 const CATERING_COS = ['Sodexo','Compass Group','Downer','ISS','Broadspectrum','기타']
 const CAMP_POSITIONS = ['Kitchen Hand','Housekeeping','Utility','Bar','Retail','기타']
 
@@ -1058,7 +1058,7 @@ function CampReviewModal({ onClose, addReview, user }) {
         {/* 캠프 이름 */}
         <div style={{ marginBottom:12, position:'relative' }}>
           <label style={labelStyle}>캠프 이름 *</label>
-          <input style={inputStyle} placeholder="예: Punurrunha, Hope Downs 1"
+          <input style={inputStyle} placeholder="예: Punurunha, Hope Downs 1"
             value={campInput}
             onChange={e => { setCampInput(e.target.value); set('camp_name', e.target.value); setShowSuggestions(true) }}
             onFocus={() => setShowSuggestions(true)}
@@ -1327,7 +1327,7 @@ function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, deleteRevie
           <div style={{ fontSize:40, marginBottom:16 }}>⛏️</div>
           <div style={{ fontFamily:'Noto Sans KR', fontSize:15, fontWeight:700, color:C.dark, marginBottom:8 }}>아직 캠프 후기가 없어요</div>
           <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, lineHeight:1.7, marginBottom:20 }}>
-            Punurrunha, Hope Downs 1 등<br />캠프 경험 있으신 분 첫 후기 부탁드려요!
+            Punurunha, Hope Downs 1 등<br />캠프 경험 있으신 분 첫 후기 부탁드려요!
           </div>
           <button onClick={() => user ? setShowModal(true) : onLoginPrompt()}
             style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'10px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
