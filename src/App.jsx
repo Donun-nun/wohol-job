@@ -591,8 +591,8 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
   return (
     <div onClick={() => setOpen(o => !o)}
       style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s, transform 0.18s', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}
-      onMouseEnter={e => { e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.1)'; e.currentTarget.style.transform='translateY(-1px)' }}
-      onMouseLeave={e => { e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'; e.currentTarget.style.transform='none' }}
+      onMouseEnter={e => { e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.1)' }}
+      onMouseLeave={e => { e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)' }}
     >
       {hasPhotos && <div style={{ paddingTop:14 }}><PhotoGallery photos={job.photos} isOwner={isOwner} onCaptionSave={handleCaptionSave} /></div>}
 
