@@ -848,6 +848,7 @@ export default function App() {
         <div style={{ padding:'36px 0 24px' }}>
           <div style={{ fontSize:20, marginBottom:10, letterSpacing:'4px' }}>🇰🇷 → 🇦🇺</div>
           <h1 style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:'clamp(30px,7vw,48px)', fontWeight:400, color:C.dark, margin:'0 0 12px', lineHeight:1.2 }}>
+            <span style={{ fontSize:'clamp(14px,3.5vw,20px)', color:C.sub, display:'block', marginBottom:6 }}>한국인끼리만 공유하는</span>
             호주 워킹홀리데이<br />경험담
           </h1>
           <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
