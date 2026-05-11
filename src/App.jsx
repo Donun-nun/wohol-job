@@ -313,11 +313,12 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
       return
     }
     setSubmitting(true)
+    const { tags, ...formRest } = form
     const payload = {
-      ...form,
+      ...formRest,
       hourly: Number(form.hourly),
       photos: JSON.stringify(photos.map(p => ({ url: p.url, caption: p.caption || '' }))),
-      tag: form.tags.length ? JSON.stringify(form.tags) : null,
+      tag: tags.length ? JSON.stringify(tags) : null,
       ...(!isEdit && user ? { user_id: user.id } : {}),
     }
     const success = isEdit
