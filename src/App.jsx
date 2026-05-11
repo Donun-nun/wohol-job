@@ -1005,13 +1005,12 @@ function ReviewTypeModal({ onClose, onSelect }) {
 // ─── FIFO 상수 ────────────────────────────────────────────────────────────────
 const KNOWN_CAMPS = ['Punurrunha','Hope Downs 1','Hope Downs 4','Newman Camp','Yandi','Mining Area C','Cloudbreak','Christmas Creek','Karara','Sino Iron','Yandicoogina','Tom Price','Paraburdoo','Pannawonica','South Flank','Jimblebar','Wheelarra']
 const CATERING_COS = ['Sodexo','Compass Group','Downer','ISS','Broadspectrum','기타']
-const CAMP_POSITIONS = ['Service Attendant','Food Service Attendant','Bar Attendant','Room Attendant','Accommodation Attendant','Kitchen Hand','Cook','Cleaner','기타']
-const SWINGS = ['2/1','8/6','14/7','20/10','4/1','DIDO','기타']
+const CAMP_POSITIONS = ['Kitchen Hand','Housekeeping','Utility','Bar','Retail','기타']
 
 // ─── CampReviewModal ──────────────────────────────────────────────────────────
 function CampReviewModal({ onClose, addReview, user }) {
   const C = useC()
-  const EMPTY = { camp_name:'', catering_company:'', position:'Service Attendant', swing:'2/1', hourly:'', review:'', pros:'', cons:'', daily_life:'', stars:4, swing_satisfaction:null }
+  const EMPTY = { camp_name:'', catering_company:'', position:'Kitchen Hand', position_custom:'', review:'', pros:'', cons:'', daily_life:'', swing_satisfaction:null }
   const [form, setForm] = useState(EMPTY)
   const [campInput, setCampInput] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -1026,7 +1025,9 @@ function CampReviewModal({ onClose, addReview, user }) {
   const handleSubmit = async () => {
     if (!form.camp_name || !form.review) { alert('캠프 이름과 한줄평은 필수예요!'); return }
     setSubmitting(true)
-    const ok = await addReview({ ...form, hourly: form.hourly ? Number(form.hourly) : null })
+    const finalPosition = form.position === '기타' ? (form.position_custom || '기타') : form.position
+    const { position_custom, ...rest } = form
+    const ok = await addReview({ ...rest, position: finalPosition })
     setSubmitting(false)
     if (ok) setDone(true)
     else alert('저장 실패. 다시 시도해주세요.')
@@ -1092,7 +1093,7 @@ function CampReviewModal({ onClose, addReview, user }) {
         {/* 포지션 */}
         <div style={{ marginBottom:12 }}>
           <label style={labelStyle}>포지션</label>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom: form.position==='기타' ? 8 : 0 }}>
             {CAMP_POSITIONS.map(p => (
               <button key={p} type="button" onClick={() => set('position', p)}
                 style={{ padding:'5px 12px', borderRadius:20, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: form.position===p ? C.dark : 'transparent', borderColor: form.position===p ? C.dark : C.border, color: form.position===p ? C.gold : C.sub }}>
@@ -1100,25 +1101,9 @@ function CampReviewModal({ onClose, addReview, user }) {
               </button>
             ))}
           </div>
-        </div>
-
-        {/* 스윙 + 시급 */}
-        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-          <div>
-            <label style={labelStyle}>스윙 패턴</label>
-            <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>
-              {SWINGS.map(s => (
-                <button key={s} type="button" onClick={() => set('swing', s)}
-                  style={{ padding:'4px 10px', borderRadius:16, cursor:'pointer', fontSize:11, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: form.swing===s ? C.dark : 'transparent', borderColor: form.swing===s ? C.dark : C.border, color: form.swing===s ? C.gold : C.sub }}>
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label style={labelStyle}>시급 (AUD)</label>
-            <input style={inputStyle} type="number" placeholder="예: 32" value={form.hourly} onChange={e => set('hourly', e.target.value)} />
-          </div>
+          {form.position === '기타' && (
+            <input style={{ ...inputStyle, marginTop:8 }} placeholder="포지션 직접 입력" value={form.position_custom} onChange={e => set('position_custom', e.target.value)} />
+          )}
         </div>
 
         {/* 한줄평 */}
@@ -1137,16 +1122,6 @@ function CampReviewModal({ onClose, addReview, user }) {
         <div style={{ marginBottom:12 }}>
           <label style={labelStyle}>하루일과</label>
           <textarea style={{ ...inputStyle, height:100, resize:'vertical' }} placeholder="예: 5:30 기상 → 6시 브렉퍼스트 서비스 → 8시 룸 서비스 → ..." value={form.daily_life} onChange={e => set('daily_life', e.target.value)} />
-        </div>
-
-        {/* 별점 */}
-        <div style={{ marginBottom:12 }}>
-          <label style={labelStyle}>추천 점수</label>
-          <div style={{ display:'flex', gap:8 }}>
-            {[1,2,3,4,5].map(n => (
-              <button key={n} onClick={() => set('stars', n)} style={{ background: n<=form.stars?'rgba(245,166,35,0.12)':'transparent', border:`1.5px solid ${n<=form.stars?'#F5A623':C.border}`, borderRadius:8, padding:'8px 14px', cursor:'pointer', color: n<=form.stars?'#F5A623':C.border, fontSize:18 }}>★</button>
-            ))}
-          </div>
         </div>
 
         {/* 스윙 만족도 1-10 */}
