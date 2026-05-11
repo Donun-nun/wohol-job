@@ -163,7 +163,14 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
         <div onClick={e => { e.stopPropagation(); setActive(null) }}
           style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ position:'relative', maxWidth:600, width:'100%' }}>
-            <div style={{ position:'relative', height:'60vh', background:'rgba(0,0,0,0.2)', borderRadius:12, overflow:'hidden' }}>
+            <div
+              style={{ position:'relative', height:'60vh', background:'rgba(0,0,0,0.2)', borderRadius:12, overflow:'hidden' }}
+              onTouchStart={e => { if (photos.length > 1) e.currentTarget._tx = e.touches[0].clientX }}
+              onTouchEnd={e => {
+                const dx = e.changedTouches[0].clientX - (e.currentTarget._tx ?? 0)
+                if (Math.abs(dx) > 50) navigate(dx < 0 ? 1 : -1)
+              }}
+            >
               <img src={photos[active].url} style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }} />
               {photos.length > 1 && (<>
                 <button onClick={e => { e.stopPropagation(); navigate(-1) }}
@@ -756,6 +763,7 @@ export default function App() {
   const [sort, setSort]           = useState("좋아요순")
   const [photoOnly, setPhotoOnly] = useState(false)
   const [selectedTags, setSelectedTags] = useState([])
+  const [search, setSearch] = useState("")
   const [minHourly, setMinHourly] = useState(0)
   const [secondVisaOnly, setSecondVisaOnly] = useState(false)
   const [engLevel, setEngLevel]   = useState("")
@@ -787,7 +795,9 @@ export default function App() {
   const signIn  = () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
   const signOut = () => supabase.auth.signOut()
 
+  const q = search.trim().toLowerCase()
   const filtered = jobs
+    .filter(j => !q || j.title.toLowerCase().includes(q) || (j.company || '').toLowerCase().includes(q))
     .filter(j => region === "전체"  || j.region.includes(region))
     .filter(j => type === "전체"    || j.type === type)
     .filter(j => !photoOnly         || j.photos?.length > 0)
@@ -862,6 +872,20 @@ export default function App() {
           <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
             시급부터 장단점, 면접 꿀팁까지 — 직접 겪은 사람만 아는 정보.
           </p>
+        </div>
+
+        {/* 검색 */}
+        <div style={{ marginBottom:12, position:'relative' }}>
+          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:15, pointerEvents:'none' }}>🔍</span>
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="직업명, 회사명으로 검색..."
+            style={{ width:'100%', background:C.card, border:`1.5px solid ${search ? C.accent : C.border}`, borderRadius:10, padding:'10px 14px 10px 36px', fontFamily:'Noto Sans KR', fontSize:14, color:C.dark, outline:'none', boxSizing:'border-box', transition:'border-color 0.15s' }}
+          />
+          {search && (
+            <button onClick={() => setSearch('')} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:14, color:C.sub }}>✕</button>
+          )}
         </div>
 
         {/* 필터 */}
