@@ -1010,7 +1010,7 @@ const CAMP_POSITIONS = ['Kitchen Hand','Housekeeping','Utility','Bar','Retail','
 // ─── CampReviewModal ──────────────────────────────────────────────────────────
 function CampReviewModal({ onClose, addReview, user }) {
   const C = useC()
-  const EMPTY = { camp_name:'', catering_company:'', position:'Kitchen Hand', position_custom:'', review:'', pros:'', cons:'', daily_life:'', food_satisfaction:null, accommodation_satisfaction:null, work_satisfaction:null, swing_satisfaction:null }
+  const EMPTY = { camp_name:'', catering_company:'', positions:[], position_custom:'', review:'', pros:'', cons:'', daily_life:'', food_satisfaction:null, accommodation_satisfaction:null, work_satisfaction:null, swing_satisfaction:null }
   const [form, setForm] = useState(EMPTY)
   const [campInput, setCampInput] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -1025,9 +1025,9 @@ function CampReviewModal({ onClose, addReview, user }) {
   const handleSubmit = async () => {
     if (!form.camp_name || !form.review) { alert('캠프 이름과 한줄평은 필수예요!'); return }
     setSubmitting(true)
-    const finalPosition = form.position === '기타' ? (form.position_custom || '기타') : form.position
-    const { position_custom, ...rest } = form
-    const errMsg = await addReview({ ...rest, position: finalPosition })
+    const finalPositions = form.positions.map(p => p === '기타' ? (form.position_custom || '기타') : p)
+    const { positions, position_custom, ...rest } = form
+    const errMsg = await addReview({ ...rest, position: finalPositions.join(', ') || null })
     setSubmitting(false)
     if (!errMsg) setDone(true)
     else alert(`저장 실패: ${errMsg}`)
@@ -1090,19 +1090,22 @@ function CampReviewModal({ onClose, addReview, user }) {
           </div>
         </div>
 
-        {/* 포지션 */}
+        {/* 포지션 (다중선택) */}
         <div style={{ marginBottom:12 }}>
-          <label style={labelStyle}>포지션</label>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom: form.position==='기타' ? 8 : 0 }}>
-            {CAMP_POSITIONS.map(p => (
-              <button key={p} type="button" onClick={() => set('position', p)}
-                style={{ padding:'5px 12px', borderRadius:20, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: form.position===p ? C.dark : 'transparent', borderColor: form.position===p ? C.dark : C.border, color: form.position===p ? C.gold : C.sub }}>
-                {p}
-              </button>
-            ))}
+          <label style={labelStyle}>포지션 (복수 선택 가능)</label>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {CAMP_POSITIONS.map(p => {
+              const active = form.positions.includes(p)
+              return (
+                <button key={p} type="button" onClick={() => set('positions', active ? form.positions.filter(x => x !== p) : [...form.positions, p])}
+                  style={{ padding:'5px 12px', borderRadius:20, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: active ? C.dark : 'transparent', borderColor: active ? C.dark : C.border, color: active ? C.gold : C.sub }}>
+                  {p}
+                </button>
+              )
+            })}
           </div>
-          {form.position === '기타' && (
-            <input style={{ ...inputStyle, marginTop:8 }} placeholder="포지션 직접 입력" value={form.position_custom} onChange={e => set('position_custom', e.target.value)} />
+          {form.positions.includes('기타') && (
+            <input style={{ ...inputStyle, marginTop:8 }} placeholder="기타 포지션 직접 입력" value={form.position_custom} onChange={e => set('position_custom', e.target.value)} />
           )}
         </div>
 
