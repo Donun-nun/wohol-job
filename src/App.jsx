@@ -565,7 +565,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
                 {job.region}{job.location ? ` · ${job.location}` : ''} · {job.type}
               </span>
               {job.second_visa === true  && <span style={{ fontSize:10, background:'#E8F5E9', color:'#2E7D32', border:'1px solid #A5D6A7', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✓</span>}
-              {job.second_visa === false && <span style={{ fontSize:10, background:'#FFEBEE', color:'#C62828', border:'1px solid #EF9A9A', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✗</span>}
+              {job.second_visa === false && <span style={{ fontSize:10, background:'#F5F5F5', color:'#AAAAAA', border:'1px solid #E0E0E0', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✗</span>}
               {job.english_level && <span style={{ fontSize:10, background: job.english_level==='하'?'#E8F5E9':job.english_level==='중'?'#FFF3E0':'#FFEBEE', color: job.english_level==='하'?'#2E7D32':job.english_level==='중'?'#E65100':'#C62828', border:`1px solid ${job.english_level==='하'?'#A5D6A7':job.english_level==='중'?'#FFCC80':'#EF9A9A'}`, borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>영어 {job.english_level}</span>}
             </div>
           </div>
