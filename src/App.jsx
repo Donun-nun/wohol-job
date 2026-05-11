@@ -133,15 +133,19 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
   }
 
   useEffect(() => {
-    if (active === null || photos.length <= 1) return
+    if (active !== null) { setCaptionDraft(photos[active]?.caption || ''); setEditing(false) }
+  }, [active])
+
+  useEffect(() => {
+    if (active === null) return
     const onKey = (e) => {
-      if (e.key === 'ArrowLeft')  navigate(-1)
-      if (e.key === 'ArrowRight') navigate(1)
+      if (e.key === 'ArrowLeft')  setActive(a => a === null ? null : (a - 1 + photos.length) % photos.length)
+      if (e.key === 'ArrowRight') setActive(a => a === null ? null : (a + 1) % photos.length)
       if (e.key === 'Escape')     setActive(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [active, photos.length])
+  }, [active === null, photos.length])
 
   if (!photos?.length) return null
   return (
@@ -159,8 +163,8 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
         <div onClick={e => { e.stopPropagation(); setActive(null) }}
           style={{ position:'fixed', inset:0, zIndex:200, background:'rgba(0,0,0,0.92)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
           <div onClick={e => e.stopPropagation()} style={{ position:'relative', maxWidth:600, width:'100%' }}>
-            <div style={{ position:'relative' }}>
-              <img src={photos[active].url} style={{ width:'100%', borderRadius:12, maxHeight:'60vh', objectFit:'contain', display:'block' }} />
+            <div style={{ position:'relative', height:'60vh', background:'rgba(0,0,0,0.2)', borderRadius:12, overflow:'hidden' }}>
+              <img src={photos[active].url} style={{ width:'100%', height:'100%', objectFit:'contain', display:'block' }} />
               {photos.length > 1 && (<>
                 <button onClick={e => { e.stopPropagation(); navigate(-1) }}
                   style={{ position:'absolute', left:0, top:'50%', transform:'translateY(-50%)', background:'rgba(0,0,0,0.25)', border:'none', color:'rgba(255,255,255,0.75)', borderRadius:'0 8px 8px 0', width:40, height:64, cursor:'pointer', fontSize:22, display:'flex', alignItems:'center', justifyContent:'center', transition:'background 0.15s' }}
