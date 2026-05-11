@@ -15,8 +15,8 @@ const C = {
   fill:    '#F5F0E8',
 }
 
-function NicknameModal({ user, onSave }) {
-  const [nickname, setNickname] = useState('')
+function NicknameModal({ user, onSave, onClose, isEdit, currentNickname }) {
+  const [nickname, setNickname] = useState(isEdit ? (currentNickname || '') : '')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -26,7 +26,9 @@ function NicknameModal({ user, onSave }) {
     if (trimmed.length < 2) { setError('2자 이상 입력해주세요.'); return }
     if (trimmed.length > 20) { setError('20자 이하로 입력해주세요.'); return }
     setSaving(true)
-    const { error: err } = await supabase.from('profiles').insert({ id: user.id, nickname: trimmed })
+    const { error: err } = isEdit
+      ? await supabase.from('profiles').update({ nickname: trimmed }).eq('id', user.id)
+      : await supabase.from('profiles').insert({ id: user.id, nickname: trimmed })
     if (err) {
       setError(err.code === '23505' ? '이미 사용 중인 닉네임이에요.' : '저장 실패. 다시 시도해주세요.')
       setSaving(false)
@@ -39,9 +41,11 @@ function NicknameModal({ user, onSave }) {
     <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:380, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ fontSize:36, marginBottom:14 }}>👤</div>
-        <div style={{ fontFamily:"'Noto Sans KR', sans-serif", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>닉네임을 정해줘요</div>
+        <div style={{ fontFamily:"'Noto Sans KR', sans-serif", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>
+          {isEdit ? '닉네임 수정' : '닉네임을 정해줘요'}
+        </div>
         <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:24, lineHeight:1.7 }}>
-          모든 글에 이 닉네임이 표시돼요.<br />나중에 수정하면 기존 글도 자동 반영돼요.
+          모든 글에 이 닉네임이 표시돼요.<br />수정하면 기존 글도 자동 반영돼요.
         </div>
         <input
           value={nickname}
@@ -53,8 +57,11 @@ function NicknameModal({ user, onSave }) {
         />
         {error && <div style={{ fontSize:12, color:'#E05050', fontFamily:'Noto Sans KR', marginBottom:10 }}>{error}</div>}
         <button onClick={handleSave} disabled={saving} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, marginTop:8 }}>
-          {saving ? '저장 중...' : '닉네임 저장하기'}
+          {saving ? '저장 중...' : (isEdit ? '닉네임 변경하기' : '닉네임 저장하기')}
         </button>
+        {isEdit && onClose && (
+          <button onClick={onClose} style={{ marginTop:10, width:'100%', background:'transparent', color:C.sub, border:'none', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>취소</button>
+        )}
       </div>
     </div>
   )
@@ -497,7 +504,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   )
 }
 
-function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen, updateJob }) {
+function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen, updateJob, incrementView }) {
   const [open, setOpen] = useState(!!defaultOpen)
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
@@ -526,6 +533,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
   useEffect(() => {
     if (!open) return
     fetchComments()
+    incrementView(job.id)
   }, [open, job.id])
 
   const fetchComments = async () => {
@@ -635,6 +643,12 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
               <span>💬</span>
               <span>{comments.length}</span>
             </div>
+            {job.views > 0 && (
+              <div style={{ display:'flex', alignItems:'center', gap:3, fontSize:12, color:C.sub, opacity:0.6 }}>
+                <span>👁</span>
+                <span>{job.views}</span>
+              </div>
+            )}
             <button onClick={shareJob}
               style={{ display:'flex', alignItems:'center', gap:4, background: copied ? 'rgba(200,150,60,0.1)' : 'transparent', border:`1px solid ${copied ? C.accent : C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:12, color: copied ? C.accent : C.sub, transition:'all 0.15s' }}>
               {copied ? '✓ 복사됨' : '🔗 공유'}
@@ -757,11 +771,12 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
 export default function App() {
   const targetId = new URLSearchParams(window.location.search).get('id')
   const [user, setUser]                         = useState(null)
-  const { jobs, loading, likedIds, toggleLike, addJob, updateJob } = useJobs(user)
+  const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
   const [region, setRegion]       = useState("전체")
   const [type, setType]           = useState("전체")
   const [sort, setSort]           = useState("좋아요순")
   const [photoOnly, setPhotoOnly] = useState(false)
+  const [myPostsOnly, setMyPostsOnly] = useState(false)
   const [selectedTags, setSelectedTags] = useState([])
   const [search, setSearch] = useState("")
   const [minHourly, setMinHourly] = useState(0)
@@ -770,11 +785,14 @@ export default function App() {
   const [showModal, setShowModal]               = useState(false)
   const [editJob, setEditJob]                   = useState(null)
   const [showNicknameModal, setShowNicknameModal] = useState(false)
+  const [editNickname, setEditNickname] = useState(false)
+  const [currentNickname, setCurrentNickname] = useState('')
   const [showLoginPrompt, setShowLoginPrompt]   = useState(false)
 
   const fetchProfile = async (userId) => {
     const { data } = await supabase.from('profiles').select('nickname').eq('id', userId).single()
     if (!data) setShowNicknameModal(true)
+    else setCurrentNickname(data.nickname || '')
   }
 
   useEffect(() => {
@@ -801,6 +819,7 @@ export default function App() {
     .filter(j => region === "전체"  || j.region.includes(region))
     .filter(j => type === "전체"    || j.type === type)
     .filter(j => !photoOnly         || j.photos?.length > 0)
+    .filter(j => !myPostsOnly       || j.user_id === user?.id)
     .filter(j => selectedTags.length === 0 || j.tags?.some(t => selectedTags.includes(t)))
     .filter(j => j.hourly >= minHourly)
     .filter(j => !secondVisaOnly    || j.second_visa === true)
@@ -841,9 +860,14 @@ export default function App() {
               <img
                 src={user.user_metadata?.avatar_url}
                 alt="프로필"
-                style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${C.accent}`, objectFit:'cover' }}
+                title="닉네임 수정"
+                onClick={() => setEditNickname(true)}
+                style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${C.accent}`, objectFit:'cover', cursor:'pointer' }}
                 onError={e => { e.target.style.display='none' }}
               />
+              <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly ? C.dark : 'transparent', color: myPostsOnly ? C.gold : C.sub, border:`1px solid ${myPostsOnly ? C.dark : C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>
+                내 글
+              </button>
               <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
                 로그아웃
               </button>
@@ -938,7 +962,7 @@ export default function App() {
         {/* 카드 목록 */}
         <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
           {filtered.map(job => (
-            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} defaultOpen={targetId === String(job.id)} updateJob={updateJob} />
+            <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} defaultOpen={targetId === String(job.id)} updateJob={updateJob} incrementView={incrementView} />
           ))}
         </div>
 
@@ -950,7 +974,12 @@ export default function App() {
       </div>
 
       {showNicknameModal && user && (
-        <NicknameModal user={user} onSave={() => setShowNicknameModal(false)} />
+        <NicknameModal user={user} onSave={(n) => { setCurrentNickname(n); setShowNicknameModal(false) }} />
+      )}
+      {editNickname && user && (
+        <NicknameModal user={user} isEdit currentNickname={currentNickname}
+          onSave={(n) => { setCurrentNickname(n); setEditNickname(false) }}
+          onClose={() => setEditNickname(false)} />
       )}
       {showLoginPrompt && (
         <LoginPromptModal onClose={() => setShowLoginPrompt(false)} onLogin={signIn} />

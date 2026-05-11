@@ -86,6 +86,11 @@ export function useJobs(user) {
     return !error
   }
 
+  const incrementView = async (id) => {
+    await supabase.rpc('increment_view', { job_id: id })
+    setJobs(prev => prev.map(j => j.id === id ? { ...j, views: (j.views || 0) + 1 } : j))
+  }
+
   const toggleLike = async (jobId) => {
     const alreadyLiked = likedIds.includes(jobId)
 
@@ -116,7 +121,7 @@ export function useJobs(user) {
     ))
   }
 
-  return { jobs, loading, likedIds, toggleLike, addJob, updateJob }
+  return { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView }
 }
 
 function inferTag(title, region) {
