@@ -265,7 +265,7 @@ function PhotoUploader({ photos, setPhotos }) {
 
 const TAGS = ['광산','카페','농장','주방','리테일','건설','서비스','물류','기타']
 const ENG_LABELS = { 하:'下', 중:'中', 상:'上' }
-const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tag:'', second_visa:null, english_level:'' }
+const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tags:[], second_visa:null, english_level:'' }
 
 function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   const isEdit = !!editData
@@ -285,7 +285,12 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     interview_tips: data.interview_tips || '',
     stars: data.stars || 4,
     author: data.author || '',
-    tag: data.tag || '',
+    tags: (() => {
+      const raw = data.tag || ''
+      if (!raw) return []
+      if (raw.trim().startsWith('[')) { try { return JSON.parse(raw) } catch {} }
+      return [raw]
+    })(),
     second_visa: data.second_visa ?? null,
     english_level: data.english_level || '',
   } : EMPTY_FORM
@@ -312,7 +317,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
       ...form,
       hourly: Number(form.hourly),
       photos: JSON.stringify(photos.map(p => ({ url: p.url, caption: p.caption || '' }))),
-      tag: form.tag || null,
+      tag: form.tags.length ? JSON.stringify(form.tags) : null,
       ...(!isEdit && user ? { user_id: user.id } : {}),
     }
     const success = isEdit
@@ -384,8 +389,8 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           <label style={labelStyle}>직종 분류 (선택 — 안 하면 자동 분류)</label>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             {TAGS.map(t => (
-              <button key={t} type="button" onClick={() => set('tag', form.tag === t ? '' : t)}
-                style={{ padding:'5px 12px', borderRadius:20, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: form.tag === t ? C.dark : 'transparent', borderColor: form.tag === t ? C.dark : C.border, color: form.tag === t ? C.gold : C.sub }}>
+              <button key={t} type="button" onClick={() => set('tags', form.tags.includes(t) ? form.tags.filter(x => x !== t) : [...form.tags, t])}
+                style={{ padding:'5px 12px', borderRadius:20, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s', background: form.tags.includes(t) ? C.dark : 'transparent', borderColor: form.tags.includes(t) ? C.dark : C.border, color: form.tags.includes(t) ? C.gold : C.sub }}>
                 {t}
               </button>
             ))}
@@ -574,7 +579,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:3, flexWrap:'wrap' }}>
               <span style={{ fontFamily:"'Noto Sans KR', sans-serif", fontSize:18, fontWeight:700, color:C.dark }}>{job.title}</span>
-              <span style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.7 }}>{job.tag}</span>
+              {job.tags?.map(t => <span key={t} style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.7 }}>{t}</span>)}
               {hasPhotos && <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.7 }}>📷 {job.photos.length}</span>}
             </div>
             {job.company && (
@@ -749,6 +754,7 @@ export default function App() {
   const [type, setType]           = useState("전체")
   const [sort, setSort]           = useState("좋아요순")
   const [photoOnly, setPhotoOnly] = useState(false)
+  const [selectedTags, setSelectedTags] = useState([])
   const [minHourly, setMinHourly] = useState(0)
   const [secondVisaOnly, setSecondVisaOnly] = useState(false)
   const [engLevel, setEngLevel]   = useState("")
@@ -784,6 +790,7 @@ export default function App() {
     .filter(j => region === "전체"  || j.region.includes(region))
     .filter(j => type === "전체"    || j.type === type)
     .filter(j => !photoOnly         || j.photos?.length > 0)
+    .filter(j => selectedTags.length === 0 || j.tags?.some(t => selectedTags.includes(t)))
     .filter(j => j.hourly >= minHourly)
     .filter(j => !secondVisaOnly    || j.second_visa === true)
     .filter(j => !engLevel          || j.english_level === engLevel)
@@ -860,6 +867,12 @@ export default function App() {
         <div style={{ marginBottom:20, display:'flex', flexDirection:'column', gap:8 }}>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             {REGIONS.map(r => <button key={r} onClick={() => setRegion(r)} style={chip(region===r)}>{r}</button>)}
+          </div>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {TAGS.map(t => (
+              <button key={t} onClick={() => setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                style={chip(selectedTags.includes(t))}>{t}</button>
+            ))}
           </div>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
             {TYPES.map(t => <button key={t} onClick={() => setType(t)} style={chip(type===t)}>{t}</button>)}

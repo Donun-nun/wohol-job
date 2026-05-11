@@ -59,7 +59,12 @@ export function useJobs(user) {
           }
           return s.split(',').map(url => ({ url: url.trim(), caption: '' })).filter(p => p.url)
         })(),
-        tag: job.tag || inferTag(job.title, job.region),
+        tags: (() => {
+          const raw = job.tag || ''
+          if (!raw) return [inferTag(job.title, job.region)].filter(Boolean)
+          if (raw.trim().startsWith('[')) { try { return JSON.parse(raw) } catch {} }
+          return [raw]
+        })(),
         author: job.user_id ? (nicknameMap[job.user_id] || '알 수 없음') : (job.author || '익명'),
       }))
       setJobs(parsed)
