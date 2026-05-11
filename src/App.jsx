@@ -245,7 +245,7 @@ function PhotoUploader({ photos, setPhotos }) {
 }
 
 const TAGS = ['광산','카페','농장','주방','리테일','건설','서비스','물류','기타']
-const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tag:'' }
+const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tag:'', second_visa:null, english_level:'' }
 
 function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   const isEdit = !!editData
@@ -266,6 +266,8 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     stars: data.stars || 4,
     author: data.author || '',
     tag: data.tag || '',
+    second_visa: data.second_visa ?? null,
+    english_level: data.english_level || '',
   } : EMPTY_FORM
 
   const [form, setForm] = useState(() => toForm(editData))
@@ -406,6 +408,37 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           <textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder="예: 경력 없어도 됨, 복장은 캐주얼 OK, 영어 인터뷰 5분 정도" value={form.interview_tips} onChange={e => set('interview_tips', e.target.value)} />
         </div>
 
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
+          <div>
+            <label style={labelStyle}>2nd 비자 가능 여부 (선택)</label>
+            <div style={{ display:'flex', gap:6 }}>
+              {[['모름', null], ['가능 ✓', true], ['불가 ✗', false]].map(([label, val]) => (
+                <button key={label} type="button" onClick={() => set('second_visa', form.second_visa === val ? null : val)}
+                  style={{ flex:1, padding:'8px 4px', borderRadius:8, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s',
+                    background: form.second_visa === val ? (val === true ? '#E8F5E9' : val === false ? '#FFEBEE' : C.fill) : 'transparent',
+                    borderColor: form.second_visa === val ? (val === true ? '#4CAF50' : val === false ? '#E57373' : C.accent) : C.border,
+                    color: form.second_visa === val ? (val === true ? '#2E7D32' : val === false ? '#C62828' : C.dark) : C.sub }}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label style={labelStyle}>영어 필요도 (선택)</label>
+            <div style={{ display:'flex', gap:6 }}>
+              {[['하', '#4CAF50'], ['중', '#FF9800'], ['상', '#F44336']].map(([level, color]) => (
+                <button key={level} type="button" onClick={() => set('english_level', form.english_level === level ? '' : level)}
+                  style={{ flex:1, padding:'8px 4px', borderRadius:8, cursor:'pointer', fontSize:13, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s',
+                    background: form.english_level === level ? `${color}18` : 'transparent',
+                    borderColor: form.english_level === level ? color : C.border,
+                    color: form.english_level === level ? color : C.sub }}>
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         <div style={{ marginBottom:16 }}>
           <label style={labelStyle}>추천 점수</label>
           <div style={{ display:'flex', gap:8 }}>
@@ -527,8 +560,13 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
             {job.company && (
               <div style={{ fontSize:14, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginBottom:4, opacity:0.75 }}>{job.company}</div>
             )}
-            <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>
-              {job.region}{job.location ? ` · ${job.location}` : ''} · {job.type}
+            <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+              <span style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>
+                {job.region}{job.location ? ` · ${job.location}` : ''} · {job.type}
+              </span>
+              {job.second_visa === true  && <span style={{ fontSize:10, background:'#E8F5E9', color:'#2E7D32', border:'1px solid #A5D6A7', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✓</span>}
+              {job.second_visa === false && <span style={{ fontSize:10, background:'#FFEBEE', color:'#C62828', border:'1px solid #EF9A9A', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✗</span>}
+              {job.english_level && <span style={{ fontSize:10, background: job.english_level==='하'?'#E8F5E9':job.english_level==='중'?'#FFF3E0':'#FFEBEE', color: job.english_level==='하'?'#2E7D32':job.english_level==='중'?'#E65100':'#C62828', border:`1px solid ${job.english_level==='하'?'#A5D6A7':job.english_level==='중'?'#FFCC80':'#EF9A9A'}`, borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>영어 {job.english_level}</span>}
             </div>
           </div>
           <div style={{ background:C.dark, color:C.gold, borderRadius:10, padding:'8px 14px', textAlign:'center', minWidth:56, flexShrink:0, marginLeft:14 }}>
@@ -691,6 +729,9 @@ export default function App() {
   const [type, setType]           = useState("전체")
   const [sort, setSort]           = useState("좋아요순")
   const [photoOnly, setPhotoOnly] = useState(false)
+  const [minHourly, setMinHourly] = useState(0)
+  const [secondVisaOnly, setSecondVisaOnly] = useState(false)
+  const [engLevel, setEngLevel]   = useState("")
   const [showModal, setShowModal]               = useState(false)
   const [editJob, setEditJob]                   = useState(null)
   const [showNicknameModal, setShowNicknameModal] = useState(false)
@@ -720,9 +761,12 @@ export default function App() {
   const signOut = () => supabase.auth.signOut()
 
   const filtered = jobs
-    .filter(j => region === "전체" || j.region.includes(region))
-    .filter(j => type === "전체"   || j.type === type)
-    .filter(j => !photoOnly        || j.photos?.length > 0)
+    .filter(j => region === "전체"  || j.region.includes(region))
+    .filter(j => type === "전체"    || j.type === type)
+    .filter(j => !photoOnly         || j.photos?.length > 0)
+    .filter(j => j.hourly >= minHourly)
+    .filter(j => !secondVisaOnly    || j.second_visa === true)
+    .filter(j => !engLevel          || j.english_level === engLevel)
     .sort((a,b) =>
       sort === "좋아요순" ? b.likes - a.likes :
       sort === "별점순"   ? b.stars - a.stars :
@@ -792,12 +836,33 @@ export default function App() {
         </div>
 
         {/* 필터 */}
-        <div style={{ marginBottom:20 }}>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:8 }}>
+        <div style={{ marginBottom:20, display:'flex', flexDirection:'column', gap:8 }}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             {REGIONS.map(r => <button key={r} onClick={() => setRegion(r)} style={chip(region===r)}>{r}</button>)}
           </div>
-          <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
             {TYPES.map(t => <button key={t} onClick={() => setType(t)} style={chip(type===t)}>{t}</button>)}
+            <div style={{ width:1, height:16, background:C.border, margin:'0 2px' }} />
+            {[0,20,25,30,35].map(n => (
+              <button key={n} onClick={() => setMinHourly(n)} style={chip(minHourly===n)}>
+                {n === 0 ? '시급 전체' : `$${n}+`}
+              </button>
+            ))}
+          </div>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
+            <button onClick={() => setSecondVisaOnly(v=>!v)}
+              style={{ ...chip(secondVisaOnly), borderColor: secondVisaOnly ? '#4CAF50' : C.border, background: secondVisaOnly ? '#E8F5E9' : 'transparent', color: secondVisaOnly ? '#2E7D32' : C.sub }}>
+              2nd 비자 가능
+            </button>
+            {['','하','중','상'].map(lv => (
+              <button key={lv} onClick={() => setEngLevel(lv)}
+                style={{ ...chip(engLevel===lv),
+                  borderColor: engLevel===lv && lv ? (lv==='하'?'#4CAF50':lv==='중'?'#FF9800':'#F44336') : engLevel===lv ? C.dark : C.border,
+                  background:  engLevel===lv && lv ? (lv==='하'?'#E8F5E9':lv==='중'?'#FFF3E0':'#FFEBEE') : engLevel===lv ? C.dark : 'transparent',
+                  color:       engLevel===lv && lv ? (lv==='하'?'#2E7D32':lv==='중'?'#E65100':'#C62828') : engLevel===lv ? C.gold : C.sub }}>
+                {lv === '' ? '영어 전체' : `영어 ${lv}`}
+              </button>
+            ))}
             <button onClick={() => setPhotoOnly(p=>!p)} style={{ ...chip(photoOnly), borderColor: photoOnly ? C.accent : C.border, background: photoOnly ? 'rgba(200,150,60,0.12)' : 'transparent', color: photoOnly ? C.accent : C.sub }}>📷 사진만</button>
             <div style={{ marginLeft:'auto' }}>
               <select value={sort} onChange={e => setSort(e.target.value)} style={selectStyle}>
