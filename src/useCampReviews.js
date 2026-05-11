@@ -38,10 +38,17 @@ export function useCampReviews(user) {
     return null
   }
 
+  const updateReview = async (id, formData) => {
+    const { error } = await supabase.from('camp_reviews').update(formData).eq('id', id)
+    if (error) { console.error('camp_reviews update error:', error); return error.message }
+    await fetchReviews()
+    return null
+  }
+
   const deleteReview = async (id) => {
     await supabase.from('camp_reviews').delete().eq('id', id)
     await fetchReviews()
   }
 
-  return { reviews, loading, addReview, deleteReview }
+  return { reviews, loading, addReview, updateReview, deleteReview }
 }

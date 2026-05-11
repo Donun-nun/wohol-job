@@ -1008,11 +1008,26 @@ const CATERING_COS = ['Sodexo','Compass Group','Downer','ISS','Broadspectrum','�
 const CAMP_POSITIONS = ['Kitchen Hand','Housekeeping','Utility','Bar','Retail','기타']
 
 // ─── CampReviewModal ──────────────────────────────────────────────────────────
-function CampReviewModal({ onClose, addReview, user }) {
+function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
   const C = useC()
+  const isEdit = !!editData
   const EMPTY = { camp_name:'', catering_company:'', positions:[], position_custom:'', review:'', pros:'', cons:'', daily_life:'', food_satisfaction:null, accommodation_satisfaction:null, work_satisfaction:null, swing_satisfaction:null }
-  const [form, setForm] = useState(EMPTY)
-  const [campInput, setCampInput] = useState('')
+  const toForm = (d) => d ? {
+    camp_name: d.camp_name || '',
+    catering_company: d.catering_company || '',
+    positions: d.position ? d.position.split(', ').filter(Boolean) : [],
+    position_custom: '',
+    review: d.review || '',
+    pros: Array.isArray(d.pros) ? d.pros.join('\n') : (d.pros || ''),
+    cons: Array.isArray(d.cons) ? d.cons.join('\n') : (d.cons || ''),
+    daily_life: d.daily_life || '',
+    food_satisfaction: d.food_satisfaction ?? null,
+    accommodation_satisfaction: d.accommodation_satisfaction ?? null,
+    work_satisfaction: d.work_satisfaction ?? null,
+    swing_satisfaction: d.swing_satisfaction ?? null,
+  } : EMPTY
+  const [form, setForm] = useState(() => toForm(editData))
+  const [campInput, setCampInput] = useState(editData?.camp_name || '')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
@@ -1027,7 +1042,8 @@ function CampReviewModal({ onClose, addReview, user }) {
     setSubmitting(true)
     const finalPositions = form.positions.map(p => p === '기타' ? (form.position_custom || '기타') : p)
     const { positions, position_custom, ...rest } = form
-    const errMsg = await addReview({ ...rest, position: finalPositions.join(', ') || null })
+    const payload = { ...rest, position: finalPositions.join(', ') || null }
+    const errMsg = isEdit ? await updateReview(editData.id, payload) : await addReview(payload)
     setSubmitting(false)
     if (!errMsg) setDone(true)
     else alert(`저장 실패: ${errMsg}`)
@@ -1040,8 +1056,8 @@ function CampReviewModal({ onClose, addReview, user }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:40, width:'100%', maxWidth:400, textAlign:'center' }}>
         <div style={{ fontSize:44, marginBottom:16 }}>⛏️</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>후기 등록 완료!</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>다음 워홀러에게 큰 도움이 될 거예요.</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? '수정 완료!' : '후기 등록 완료!'}</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? '변경사항이 저장됐어요.' : '다음 워홀러에게 큰 도움이 될 거예요.'}</div>
         <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
       </div>
     </div>
@@ -1159,7 +1175,7 @@ function CampReviewModal({ onClose, addReview, user }) {
         ))}
 
         <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting?'default':'pointer', opacity: submitting?0.7:1 }}>
-          {submitting ? '저장 중...' : '후기 등록하기'}
+          {submitting ? '저장 중...' : (isEdit ? '수정 완료' : '후기 등록하기')}
         </button>
       </div>
     </div>
@@ -1167,7 +1183,7 @@ function CampReviewModal({ onClose, addReview, user }) {
 }
 
 // ─── CampReviewCard ───────────────────────────────────────────────────────────
-function CampReviewCard({ review, user, onDelete }) {
+function CampReviewCard({ review, user, onDelete, onEdit }) {
   const C = useC()
   const [open, setOpen] = useState(false)
 
@@ -1208,8 +1224,12 @@ function CampReviewCard({ review, user, onDelete }) {
               })}
               <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginLeft:'auto' }}>{review.nickname} · {timeAgo(review.created_at)}</span>
               {user?.id === review.user_id && (
-                <button onClick={e => { e.stopPropagation(); onDelete(review.id) }}
-                  style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', fontFamily:'Noto Sans KR' }}>삭제</button>
+                <>
+                  <button onClick={e => { e.stopPropagation(); onEdit(review) }}
+                    style={{ background:'transparent', border:`1px solid ${C.accent}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:11, color:C.accent }}>수정</button>
+                  <button onClick={e => { e.stopPropagation(); onDelete(review.id) }}
+                    style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', fontFamily:'Noto Sans KR' }}>삭제</button>
+                </>
               )}
             </div>
           </div>
@@ -1247,9 +1267,10 @@ function CampReviewCard({ review, user, onDelete }) {
 }
 
 // ─── FIFOTab ──────────────────────────────────────────────────────────────────
-function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, deleteReview }) {
+function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, updateReview, deleteReview }) {
   const C = useC()
   const [showModal, setShowModal] = useState(false)
+  const [editReview, setEditReview] = useState(null)
   const [selectedCamp, setSelectedCamp] = useState('')
   const [selectedPosition, setSelectedPosition] = useState('')
   const [selectedSwing, setSelectedSwing] = useState('')
@@ -1344,7 +1365,7 @@ function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, deleteRevie
               <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:4 }}>
                 <b style={{ color:C.dark }}>{selectedCamp}</b> 후기 {filtered.length}개
               </div>
-              {filtered.map(r => <CampReviewCard key={r.id} review={r} user={user} onDelete={deleteReview} />)}
+              {filtered.map(r => <CampReviewCard key={r.id} review={r} user={user} onDelete={deleteReview} onEdit={setEditReview} />)}
             </>
           ) : (
             campsWithReviews.map(campName => {
@@ -1360,7 +1381,7 @@ function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, deleteRevie
                     <span style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>후기 {campReviews.length}개</span>
                     <span style={{ fontSize:12, color:C.accent, fontFamily:'Noto Sans KR', marginLeft:'auto' }}>전체보기 →</span>
                   </div>
-                  {campReviews.slice(0,2).map(r => <CampReviewCard key={r.id} review={r} user={user} onDelete={deleteReview} />)}
+                  {campReviews.slice(0,2).map(r => <CampReviewCard key={r.id} review={r} user={user} onDelete={deleteReview} onEdit={setEditReview} />)}
                   {campReviews.length > 2 && (
                     <button onClick={() => setSelectedCamp(campName)}
                       style={{ width:'100%', marginTop:4, background:'transparent', border:`1px dashed ${C.border}`, borderRadius:8, padding:'7px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, cursor:'pointer' }}>
@@ -1375,6 +1396,7 @@ function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, deleteRevie
       )}
 
       {showModal && <CampReviewModal onClose={() => setShowModal(false)} addReview={addReview} user={user} />}
+      {editReview && <CampReviewModal onClose={() => setEditReview(null)} editData={editReview} updateReview={updateReview} user={user} />}
     </div>
   )
 }
@@ -1389,7 +1411,7 @@ export default function App() {
 
   const [user, setUser] = useState(null)
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
-  const { reviews: campReviews, loading: campLoading, addReview, deleteReview } = useCampReviews(user)
+  const { reviews: campReviews, loading: campLoading, addReview, updateReview, deleteReview } = useCampReviews(user)
   const [tab, setTab] = useState('reviews') // 'reviews' | 'qna' | 'best'
   const [region, setRegion]       = useState(params.get('region') || "전체")
   const [type, setType]           = useState(params.get('type') || "전체")
@@ -1735,7 +1757,7 @@ export default function App() {
           {/* ─── FIFO 탭 ─── */}
           {tab === 'fifo' && (
             <FIFOTab user={user} onLoginPrompt={() => setShowLoginPrompt(true)}
-              reviews={campReviews} loading={campLoading} addReview={addReview} deleteReview={deleteReview} />
+              reviews={campReviews} loading={campLoading} addReview={addReview} updateReview={updateReview} deleteReview={deleteReview} />
           )}
 
           {/* ─── Q&A 탭 ─── */}
