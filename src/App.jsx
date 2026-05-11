@@ -426,7 +426,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           <div>
             <label style={labelStyle}>영어 필요도 (선택)</label>
             <div style={{ display:'flex', gap:6 }}>
-              {[['하', '#4CAF50'], ['중', '#FF9800'], ['상', '#F44336']].map(([level, color]) => (
+              {[['하', '#4CAF50'], ['중', '#D97706'], ['상', '#F44336']].map(([level, color]) => (
                 <button key={level} type="button" onClick={() => set('english_level', form.english_level === level ? '' : level)}
                   style={{ flex:1, padding:'8px 4px', borderRadius:8, cursor:'pointer', fontSize:13, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s',
                     background: form.english_level === level ? `${color}18` : 'transparent',
@@ -566,7 +566,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
               </span>
               {job.second_visa === true  && <span style={{ fontSize:10, background:'#E8F5E9', color:'#2E7D32', border:'1px solid #A5D6A7', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✓</span>}
               {job.second_visa === false && <span style={{ fontSize:10, background:'#F5F5F5', color:'#AAAAAA', border:'1px solid #E0E0E0', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✗</span>}
-              {job.english_level && <span style={{ fontSize:10, background: job.english_level==='하'?'#E8F5E9':job.english_level==='중'?'#FFF3E0':'#FFEBEE', color: job.english_level==='하'?'#2E7D32':job.english_level==='중'?'#E65100':'#C62828', border:`1px solid ${job.english_level==='하'?'#A5D6A7':job.english_level==='중'?'#FFCC80':'#EF9A9A'}`, borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>영어 {job.english_level}</span>}
+              {job.english_level && <span style={{ fontSize:10, background: job.english_level==='하'?'#E8F5E9':job.english_level==='중'?'#FFFBEB':'#FFEBEE', color: job.english_level==='하'?'#2E7D32':job.english_level==='중'?'#D97706':'#C62828', border:`1px solid ${job.english_level==='하'?'#A5D6A7':job.english_level==='중'?'#FCD34D':'#EF9A9A'}`, borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>영어 {job.english_level}</span>}
             </div>
           </div>
           <div style={{ background:C.dark, color:C.gold, borderRadius:10, padding:'8px 14px', textAlign:'center', minWidth:56, flexShrink:0, marginLeft:14 }}>
@@ -857,9 +857,9 @@ export default function App() {
             {['','하','중','상'].map(lv => (
               <button key={lv} onClick={() => setEngLevel(lv)}
                 style={{ ...chip(engLevel===lv),
-                  borderColor: engLevel===lv && lv ? (lv==='하'?'#4CAF50':lv==='중'?'#FF9800':'#F44336') : engLevel===lv ? C.dark : C.border,
-                  background:  engLevel===lv && lv ? (lv==='하'?'#E8F5E9':lv==='중'?'#FFF3E0':'#FFEBEE') : engLevel===lv ? C.dark : 'transparent',
-                  color:       engLevel===lv && lv ? (lv==='하'?'#2E7D32':lv==='중'?'#E65100':'#C62828') : engLevel===lv ? C.gold : C.sub }}>
+                  borderColor: engLevel===lv && lv ? (lv==='하'?'#4CAF50':lv==='중'?'#FCD34D':'#F44336') : engLevel===lv ? C.dark : C.border,
+                  background:  engLevel===lv && lv ? (lv==='하'?'#E8F5E9':lv==='중'?'#FFFBEB':'#FFEBEE') : engLevel===lv ? C.dark : 'transparent',
+                  color:       engLevel===lv && lv ? (lv==='하'?'#2E7D32':lv==='중'?'#D97706':'#C62828') : engLevel===lv ? C.gold : C.sub }}>
                 {lv === '' ? '영어 전체' : `영어 ${lv}`}
               </button>
             ))}
