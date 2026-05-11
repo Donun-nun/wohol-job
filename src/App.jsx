@@ -1,21 +1,33 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, createContext, useContext, lazy, Suspense } from 'react'
 import { useJobs } from './useJobs'
 import { supabase } from './supabase'
 
-// Design tokens
-const C = {
-  dark:    '#2C1A00',
-  accent:  '#C8963C',
-  gold:    '#FFD580',
-  text:    '#2C1A00',
-  sub:     '#8A7060',
-  border:  '#E8E2D8',
-  bg:      '#FAF7F2',
-  card:    '#ffffff',
-  fill:    '#F5F0E8',
+// ─── Themes ──────────────────────────────────────────────────────────────────
+const lightC = {
+  dark:'#2C1A00', accent:'#C8963C', gold:'#FFD580',
+  sub:'#8A7060', border:'#E8E2D8', bg:'#FAF7F2', card:'#ffffff', fill:'#F5F0E8',
 }
+const darkC = {
+  dark:'#F0E8D8', accent:'#C8963C', gold:'#FFD580',
+  sub:'#9A8070', border:'#3D2E22', bg:'#1A1210', card:'#2A1E15', fill:'#231915',
+}
+const ThemeCtx = createContext(lightC)
+const useC = () => useContext(ThemeCtx)
 
+// ─── Lazy map (requires react-leaflet + leaflet) ──────────────────────────────
+const LazyMapView = lazy(() =>
+  import('./MapView').catch(() => ({
+    default: () => (
+      <div style={{ height:360, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Noto Sans KR', fontSize:13, color:'#8A7060' }}>
+        지도 로드 실패. 터미널에서 <code style={{ margin:'0 6px' }}>npm install react-leaflet leaflet</code> 후 재시작하세요.
+      </div>
+    ),
+  }))
+)
+
+// ─── NicknameModal ────────────────────────────────────────────────────────────
 function NicknameModal({ user, onSave, onClose, isEdit, currentNickname }) {
+  const C = useC()
   const [nickname, setNickname] = useState(isEdit ? (currentNickname || '') : '')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -67,7 +79,9 @@ function NicknameModal({ user, onSave, onClose, isEdit, currentNickname }) {
   )
 }
 
+// ─── LoginPromptModal ─────────────────────────────────────────────────────────
 function LoginPromptModal({ onClose, onLogin }) {
+  const C = useC()
   return (
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:360, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
@@ -86,10 +100,9 @@ function LoginPromptModal({ onClose, onLogin }) {
   )
 }
 
-
+// ─── Constants ────────────────────────────────────────────────────────────────
 const REGIONS = ["전체", "WA", "NSW", "VIC", "QLD", "SA", "NT", "TAS", "ACT"]
 const TYPES   = ["전체", "Casual", "Part-time", "Full-time"]
-
 const CLOUDINARY_CLOUD  = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
@@ -114,6 +127,7 @@ async function uploadPhoto(file) {
 }
 
 function Stars({ n }) {
+  const C = useC()
   return (
     <div style={{ display:'flex', gap:2 }}>
       {[1,2,3,4,5].map(i => (
@@ -123,7 +137,9 @@ function Stars({ n }) {
   )
 }
 
+// ─── PhotoGallery ─────────────────────────────────────────────────────────────
 function PhotoGallery({ photos, isOwner, onCaptionSave }) {
+  const C = useC()
   const [active, setActive] = useState(null)
   const [editing, setEditing] = useState(false)
   const [captionDraft, setCaptionDraft] = useState('')
@@ -192,7 +208,6 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
               </>)}
             </div>
 
-            {/* 캡션 영역 */}
             <div style={{ marginTop:12, minHeight:36 }}>
               {editing ? (
                 <div style={{ display:'flex', gap:8 }}>
@@ -226,7 +241,7 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
             </div>
 
             <button onClick={e => { e.stopPropagation(); setActive(null) }}
-              style={{ position:'absolute', top:-14, right:-14, background:C.dark, color:C.gold, border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
+              style={{ position:'absolute', top:-14, right:-14, background:lightC.dark, color:lightC.gold, border:'none', borderRadius:'50%', width:32, height:32, cursor:'pointer', fontSize:16, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</button>
           </div>
         </div>
       )}
@@ -234,7 +249,9 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
   )
 }
 
+// ─── PhotoUploader ────────────────────────────────────────────────────────────
 function PhotoUploader({ photos, setPhotos }) {
+  const C = useC()
   const [uploading, setUploading] = useState(false)
   const handleFiles = async (e) => {
     const files = Array.from(e.target.files)
@@ -262,7 +279,7 @@ function PhotoUploader({ photos, setPhotos }) {
                 onChange={e => setPhotos(prev => prev.map((ph, idx) => idx === i ? { ...ph, caption: e.target.value } : ph))}
                 placeholder="사진 설명 (예: 점심시간, 작업 현장)"
                 maxLength={60}
-                style={{ flex:1, background:'#FAF7F2', border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 10px', fontSize:12, fontFamily:'Noto Sans KR', color:C.dark, outline:'none', alignSelf:'center' }}
+                style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 10px', fontSize:12, fontFamily:'Noto Sans KR', color:C.dark, outline:'none', alignSelf:'center' }}
               />
             </div>
           ))}
@@ -277,11 +294,13 @@ function PhotoUploader({ photos, setPhotos }) {
   )
 }
 
+// ─── SubmitModal ──────────────────────────────────────────────────────────────
 const TAGS = ['광산','카페','농장','주방','건설','서비스','물류','기타']
 const ENG_LABELS = { 하:'下', 중:'中', 상:'上' }
 const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tags:[], second_visa:null, english_level:'' }
 
 function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
+  const C = useC()
   const isEdit = !!editData
 
   const toForm = (data) => data ? {
@@ -504,15 +523,35 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   )
 }
 
-function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen, updateJob, incrementView, onAuthorClick }) {
+// ─── JobCard ──────────────────────────────────────────────────────────────────
+function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, onLoginPrompt, defaultOpen, updateJob, incrementView, onAuthorClick }) {
+  const C = useC()
   const [open, setOpen] = useState(!!defaultOpen)
   const [comments, setComments] = useState([])
   const [commentText, setCommentText] = useState('')
   const [posting, setPosting] = useState(false)
-  const [replyTo, setReplyTo] = useState(null) // { id, nickname }
+  const [replyTo, setReplyTo] = useState(null)
   const [replyText, setReplyText] = useState('')
   const [copied, setCopied] = useState(false)
   const submitting = useRef(false)
+
+  // F6: Comment likes (localStorage-based per-device)
+  const [likedCommentIds, setLikedCommentIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('liked_comment_ids') || '[]') } catch { return [] }
+  })
+
+  const toggleCommentLike = (e, commentId) => {
+    e.stopPropagation()
+    const alreadyLiked = likedCommentIds.includes(commentId)
+    const next = alreadyLiked
+      ? likedCommentIds.filter(id => id !== commentId)
+      : [...likedCommentIds, commentId]
+    setLikedCommentIds(next)
+    localStorage.setItem('liked_comment_ids', JSON.stringify(next))
+    setComments(prev => prev.map(c =>
+      c.id === commentId ? { ...c, _localLikes: Math.max(0, (c._localLikes ?? 0) + (alreadyLiked ? -1 : 1)) } : c
+    ))
+  }
 
   const shareJob = async (e) => {
     e.stopPropagation()
@@ -552,7 +591,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
     const { data: profilesData } = await supabase.from('profiles').select('id, nickname').in('id', userIds)
     const nickMap = {}
     if (profilesData) profilesData.forEach(p => { nickMap[p.id] = p.nickname })
-    setComments(commentsData.map(c => ({ ...c, nickname: nickMap[c.user_id] || '익명' })))
+    setComments(commentsData.map(c => ({ ...c, nickname: nickMap[c.user_id] || '익명', _localLikes: 0 })))
   }
 
   const postComment = async (e) => {
@@ -590,7 +629,7 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
 
   return (
     <div onClick={() => setOpen(o => !o)}
-      style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s, transform 0.18s', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}
+      style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s', boxShadow:'0 1px 4px rgba(0,0,0,0.06)' }}
       onMouseEnter={e => { e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.1)' }}
       onMouseLeave={e => { e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)' }}
     >
@@ -638,11 +677,17 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
               </button>
             )}
           </div>
-          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:6 }}>
             <div onClick={e => { e.stopPropagation(); onAuthorClick(job.author || '익명') }}
               style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.8, cursor:'pointer', textDecoration:'underline', textDecorationStyle:'dotted', textUnderlineOffset:2 }}>
               {job.author || '익명'}
             </div>
+            {/* F5: Bookmark button */}
+            <button onClick={e => { e.stopPropagation(); onBookmark(job.id) }}
+              title={isBookmarked ? '북마크 해제' : '북마크'}
+              style={{ display:'flex', alignItems:'center', background: isBookmarked ? 'rgba(200,150,60,0.12)' : 'transparent', border:`1px solid ${isBookmarked ? C.accent : C.border}`, borderRadius:20, padding:'4px 8px', cursor:'pointer', fontSize:14, color: isBookmarked ? C.accent : C.sub, transition:'all 0.15s' }}>
+              {isBookmarked ? '🔖' : '🏷️'}
+            </button>
             <button onClick={e => { e.stopPropagation(); onLike(job.id) }}
               style={{ display:'flex', alignItems:'center', gap:4, background: liked ? 'rgba(200,150,60,0.1)' : 'transparent', border:`1px solid ${liked ? C.accent : C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:13, color: liked ? C.accent : C.sub, transition:'all 0.15s' }}>
               <span>{liked ? '❤️' : '🤍'}</span>
@@ -699,14 +744,19 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
 
             {topLevel.map(c => (
               <div key={c.id} style={{ marginBottom:12 }}>
-                {/* 댓글 */}
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
                   <div style={{ flex:1 }}>
                     <span style={{ fontSize:12, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginRight:6 }}>{c.nickname}</span>
                     <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginRight:8 }}>{timeAgo(c.created_at)}</span>
                     <span style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.6 }}>{c.content}</span>
                   </div>
-                  <div style={{ display:'flex', gap:6, flexShrink:0 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
+                    {/* F6: Comment like button */}
+                    <button onClick={e => toggleCommentLike(e, c.id)}
+                      style={{ display:'flex', alignItems:'center', gap:2, background:'none', border:'none', color: likedCommentIds.includes(c.id) ? '#E05060' : C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>
+                      {likedCommentIds.includes(c.id) ? '❤️' : '🤍'}
+                      {(c._localLikes > 0) && <span>{c._localLikes}</span>}
+                    </button>
                     {user && replyTo?.id !== c.id && (
                       <button onClick={e => { e.stopPropagation(); setReplyTo({ id: c.id, nickname: c.nickname }); setReplyText('') }}
                         style={{ background:'none', border:'none', color:C.accent, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>답글</button>
@@ -717,7 +767,6 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
                   </div>
                 </div>
 
-                {/* 대댓글 */}
                 {replies(c.id).map(r => (
                   <div key={r.id} style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginTop:8, paddingLeft:16, borderLeft:`2px solid ${C.border}` }}>
                     <div style={{ flex:1 }}>
@@ -725,13 +774,19 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
                       <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginRight:8 }}>{timeAgo(r.created_at)}</span>
                       <span style={{ fontSize:13, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.6 }}>{r.content}</span>
                     </div>
-                    {user?.id === r.user_id && (
-                      <button onClick={e => deleteComment(e, r.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>삭제</button>
-                    )}
+                    <div style={{ display:'flex', alignItems:'center', gap:4, flexShrink:0 }}>
+                      <button onClick={e => toggleCommentLike(e, r.id)}
+                        style={{ display:'flex', alignItems:'center', gap:2, background:'none', border:'none', color: likedCommentIds.includes(r.id) ? '#E05060' : C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>
+                        {likedCommentIds.includes(r.id) ? '❤️' : '🤍'}
+                        {(r._localLikes > 0) && <span>{r._localLikes}</span>}
+                      </button>
+                      {user?.id === r.user_id && (
+                        <button onClick={e => deleteComment(e, r.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>삭제</button>
+                      )}
+                    </div>
                   </div>
                 ))}
 
-                {/* 답글 입력창 */}
                 {replyTo?.id === c.id && (
                   <div style={{ display:'flex', gap:8, marginTop:8, paddingLeft:16 }}>
                     <input
@@ -777,10 +832,16 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
   )
 }
 
+// ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const params = new URLSearchParams(window.location.search)
   const targetId = params.get('id')
-  const [user, setUser]                         = useState(null)
+
+  // F9: Dark mode
+  const [dark, setDark] = useState(() => localStorage.getItem('dark_mode') === 'true')
+  const C = dark ? darkC : lightC
+
+  const [user, setUser]  = useState(null)
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
   const [region, setRegion]       = useState(params.get('region') || "전체")
   const [type, setType]           = useState(params.get('type') || "전체")
@@ -799,6 +860,61 @@ export default function App() {
   const [editNickname, setEditNickname] = useState(false)
   const [currentNickname, setCurrentNickname] = useState('')
   const [showLoginPrompt, setShowLoginPrompt]   = useState(false)
+
+  // F5: Bookmarks
+  const [bookmarkedIds, setBookmarkedIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('bookmarked_ids') || '[]') } catch { return [] }
+  })
+  const [bookmarkOnly, setBookmarkOnly] = useState(false)
+
+  // F8: View mode (list / map)
+  const [viewMode, setViewMode] = useState('list')
+
+  // F10: Filter collapse on scroll
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false)
+  const lastScrollY = useRef(0)
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY
+      if (y > 80 && y > lastScrollY.current + 12) setFiltersCollapsed(true)
+      else if (y < lastScrollY.current - 12) setFiltersCollapsed(false)
+      lastScrollY.current = y
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Persist dark mode preference
+  useEffect(() => {
+    localStorage.setItem('dark_mode', dark ? 'true' : 'false')
+  }, [dark])
+
+  // F7: Dynamic meta tags for direct-link posts
+  useEffect(() => {
+    if (!targetId || loading || !jobs.length) return
+    const job = jobs.find(j => String(j.id) === targetId)
+    if (!job) return
+    document.title = `${job.title} (${job.region}) — 호주잡`
+    const setMeta = (attr, val, prop = 'property') => {
+      let el = document.querySelector(`meta[${prop}="${attr}"]`)
+      if (!el) { el = document.createElement('meta'); el.setAttribute(prop, attr); document.head.appendChild(el) }
+      el.content = val
+    }
+    setMeta('og:title', `${job.title} — 호주잡`)
+    setMeta('og:description', `${job.region} · $${job.hourly}/hr AUD · "${job.review}"`)
+    setMeta('twitter:title', `${job.title} — 호주잡`, 'name')
+    setMeta('twitter:description', `${job.region} · $${job.hourly}/hr AUD · "${job.review}"`, 'name')
+  }, [targetId, jobs.length, loading])
+
+  // F5: Bookmark toggle
+  const toggleBookmark = (jobId) => {
+    setBookmarkedIds(prev => {
+      const next = prev.includes(jobId) ? prev.filter(id => id !== jobId) : [...prev, jobId]
+      localStorage.setItem('bookmarked_ids', JSON.stringify(next))
+      return next
+    })
+  }
 
   const fetchProfile = async (userId) => {
     const { data } = await supabase.from('profiles').select('nickname').eq('id', userId).single()
@@ -845,6 +961,7 @@ export default function App() {
     .filter(j => j.hourly >= minHourly)
     .filter(j => !secondVisaOnly    || j.second_visa === true)
     .filter(j => !engLevel          || j.english_level === engLevel)
+    .filter(j => !bookmarkOnly      || bookmarkedIds.includes(j.id))
     .sort((a,b) =>
       sort === "좋아요순" ? b.likes - a.likes :
       sort === "별점순"   ? b.stars - a.stars :
@@ -876,199 +993,257 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight:'100vh', background:C.bg }}>
+    <ThemeCtx.Provider value={C}>
+      <div style={{ minHeight:'100vh', background:C.bg, transition:'background 0.3s' }}>
 
-      {/* 헤더 */}
-      <div style={{ borderBottom:`1px solid ${C.border}`, background:`rgba(250,247,242,0.95)`, backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <div>
-          <div style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:22, fontWeight:400, color:C.dark }}>🦘 호주잡</div>
-          <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>호주 워홀러들의 경험담</div>
-        </div>
-        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          {user ? (
-            <>
-              <img
-                src={user.user_metadata?.avatar_url}
-                alt="프로필"
-                title="닉네임 수정"
-                onClick={() => setEditNickname(true)}
-                style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${C.accent}`, objectFit:'cover', cursor:'pointer' }}
-                onError={e => { e.target.style.display='none' }}
-              />
-              <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly ? C.dark : 'transparent', color: myPostsOnly ? C.gold : C.sub, border:`1px solid ${myPostsOnly ? C.dark : C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>
-                내 글
-              </button>
-              <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <button onClick={signIn} style={{ background:'transparent', color:C.dark, border:`1.5px solid ${C.dark}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
-              <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-              구글로 로그인
+        {/* 헤더 */}
+        <div style={{ borderBottom:`1px solid ${C.border}`, background: dark ? 'rgba(26,18,16,0.96)' : 'rgba(250,247,242,0.95)', backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', transition:'background 0.3s' }}>
+          <div>
+            <div style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:22, fontWeight:400, color:C.dark }}>🦘 호주잡</div>
+            <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>호주 워홀러들의 경험담</div>
+          </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            {/* F9: Dark mode toggle */}
+            <button onClick={() => setDark(d => !d)} title={dark ? '라이트 모드' : '다크 모드'}
+              style={{ background:'transparent', border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 10px', cursor:'pointer', fontSize:15, lineHeight:1 }}>
+              {dark ? '☀️' : '🌙'}
             </button>
+            {user ? (
+              <>
+                <img
+                  src={user.user_metadata?.avatar_url}
+                  alt="프로필"
+                  title="닉네임 수정"
+                  onClick={() => setEditNickname(true)}
+                  style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${C.accent}`, objectFit:'cover', cursor:'pointer' }}
+                  onError={e => { e.target.style.display='none' }}
+                />
+                <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly ? C.dark : 'transparent', color: myPostsOnly ? C.gold : C.sub, border:`1px solid ${myPostsOnly ? C.dark : C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>
+                  내 글
+                </button>
+                <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <button onClick={signIn} style={{ background:'transparent', color:C.dark, border:`1.5px solid ${C.dark}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                구글로 로그인
+              </button>
+            )}
+            <button onClick={() => user ? setShowModal(true) : setShowLoginPrompt(true)} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+              + 후기 쓰기
+            </button>
+          </div>
+        </div>
+
+        <div style={{ maxWidth:680, margin:'0 auto', padding:'0 16px 80px' }}>
+
+          {/* 히어로 */}
+          <div style={{ padding:'36px 0 24px' }}>
+            <div style={{ fontSize:20, marginBottom:10, letterSpacing:'4px' }}>🇰🇷 → 🇦🇺</div>
+            <h1 style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:'clamp(30px,7vw,48px)', fontWeight:400, color:C.dark, margin:'0 0 12px', lineHeight:1.2 }}>
+              <span style={{ fontSize:'clamp(14px,3.5vw,20px)', color:C.sub, display:'block', marginBottom:6 }}>한국인끼리만 공유하는</span>
+              호주 워킹홀리데이<br />경험담
+            </h1>
+            <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
+              시급부터 장단점, 면접 꿀팁까지 — 직접 겪은 사람만 아는 정보.
+            </p>
+          </div>
+
+          {/* 통계 배너 */}
+          {stats && (
+            <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
+              {[
+                { label:'총 후기', value:`${stats.total}개` },
+                { label:'평균 시급', value:`$${stats.avgHourly}/hr` },
+                { label:'인기 직종', value:stats.topTag },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ flex:1, minWidth:90, background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'10px 14px', textAlign:'center' }}>
+                  <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:4 }}>{label}</div>
+                  <div style={{ fontSize:16, fontWeight:700, color:C.dark, fontFamily:"'Jua', sans-serif" }}>{value}</div>
+                </div>
+              ))}
+            </div>
           )}
-          <button onClick={() => user ? setShowModal(true) : setShowLoginPrompt(true)} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-            + 후기 쓰기
-          </button>
-        </div>
-      </div>
 
-      <div style={{ maxWidth:680, margin:'0 auto', padding:'0 16px 80px' }}>
+          {/* 검색 */}
+          <div style={{ marginBottom:12, position:'relative' }}>
+            <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:15, pointerEvents:'none' }}>🔍</span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="직업명, 회사명으로 검색..."
+              style={{ width:'100%', background:C.card, border:`1.5px solid ${search ? C.accent : C.border}`, borderRadius:10, padding:'10px 14px 10px 36px', fontFamily:'Noto Sans KR', fontSize:14, color:C.dark, outline:'none', boxSizing:'border-box', transition:'border-color 0.15s' }}
+            />
+            {search && (
+              <button onClick={() => setSearch('')} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:14, color:C.sub }}>✕</button>
+            )}
+          </div>
 
-        {/* 히어로 */}
-        <div style={{ padding:'36px 0 24px' }}>
-          <div style={{ fontSize:20, marginBottom:10, letterSpacing:'4px' }}>🇰🇷 → 🇦🇺</div>
-          <h1 style={{ fontFamily:"'Jua', 'Noto Sans KR', sans-serif", fontSize:'clamp(30px,7vw,48px)', fontWeight:400, color:C.dark, margin:'0 0 12px', lineHeight:1.2 }}>
-            <span style={{ fontSize:'clamp(14px,3.5vw,20px)', color:C.sub, display:'block', marginBottom:6 }}>한국인끼리만 공유하는</span>
-            호주 워킹홀리데이<br />경험담
-          </h1>
-          <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
-            시급부터 장단점, 면접 꿀팁까지 — 직접 겪은 사람만 아는 정보.
-          </p>
-        </div>
+          {/* F8: View mode toggle */}
+          <div style={{ display:'flex', gap:6, marginBottom:12 }}>
+            <button onClick={() => setViewMode('list')} style={chip(viewMode === 'list')}>📋 목록</button>
+            <button onClick={() => setViewMode('map')} style={chip(viewMode === 'map')}>🗺️ 지도</button>
+          </div>
 
-        {/* 통계 배너 */}
-        {stats && (
-          <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
-            {[
-              { label:'총 후기', value:`${stats.total}개` },
-              { label:'평균 시급', value:`$${stats.avgHourly}/hr` },
-              { label:'인기 직종', value:stats.topTag },
-            ].map(({ label, value }) => (
-              <div key={label} style={{ flex:1, minWidth:90, background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'10px 14px', textAlign:'center' }}>
-                <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:4 }}>{label}</div>
-                <div style={{ fontSize:16, fontWeight:700, color:C.dark, fontFamily:"'Jua', sans-serif" }}>{value}</div>
+          {/* F10: Collapsible filters */}
+          <div style={{ overflow:'hidden', maxHeight: filtersCollapsed ? 0 : 600, opacity: filtersCollapsed ? 0 : 1, transition:'max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease', pointerEvents: filtersCollapsed ? 'none' : 'auto' }}>
+            <div style={{ marginBottom:20, display:'flex', flexDirection:'column', gap:8 }}>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                {REGIONS.map(r => <button key={r} onClick={() => setRegion(r)} style={chip(region===r)}>{r}</button>)}
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* 검색 */}
-        <div style={{ marginBottom:12, position:'relative' }}>
-          <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:15, pointerEvents:'none' }}>🔍</span>
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="직업명, 회사명으로 검색..."
-            style={{ width:'100%', background:C.card, border:`1.5px solid ${search ? C.accent : C.border}`, borderRadius:10, padding:'10px 14px 10px 36px', fontFamily:'Noto Sans KR', fontSize:14, color:C.dark, outline:'none', boxSizing:'border-box', transition:'border-color 0.15s' }}
-          />
-          {search && (
-            <button onClick={() => setSearch('')} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:14, color:C.sub }}>✕</button>
-          )}
-        </div>
-
-        {/* 필터 */}
-        <div style={{ marginBottom:20, display:'flex', flexDirection:'column', gap:8 }}>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-            {REGIONS.map(r => <button key={r} onClick={() => setRegion(r)} style={chip(region===r)}>{r}</button>)}
-          </div>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-            {TAGS.map(t => (
-              <button key={t} onClick={() => setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
-                style={chip(selectedTags.includes(t))}>{t}</button>
-            ))}
-          </div>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
-            {TYPES.map(t => <button key={t} onClick={() => setType(t)} style={chip(type===t)}>{t}</button>)}
-            <div style={{ width:1, height:16, background:C.border, margin:'0 2px' }} />
-            {[0,20,25,30,35].map(n => (
-              <button key={n} onClick={() => setMinHourly(n)} style={chip(minHourly===n)}>
-                {n === 0 ? '시급 전체' : `$${n}+`}
-              </button>
-            ))}
-          </div>
-          <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
-            <button onClick={() => setSecondVisaOnly(v=>!v)}
-              style={{ ...chip(secondVisaOnly), borderColor: secondVisaOnly ? '#4CAF50' : C.border, background: secondVisaOnly ? '#E8F5E9' : 'transparent', color: secondVisaOnly ? '#2E7D32' : C.sub }}>
-              2nd 비자 가능
-            </button>
-            {['','하','중','상'].map(lv => (
-              <button key={lv} onClick={() => setEngLevel(lv)}
-                style={{ ...chip(engLevel===lv),
-                  borderColor: engLevel===lv && lv ? (lv==='하'?'#4CAF50':lv==='중'?'#FFD54F':'#F44336') : engLevel===lv ? C.dark : C.border,
-                  background:  engLevel===lv && lv ? (lv==='하'?'#E8F5E9':lv==='중'?'#FFF8E1':'#FFEBEE') : engLevel===lv ? C.dark : 'transparent',
-                  color:       engLevel===lv && lv ? (lv==='하'?'#2E7D32':lv==='중'?'#FF9800':'#C62828') : engLevel===lv ? C.gold : C.sub }}>
-                {lv === '' ? '영어 전체' : `영어 ${ENG_LABELS[lv] ?? lv}`}
-              </button>
-            ))}
-            <button onClick={() => setPhotoOnly(p=>!p)} style={{ ...chip(photoOnly), borderColor: photoOnly ? C.accent : C.border, background: photoOnly ? 'rgba(200,150,60,0.12)' : 'transparent', color: photoOnly ? C.accent : C.sub }}>📷 사진만</button>
-            <div style={{ marginLeft:'auto' }}>
-              <select value={sort} onChange={e => setSort(e.target.value)} style={selectStyle}>
-                {["좋아요순","별점순","시급순","조회순","최신순"].map(s => <option key={s}>{s}</option>)}
-              </select>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+                {TAGS.map(t => (
+                  <button key={t} onClick={() => setSelectedTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                    style={chip(selectedTags.includes(t))}>{t}</button>
+                ))}
+              </div>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
+                {TYPES.map(t => <button key={t} onClick={() => setType(t)} style={chip(type===t)}>{t}</button>)}
+                <div style={{ width:1, height:16, background:C.border, margin:'0 2px' }} />
+                {[0,20,25,30,35].map(n => (
+                  <button key={n} onClick={() => setMinHourly(n)} style={chip(minHourly===n)}>
+                    {n === 0 ? '시급 전체' : `$${n}+`}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
+                <button onClick={() => setSecondVisaOnly(v=>!v)}
+                  style={{ ...chip(secondVisaOnly), borderColor: secondVisaOnly ? '#4CAF50' : C.border, background: secondVisaOnly ? '#E8F5E9' : 'transparent', color: secondVisaOnly ? '#2E7D32' : C.sub }}>
+                  2nd 비자 가능
+                </button>
+                {['','하','중','상'].map(lv => (
+                  <button key={lv} onClick={() => setEngLevel(lv)}
+                    style={{ ...chip(engLevel===lv),
+                      borderColor: engLevel===lv && lv ? (lv==='하'?'#4CAF50':lv==='중'?'#FFD54F':'#F44336') : engLevel===lv ? C.dark : C.border,
+                      background:  engLevel===lv && lv ? (lv==='하'?'#E8F5E9':lv==='중'?'#FFF8E1':'#FFEBEE') : engLevel===lv ? C.dark : 'transparent',
+                      color:       engLevel===lv && lv ? (lv==='하'?'#2E7D32':lv==='중'?'#FF9800':'#C62828') : engLevel===lv ? C.gold : C.sub }}>
+                    {lv === '' ? '영어 전체' : `영어 ${ENG_LABELS[lv] ?? lv}`}
+                  </button>
+                ))}
+                <button onClick={() => setPhotoOnly(p=>!p)} style={{ ...chip(photoOnly), borderColor: photoOnly ? C.accent : C.border, background: photoOnly ? 'rgba(200,150,60,0.12)' : 'transparent', color: photoOnly ? C.accent : C.sub }}>📷 사진만</button>
+                {/* F5: Bookmark filter */}
+                <button onClick={() => setBookmarkOnly(v=>!v)}
+                  style={{ ...chip(bookmarkOnly), borderColor: bookmarkOnly ? C.accent : C.border, background: bookmarkOnly ? 'rgba(200,150,60,0.12)' : 'transparent', color: bookmarkOnly ? C.accent : C.sub }}>
+                  🔖 북마크
+                </button>
+                <div style={{ marginLeft:'auto' }}>
+                  <select value={sort} onChange={e => setSort(e.target.value)} style={selectStyle}>
+                    {["좋아요순","별점순","시급순","조회순","최신순"].map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {authorFilter && (
-          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, background:'rgba(200,150,60,0.08)', border:`1px solid ${C.accent}`, borderRadius:10, padding:'8px 14px' }}>
-            <span style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.dark }}>
-              <b>{authorFilter}</b>님의 후기만 보는 중
-            </span>
-            <button onClick={() => setAuthorFilter('')} style={{ marginLeft:'auto', background:'none', border:'none', color:C.sub, cursor:'pointer', fontSize:13 }}>✕ 해제</button>
+          {/* F10: Expand button when filters are collapsed */}
+          {filtersCollapsed && (
+            <button onClick={() => { setFiltersCollapsed(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              style={{ width:'100%', marginBottom:10, background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, transition:'all 0.15s' }}>
+              필터 펼치기 ∨
+            </button>
+          )}
+
+          {authorFilter && (
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, background:'rgba(200,150,60,0.08)', border:`1px solid ${C.accent}`, borderRadius:10, padding:'8px 14px' }}>
+              <span style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.dark }}>
+                <b>{authorFilter}</b>님의 후기만 보는 중
+              </span>
+              <button onClick={() => setAuthorFilter('')} style={{ marginLeft:'auto', background:'none', border:'none', color:C.sub, cursor:'pointer', fontSize:13 }}>✕ 해제</button>
+            </div>
+          )}
+          <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:16, opacity:0.7 }}>
+            {loading ? '불러오는 중…' : `${filtered.length}개 결과`}
           </div>
-        )}
-        <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:16, opacity:0.7 }}>
-          {loading ? '불러오는 중…' : `${filtered.length}개 결과`}
-        </div>
 
-        {/* 카드 목록 */}
-        <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-          {loading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:'20px', overflow:'hidden' }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
-                    <div style={{ flex:1 }}>
-                      <div style={{ height:18, width:'55%', background:'#EDE8E0', borderRadius:6, marginBottom:8, animation:'pulse 1.4s ease-in-out infinite' }} />
-                      <div style={{ height:13, width:'35%', background:'#EDE8E0', borderRadius:6, animation:'pulse 1.4s ease-in-out infinite' }} />
-                    </div>
-                    <div style={{ width:56, height:48, background:'#EDE8E0', borderRadius:10, animation:'pulse 1.4s ease-in-out infinite' }} />
-                  </div>
-                  <div style={{ height:40, background:'#EDE8E0', borderRadius:8, animation:'pulse 1.4s ease-in-out infinite' }} />
+          {/* F8: Map view */}
+          {viewMode === 'map' && (
+            <div style={{ marginBottom:16 }}>
+              <Suspense fallback={
+                <div style={{ height:360, display:'flex', alignItems:'center', justifyContent:'center', background:C.card, border:`1px solid ${C.border}`, borderRadius:12, fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>
+                  지도 불러오는 중...
                 </div>
-              ))
-            : filtered.map(job => (
-                <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} onLike={toggleLike} user={user} onEdit={setEditJob} onLoginPrompt={() => setShowLoginPrompt(true)} defaultOpen={targetId === String(job.id)} updateJob={updateJob} incrementView={incrementView} onAuthorClick={setAuthorFilter} />
-              ))
-          }
+              }>
+                <LazyMapView jobs={filtered} onSelectRegion={r => setRegion(r)} selectedRegion={region} />
+              </Suspense>
+              <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginTop:8, textAlign:'center', opacity:0.7 }}>
+                핀을 클릭하면 해당 State로 필터돼요 · 다시 클릭하면 해제
+              </div>
+            </div>
+          )}
+
+          {/* 카드 목록 */}
+          <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+            {loading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:'20px', overflow:'hidden' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:12 }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ height:18, width:'55%', background: dark ? '#3D2E22' : '#EDE8E0', borderRadius:6, marginBottom:8, animation:'pulse 1.4s ease-in-out infinite' }} />
+                        <div style={{ height:13, width:'35%', background: dark ? '#3D2E22' : '#EDE8E0', borderRadius:6, animation:'pulse 1.4s ease-in-out infinite' }} />
+                      </div>
+                      <div style={{ width:56, height:48, background: dark ? '#3D2E22' : '#EDE8E0', borderRadius:10, animation:'pulse 1.4s ease-in-out infinite' }} />
+                    </div>
+                    <div style={{ height:40, background: dark ? '#3D2E22' : '#EDE8E0', borderRadius:8, animation:'pulse 1.4s ease-in-out infinite' }} />
+                  </div>
+                ))
+              : filtered.map(job => (
+                  <JobCard
+                    key={job.id}
+                    job={job}
+                    liked={likedIds.includes(job.id)}
+                    onLike={toggleLike}
+                    isBookmarked={bookmarkedIds.includes(job.id)}
+                    onBookmark={toggleBookmark}
+                    user={user}
+                    onEdit={setEditJob}
+                    onLoginPrompt={() => setShowLoginPrompt(true)}
+                    defaultOpen={targetId === String(job.id)}
+                    updateJob={updateJob}
+                    incrementView={incrementView}
+                    onAuthorClick={setAuthorFilter}
+                  />
+                ))
+            }
+          </div>
+
+          {!loading && filtered.length === 0 && (
+            <div style={{ textAlign:'center', padding:'60px 20px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:14 }}>
+              {bookmarkOnly ? '북마크한 후기가 없어요.' : '아직 후기가 없어요. 첫 번째로 공유해보세요!'}
+            </div>
+          )}
         </div>
 
-        {!loading && filtered.length === 0 && (
-          <div style={{ textAlign:'center', padding:'60px 20px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:14 }}>
-            아직 후기가 없어요. 첫 번째로 공유해보세요!
-          </div>
+        {showNicknameModal && user && (
+          <NicknameModal user={user} onSave={(n) => { setCurrentNickname(n); setShowNicknameModal(false) }} />
+        )}
+        {editNickname && user && (
+          <NicknameModal user={user} isEdit currentNickname={currentNickname}
+            onSave={(n) => { setCurrentNickname(n); setEditNickname(false) }}
+            onClose={() => setEditNickname(false)} />
+        )}
+        {showLoginPrompt && (
+          <LoginPromptModal onClose={() => setShowLoginPrompt(false)} onLogin={signIn} />
+        )}
+        {showModal && (
+          <SubmitModal
+            onClose={() => setShowModal(false)}
+            addJob={addJob}
+            updateJob={updateJob}
+            user={user}
+          />
+        )}
+        {editJob && (
+          <SubmitModal
+            onClose={() => setEditJob(null)}
+            addJob={addJob}
+            updateJob={updateJob}
+            editData={editJob}
+            user={user}
+          />
         )}
       </div>
-
-      {showNicknameModal && user && (
-        <NicknameModal user={user} onSave={(n) => { setCurrentNickname(n); setShowNicknameModal(false) }} />
-      )}
-      {editNickname && user && (
-        <NicknameModal user={user} isEdit currentNickname={currentNickname}
-          onSave={(n) => { setCurrentNickname(n); setEditNickname(false) }}
-          onClose={() => setEditNickname(false)} />
-      )}
-      {showLoginPrompt && (
-        <LoginPromptModal onClose={() => setShowLoginPrompt(false)} onLogin={signIn} />
-      )}
-      {showModal && (
-        <SubmitModal
-          onClose={() => setShowModal(false)}
-          addJob={addJob}
-          updateJob={updateJob}
-          user={user}
-        />
-      )}
-      {editJob && (
-        <SubmitModal
-          onClose={() => setEditJob(null)}
-          addJob={addJob}
-          updateJob={updateJob}
-          editData={editJob}
-          user={user}
-        />
-      )}
-    </div>
+    </ThemeCtx.Provider>
   )
 }
