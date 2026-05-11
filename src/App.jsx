@@ -514,13 +514,19 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
   const [copied, setCopied] = useState(false)
   const submitting = useRef(false)
 
-  const shareJob = (e) => {
+  const shareJob = async (e) => {
     e.stopPropagation()
     const url = `${window.location.origin}?id=${job.id}`
-    navigator.clipboard.writeText(url).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: `${job.title} — 호주잡`, text: `"${job.review}"`, url })
+      } catch {}
+    } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
+    }
   }
   const hasPhotos = job.photos?.length > 0
   const isOwner = user && job.user_id && user.id === job.user_id
@@ -769,15 +775,16 @@ function JobCard({ job, liked, onLike, user, onEdit, onLoginPrompt, defaultOpen,
 }
 
 export default function App() {
-  const targetId = new URLSearchParams(window.location.search).get('id')
+  const params = new URLSearchParams(window.location.search)
+  const targetId = params.get('id')
   const [user, setUser]                         = useState(null)
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
-  const [region, setRegion]       = useState("전체")
-  const [type, setType]           = useState("전체")
+  const [region, setRegion]       = useState(params.get('region') || "전체")
+  const [type, setType]           = useState(params.get('type') || "전체")
   const [sort, setSort]           = useState("좋아요순")
   const [photoOnly, setPhotoOnly] = useState(false)
   const [myPostsOnly, setMyPostsOnly] = useState(false)
-  const [selectedTags, setSelectedTags] = useState([])
+  const [selectedTags, setSelectedTags] = useState(params.get('tags') ? params.get('tags').split(',') : [])
   const [search, setSearch] = useState("")
   const [minHourly, setMinHourly] = useState(0)
   const [secondVisaOnly, setSecondVisaOnly] = useState(false)
@@ -809,6 +816,15 @@ export default function App() {
     })
     return () => subscription.unsubscribe()
   }, [])
+
+  useEffect(() => {
+    const p = new URLSearchParams()
+    if (region !== '전체') p.set('region', region)
+    if (type !== '전체') p.set('type', type)
+    if (selectedTags.length) p.set('tags', selectedTags.join(','))
+    const qs = p.toString()
+    window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
+  }, [region, type, selectedTags])
 
   const signIn  = () => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
   const signOut = () => supabase.auth.signOut()
