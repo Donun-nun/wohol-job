@@ -21,15 +21,15 @@
   <!-- Left accent bar -->
   <rect x="80" y="180" width="6" height="270" rx="3" fill="#C8963C"/>
 
-  <!-- Korea → Australia label -->
-  <text x="108" y="210" font-family="Georgia, serif" font-size="22" fill="#C8963C" letter-spacing="4" font-weight="400">KOREA → AUSTRALIA</text>
+  <!-- Label -->
+  <text x="108" y="210" font-family="Georgia, serif" font-size="22" fill="#C8963C" letter-spacing="4" font-weight="400">WORKING HOLIDAY VISA · AUSTRALIA</text>
 
   <!-- Main title -->
-  <text x="108" y="300" font-family="Georgia, 'Times New Roman', serif" font-size="74" fill="#2C1A00" font-weight="900" letter-spacing="-1">호주 워킹홀리데이</text>
-  <text x="108" y="385" font-family="Georgia, 'Times New Roman', serif" font-size="74" fill="#2C1A00" font-weight="900" letter-spacing="-1">직업 후기</text>
+  <text x="108" y="305" font-family="Georgia, 'Times New Roman', serif" font-size="78" fill="#2C1A00" font-weight="900" letter-spacing="-1">WHV Jobs &amp;</text>
+  <text x="108" y="395" font-family="Georgia, 'Times New Roman', serif" font-size="78" fill="#2C1A00" font-weight="900" letter-spacing="-1">Reviews</text>
 
   <!-- Subtitle -->
-  <text x="108" y="440" font-family="Arial, sans-serif" font-size="26" fill="#8A7060">시급부터 솔직한 장단점까지 — 직접 겪은 사람만 아는 정보</text>
+  <text x="108" y="448" font-family="Arial, sans-serif" font-size="26" fill="#8A7060">Pay rates, pros &amp; cons, interview tips — from people who've been there.</text>
 
   <!-- Kangaroo emoji area (right side) -->
   <rect x="820" y="160" width="300" height="300" rx="24" fill="#2C1A00" opacity="0.06"/>
@@ -38,5 +38,5 @@
   <!-- Bottom bar -->
   <rect x="0" y="570" width="1200" height="60" fill="#2C1A00"/>
   <text x="108" y="608" font-family="Arial, sans-serif" font-size="22" fill="#FFD580" font-weight="700">wohol-job.vercel.app</text>
-  <text x="1092" y="608" font-family="Arial, sans-serif" font-size="22" fill="#C8963C" text-anchor="end">호주잡 🦘</text>
+  <text x="1092" y="608" font-family="Arial, sans-serif" font-size="22" fill="#C8963C" text-anchor="end">WOHOL 🦘</text>
 </svg>
