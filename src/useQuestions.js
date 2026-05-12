@@ -22,7 +22,7 @@ export function useQuestions() {
 
     setQuestions(data.map(q => ({
       ...q,
-      nickname: q.user_id ? (nickMap[q.user_id] || '알 수 없음') : '익명',
+      nickname: q.user_id ? (nickMap[q.user_id] || 'Unknown') : 'Anonymous',
     })))
     setLoading(false)
   }

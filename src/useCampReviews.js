@@ -24,7 +24,7 @@ export function useCampReviews(user) {
       ...r,
       pros: (r.pros || '').split('\n').filter(Boolean),
       cons: (r.cons || '').split('\n').filter(Boolean),
-      nickname: r.user_id ? (nickMap[r.user_id] || '알 수 없음') : '익명',
+      nickname: r.user_id ? (nickMap[r.user_id] || 'Unknown') : 'Anonymous',
     })))
     setLoading(false)
   }

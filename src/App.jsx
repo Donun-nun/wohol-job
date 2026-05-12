@@ -20,7 +20,7 @@ const LazyMapView = lazy(() =>
   import('./MapView').catch(() => ({
     default: () => (
       <div style={{ height:360, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Noto Sans KR', fontSize:13, color:'#8A7060' }}>
-        지도 로드 실패. 터미널에서 <code style={{ margin:'0 6px' }}>npm install react-leaflet leaflet</code> 후 재시작하세요.
+        Map load failed. Run <code style={{ margin:'0 6px' }}>npm install react-leaflet leaflet</code> in terminal and restart.
       </div>
     ),
   }))
@@ -34,10 +34,10 @@ function getAuthorBadges(author, authorStats) {
   const s = authorStats?.[author]
   if (!s) return []
   const badges = []
-  if (s.count >= 5) badges.push({ emoji: '🏆', label: '베테랑 (후기 5개+)' })
-  else if (s.count >= 3) badges.push({ emoji: '⭐', label: '경험자 (후기 3개+)' })
-  if (s.hasPhoto) badges.push({ emoji: '📸', label: '사진 후기 작성자' })
-  if (s.totalLikes >= 10) badges.push({ emoji: '🔥', label: '인기 작성자' })
+  if (s.count >= 5) badges.push({ emoji: '🏆', label: 'Veteran (5+ reviews)' })
+  else if (s.count >= 3) badges.push({ emoji: '⭐', label: 'Experienced (3+ reviews)' })
+  if (s.hasPhoto) badges.push({ emoji: '📸', label: 'Photo reviewer' })
+  if (s.totalLikes >= 10) badges.push({ emoji: '🔥', label: 'Popular writer' })
   return badges
 }
 
@@ -50,15 +50,15 @@ function NicknameModal({ user, onSave, onClose, isEdit, currentNickname }) {
 
   const handleSave = async () => {
     const trimmed = nickname.trim()
-    if (!trimmed) { setError('닉네임을 입력해주세요.'); return }
-    if (trimmed.length < 2) { setError('2자 이상 입력해주세요.'); return }
-    if (trimmed.length > 20) { setError('20자 이하로 입력해주세요.'); return }
+    if (!trimmed) { setError('Please enter a nickname.'); return }
+    if (trimmed.length < 2) { setError('At least 2 characters required.'); return }
+    if (trimmed.length > 20) { setError('Maximum 20 characters.'); return }
     setSaving(true)
     const { error: err } = isEdit
       ? await supabase.from('profiles').update({ nickname: trimmed }).eq('id', user.id)
       : await supabase.from('profiles').insert({ id: user.id, nickname: trimmed })
     if (err) {
-      setError(err.code === '23505' ? '이미 사용 중인 닉네임이에요.' : '저장 실패. 다시 시도해주세요.')
+      setError(err.code === '23505' ? 'Nickname already taken.' : 'Save failed. Please try again.')
       setSaving(false)
     } else { onSave(trimmed) }
   }
@@ -67,21 +67,21 @@ function NicknameModal({ user, onSave, onClose, isEdit, currentNickname }) {
     <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:380, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ fontSize:36, marginBottom:14 }}>👤</div>
-        <div style={{ fontFamily:"'Noto Sans KR'", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? '닉네임 수정' : '닉네임을 정해줘요'}</div>
+        <div style={{ fontFamily:"'Noto Sans KR'", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? 'Edit nickname' : 'Set your nickname'}</div>
         <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:24, lineHeight:1.7 }}>
-          모든 글에 이 닉네임이 표시돼요.<br />수정하면 기존 글도 자동 반영돼요.
+          This nickname will appear on all your posts.<br />Changes apply to existing posts too.
         </div>
         <input value={nickname} onChange={e => { setNickname(e.target.value); setError('') }}
           onKeyDown={e => e.key === 'Enter' && handleSave()}
-          placeholder="예: 퍼스워홀러, 광산킹, Kenny" maxLength={20}
+          placeholder="e.g. Perth WHV, Mining King, Kenny" maxLength={20}
           style={{ width:'100%', background:C.fill, border:`1.5px solid ${error ? '#E05050' : C.border}`, borderRadius:8, padding:'11px 14px', color:C.dark, fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box', marginBottom:6 }} />
         {error && <div style={{ fontSize:12, color:'#E05050', fontFamily:'Noto Sans KR', marginBottom:10 }}>{error}</div>}
         <button onClick={handleSave} disabled={saving}
           style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor: saving ? 'default' : 'pointer', opacity: saving ? 0.7 : 1, marginTop:8 }}>
-          {saving ? '저장 중...' : (isEdit ? '닉네임 변경하기' : '닉네임 저장하기')}
+          {saving ? 'Saving...' : (isEdit ? 'Update nickname' : 'Save nickname')}
         </button>
         {isEdit && onClose && (
-          <button onClick={onClose} style={{ marginTop:10, width:'100%', background:'transparent', color:C.sub, border:'none', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>취소</button>
+          <button onClick={onClose} style={{ marginTop:10, width:'100%', background:'transparent', color:C.sub, border:'none', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>Cancel</button>
         )}
       </div>
     </div>
@@ -95,23 +95,23 @@ function LoginPromptModal({ onClose, onLogin }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:360, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ fontSize:36, marginBottom:14 }}>🔐</div>
-        <div style={{ fontFamily:"'Noto Sans KR'", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>로그인이 필요해요</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:28 }}>구글 계정으로 로그인해주세요.</div>
+        <div style={{ fontFamily:"'Noto Sans KR'", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>Login required</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:28 }}>Please sign in with your Google account.</div>
         <button onClick={onLogin} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer', marginBottom:10 }}>
           <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-          구글로 로그인하기
+          Sign in with Google
         </button>
-        <button onClick={onClose} style={{ width:'100%', background:'transparent', color:C.sub, border:'none', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>취소</button>
+        <button onClick={onClose} style={{ width:'100%', background:'transparent', color:C.sub, border:'none', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>Cancel</button>
       </div>
     </div>
   )
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const REGIONS = ["전체", "WA", "NSW", "VIC", "QLD", "SA", "NT", "TAS", "ACT"]
-const TYPES   = ["전체", "Casual", "Part-time", "Full-time"]
-const TAGS    = ['광산','카페','농장','주방','건설','서비스','물류','기타']
-const ENG_LABELS = { 하:'下', 중:'中', 상:'上' }
+const REGIONS = ["All", "WA", "NSW", "VIC", "QLD", "SA", "NT", "TAS", "ACT"]
+const TYPES   = ["All", "Casual", "Part-time", "Full-time"]
+const TAGS    = ['Mining','Cafe','Farm','Kitchen','Construction','Service','Logistics','Other']
+const ENG_LABELS = { 하:'Low', 중:'Med', 상:'High' }
 const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casual', hourly:'', shift:'', review:'', pros:'', cons:'', daily_life:'', interview_tips:'', stars:4, author:'', tags:[], second_visa:null, english_level:'' }
 
 const CLOUDINARY_CLOUD  = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
@@ -124,11 +124,47 @@ const OPENCHAT_LINKS = {
 
 function timeAgo(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000)
-  if (diff < 60) return '방금'
-  if (diff < 3600) return `${Math.floor(diff/60)}분 전`
-  if (diff < 86400) return `${Math.floor(diff/3600)}시간 전`
-  if (diff < 2592000) return `${Math.floor(diff/86400)}일 전`
-  return `${Math.floor(diff/2592000)}개월 전`
+  if (diff < 60) return 'just now'
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`
+  if (diff < 2592000) return `${Math.floor(diff/86400)}d ago`
+  return `${Math.floor(diff/2592000)}mo ago`
+}
+
+async function translateToEn(text) {
+  if (!text?.trim()) return text
+  const res = await fetch(
+    `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.slice(0, 500))}&langpair=ko|en`
+  )
+  const json = await res.json()
+  return json.responseData?.translatedText || text
+}
+
+function TranslateButton({ fields }) {
+  const C = useC()
+  const [translated, setTranslated] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const handle = async (e) => {
+    e.stopPropagation()
+    if (translated) { setTranslated(null); return }
+    setLoading(true)
+    const combined = fields.filter(Boolean).join('\n\n')
+    const result = await translateToEn(combined)
+    setTranslated(result)
+    setLoading(false)
+  }
+  return (
+    <div style={{ marginTop:8 }}>
+      <button onClick={handle} style={{ fontSize:11, color:C.sub, background:'transparent', border:`1px solid ${C.border}`, borderRadius:6, padding:'3px 8px', cursor:'pointer', fontFamily:'sans-serif' }}>
+        {loading ? '...' : translated ? '✕ Hide translation' : '🌐 Translate'}
+      </button>
+      {translated && (
+        <div style={{ marginTop:6, padding:'10px 12px', background:C.fill, borderRadius:8, fontSize:12, color:C.dark, lineHeight:1.7, fontFamily:'sans-serif', whiteSpace:'pre-wrap' }}>
+          {translated}
+        </div>
+      )}
+    </div>
+  )
 }
 
 async function uploadPhoto(file) {
@@ -216,18 +252,18 @@ function PhotoGallery({ photos, isOwner, onCaptionSave }) {
                     onKeyDown={e => { if (e.key==='Enter') saveCaption(e); if (e.key==='Escape') setEditing(false) }}
                     maxLength={60} placeholder="사진 설명 입력..."
                     style={{ flex:1, background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:8, padding:'7px 11px', color:'#fff', fontSize:13, fontFamily:'Noto Sans KR', outline:'none' }} />
-                  <button onClick={saveCaption} style={{ background:C.accent, color:'#fff', border:'none', borderRadius:8, padding:'7px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', fontWeight:700 }}>저장</button>
-                  <button onClick={e => { e.stopPropagation(); setEditing(false) }} style={{ background:'rgba(255,255,255,0.1)', color:'#ccc', border:'none', borderRadius:8, padding:'7px 10px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>취소</button>
+                  <button onClick={saveCaption} style={{ background:C.accent, color:'#fff', border:'none', borderRadius:8, padding:'7px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', fontWeight:700 }}>Save</button>
+                  <button onClick={e => { e.stopPropagation(); setEditing(false) }} style={{ background:'rgba(255,255,255,0.1)', color:'#ccc', border:'none', borderRadius:8, padding:'7px 10px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>Cancel</button>
                 </div>
               ) : (
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <span style={{ color: photos[active].caption ? '#ddd' : 'rgba(255,255,255,0.35)', fontFamily:'Noto Sans KR', fontSize:13, flex:1 }}>
-                    {photos[active].caption || (isOwner ? '+ 설명 추가' : '')}
+                    {photos[active].caption || (isOwner ? '+ Add caption' : '')}
                   </span>
                   {isOwner && (
                     <button onClick={e => { e.stopPropagation(); setEditing(true) }}
                       style={{ background:'rgba(255,255,255,0.1)', color:'#ccc', border:'1px solid rgba(255,255,255,0.2)', borderRadius:6, padding:'4px 10px', fontFamily:'Noto Sans KR', fontSize:11, cursor:'pointer' }}>
-                      ✏️ 수정
+                      ✏️ Edit
                     </button>
                   )}
                 </div>
@@ -253,7 +289,7 @@ function PhotoUploader({ photos, setPhotos }) {
     try {
       const urls = await Promise.all(files.map(f => uploadPhoto(f)))
       setPhotos(prev => [...prev, ...urls.map(url => ({ url, caption: '' }))])
-    } catch { alert('사진 업로드 실패. 다시 시도해주세요.') }
+    } catch { alert('Photo upload failed. Please try again.') }
     setUploading(false)
   }
   return (
@@ -269,17 +305,17 @@ function PhotoUploader({ photos, setPhotos }) {
               </div>
               <input value={p.caption}
                 onChange={e => setPhotos(prev => prev.map((ph,idx) => idx===i ? { ...ph, caption:e.target.value } : ph))}
-                placeholder="사진 설명" maxLength={60}
+                placeholder="Caption" maxLength={60}
                 style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 10px', fontSize:12, fontFamily:'Noto Sans KR', color:C.dark, outline:'none', alignSelf:'center' }} />
             </div>
           ))}
         </div>
       )}
       <label style={{ display:'inline-block', cursor:'pointer', background: uploading ? 'rgba(0,0,0,0.03)' : 'rgba(200,150,60,0.07)', border:`1.5px dashed ${C.accent}`, borderRadius:10, padding:'10px 20px', fontFamily:'Noto Sans KR', fontSize:13, color:C.accent }}>
-        {uploading ? '업로드 중...' : '📷 사진 선택하기'}
+        {uploading ? 'Uploading...' : '📷 Select photos'}
         <input type="file" accept="image/*" multiple onChange={handleFiles} style={{ display:'none' }} disabled={uploading} />
       </label>
-      <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginTop:6 }}>여러 장 동시 선택 가능</div>
+      <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginTop:6 }}>You can select multiple photos</div>
     </div>
   )
 }
@@ -314,7 +350,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
   const labelStyle = { fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:6, display:'block' }
 
   const handleSubmit = async () => {
-    if (!form.title || !form.hourly || !form.review) { alert('직업명, 시급, 한줄평은 필수예요!'); return }
+    if (!form.title || !form.hourly || !form.review) { alert('Job title, hourly rate, and summary are required!'); return }
     setSubmitting(true)
     const { tags, ...formRest } = form
     const payload = {
@@ -326,16 +362,16 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     const success = isEdit ? await updateJob(editData.id, payload) : await addJob(payload)
     setSubmitting(false)
     if (success) setDone(true)
-    else alert('저장 실패. 다시 시도해주세요.')
+    else alert('Save failed. Please try again.')
   }
 
   if (done) return (
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:40, width:'100%', maxWidth:400, textAlign:'center' }}>
         <div style={{ fontSize:44, marginBottom:16 }}>{isEdit ? '✅' : '🎉'}</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? '수정 완료!' : '공유해줘서 고마워요!'}</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? '변경사항이 저장됐어요.' : '다음 워홀러에게 큰 도움이 될 거예요.'}</div>
-        <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? 'Updated!' : 'Thanks for sharing!'}</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? 'Your changes have been saved.' : 'This will help the next WHV worker.'}</div>
+        <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>Close</button>
       </div>
     </div>
   )
@@ -344,26 +380,26 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:28, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark }}>{isEdit ? '후기 수정하기' : '내 경험 공유하기'}</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark }}>{isEdit ? 'Edit review' : 'Share your experience'}</div>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'#bbb' }}>✕</button>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-          <div><label style={labelStyle}>직업명 *</label><input style={inputStyle} placeholder="예: Service Attendant" value={form.title} onChange={e => set('title', e.target.value)} /></div>
-          <div><label style={labelStyle}>고용주/회사</label><input style={inputStyle} placeholder="예: Sodexo" value={form.company} onChange={e => set('company', e.target.value)} /></div>
+          <div><label style={labelStyle}>Job title *</label><input style={inputStyle} placeholder="e.g. Service Attendant" value={form.title} onChange={e => set('title', e.target.value)} /></div>
+          <div><label style={labelStyle}>Employer / company</label><input style={inputStyle} placeholder="e.g. Sodexo" value={form.company} onChange={e => set('company', e.target.value)} /></div>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-          <div><label style={labelStyle}>주(State) *</label>
+          <div><label style={labelStyle}>State *</label>
             <select style={inputStyle} value={form.region} onChange={e => set('region', e.target.value)}>
               {['WA','NSW','VIC','QLD','SA','NT','TAS','ACT'].map(r => <option key={r}>{r}</option>)}
             </select></div>
-          <div><label style={labelStyle}>고용 형태 *</label>
+          <div><label style={labelStyle}>Employment type *</label>
             <select style={inputStyle} value={form.type} onChange={e => set('type', e.target.value)}>
               {['Casual','Part-time','Full-time'].map(t => <option key={t}>{t}</option>)}
             </select></div>
         </div>
-        <div style={{ marginBottom:12 }}><label style={labelStyle}>세부 위치 (예: 퍼스 노스, 번다버그)</label><input style={inputStyle} placeholder="도시 또는 지역명" value={form.location} onChange={e => set('location', e.target.value)} /></div>
+        <div style={{ marginBottom:12 }}><label style={labelStyle}>Location (city / suburb)</label><input style={inputStyle} placeholder="e.g. Perth North, Bundaberg" value={form.location} onChange={e => set('location', e.target.value)} /></div>
         <div style={{ marginBottom:12 }}>
-          <label style={labelStyle}>직종 분류 (선택 — 안 하면 자동 분류)</label>
+          <label style={labelStyle}>Job category (optional — auto-detected if blank)</label>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             {TAGS.map(t => (
               <button key={t} type="button" onClick={() => set('tags', form.tags.includes(t) ? form.tags.filter(x => x !== t) : [...form.tags, t])}
@@ -374,19 +410,19 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           </div>
         </div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-          <div><label style={labelStyle}>시급 (AUD) *</label><input style={inputStyle} type="number" placeholder="예: 32" value={form.hourly} onChange={e => set('hourly', e.target.value)} /></div>
-          <div><label style={labelStyle}>주요 시프트</label><input style={inputStyle} placeholder="예: 12h 야간" value={form.shift} onChange={e => set('shift', e.target.value)} /></div>
+          <div><label style={labelStyle}>Hourly rate (AUD) *</label><input style={inputStyle} type="number" placeholder="e.g. 32" value={form.hourly} onChange={e => set('hourly', e.target.value)} /></div>
+          <div><label style={labelStyle}>Main shift</label><input style={inputStyle} placeholder="e.g. 12h nights" value={form.shift} onChange={e => set('shift', e.target.value)} /></div>
         </div>
-        <div style={{ marginBottom:12 }}><label style={labelStyle}>한줄평 * — 이 직업을 한 문장으로!</label><input style={inputStyle} placeholder="예: 몸은 힘들지만 통장이 웃는다" value={form.review} onChange={e => set('review', e.target.value)} /></div>
-        <div style={{ marginBottom:12 }}><label style={labelStyle}>장점 (줄바꿈으로 구분)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder="시급 높음&#10;숙식 제공&#10;저축 빠름" value={form.pros} onChange={e => set('pros', e.target.value)} /></div>
-        <div style={{ marginBottom:12 }}><label style={labelStyle}>단점 (줄바꿈으로 구분)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder="소셜 생활 제로&#10;체력 소모 큼" value={form.cons} onChange={e => set('cons', e.target.value)} /></div>
-        <div style={{ marginBottom:12 }}><label style={labelStyle}>하루 일과 — A day in the life</label><textarea style={{ ...inputStyle, height:100, resize:'vertical' }} placeholder="예: 6시 기상 → 7시 브렉퍼스트 룸 세팅 → ..." value={form.daily_life} onChange={e => set('daily_life', e.target.value)} /></div>
-        <div style={{ marginBottom:12 }}><label style={labelStyle}>면접 꿀팁 (선택)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder="예: 경력 없어도 됨, 복장은 캐주얼 OK" value={form.interview_tips} onChange={e => set('interview_tips', e.target.value)} /></div>
+        <div style={{ marginBottom:12 }}><label style={labelStyle}>One-line summary * — describe this job in one sentence!</label><input style={inputStyle} placeholder="e.g. Hard work but the savings are real" value={form.review} onChange={e => set('review', e.target.value)} /></div>
+        <div style={{ marginBottom:12 }}><label style={labelStyle}>Pros (one per line)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder={"High pay\nFood & accommodation included\nFast savings"} value={form.pros} onChange={e => set('pros', e.target.value)} /></div>
+        <div style={{ marginBottom:12 }}><label style={labelStyle}>Cons (one per line)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder={"No social life\nPhysically draining"} value={form.cons} onChange={e => set('cons', e.target.value)} /></div>
+        <div style={{ marginBottom:12 }}><label style={labelStyle}>A day in the life</label><textarea style={{ ...inputStyle, height:100, resize:'vertical' }} placeholder="e.g. 6am wake up → 7am breakfast room setup → ..." value={form.daily_life} onChange={e => set('daily_life', e.target.value)} /></div>
+        <div style={{ marginBottom:12 }}><label style={labelStyle}>Interview tips (optional)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder="e.g. No experience needed, casual dress OK" value={form.interview_tips} onChange={e => set('interview_tips', e.target.value)} /></div>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
           <div>
-            <label style={labelStyle}>2nd 비자 가능 여부</label>
+            <label style={labelStyle}>2nd visa eligible</label>
             <div style={{ display:'flex', gap:6 }}>
-              {[['모름',null],['가능 ✓',true],['불가 ✗',false]].map(([label,val]) => (
+              {[['Unknown',null],['Yes ✓',true],['No ✗',false]].map(([label,val]) => (
                 <button key={label} type="button" onClick={() => set('second_visa', form.second_visa===val ? null : val)}
                   style={{ flex:1, padding:'8px 4px', borderRadius:8, cursor:'pointer', fontSize:12, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s',
                     background: form.second_visa===val ? (val===true?'#E8F5E9':val===false?'#FFEBEE':C.fill) : 'transparent',
@@ -396,7 +432,7 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
             </div>
           </div>
           <div>
-            <label style={labelStyle}>영어 필요도</label>
+            <label style={labelStyle}>English required</label>
             <div style={{ display:'flex', gap:6 }}>
               {[['하','#4CAF50'],['중','#FF9800'],['상','#F44336']].map(([level,color]) => (
                 <button key={level} type="button" onClick={() => set('english_level', form.english_level===level ? '' : level)}
@@ -409,19 +445,19 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
           </div>
         </div>
         <div style={{ marginBottom:16 }}>
-          <label style={labelStyle}>추천 점수</label>
+          <label style={labelStyle}>Rating</label>
           <div style={{ display:'flex', gap:8 }}>
             {[1,2,3,4,5].map(n => (
               <button key={n} onClick={() => set('stars', n)} style={{ background: n<=form.stars?'rgba(245,166,35,0.12)':'transparent', border:`1.5px solid ${n<=form.stars?'#F5A623':C.border}`, borderRadius:8, padding:'8px 14px', cursor:'pointer', color: n<=form.stars?'#F5A623':C.border, fontSize:18 }}>★</button>
             ))}
           </div>
         </div>
-        <div style={{ marginBottom:20 }}><label style={labelStyle}>📷 현장 사진 (선택)</label><PhotoUploader photos={photos} setPhotos={setPhotos} /></div>
+        <div style={{ marginBottom:20 }}><label style={labelStyle}>📷 Photos (optional)</label><PhotoUploader photos={photos} setPhotos={setPhotos} /></div>
         <div style={{ background:'#FFF8EC', border:'1px solid #F0D898', borderRadius:8, padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:12, color:'#7A5A10', lineHeight:1.7 }}>
-          ⚠️ 허위 사실이나 과장된 정보는 다른 워홀러에게 피해를 줄 수 있어요.
+          ⚠️ False or exaggerated information can mislead other WHV workers.
         </div>
         <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting?'default':'pointer', opacity: submitting?0.7:1 }}>
-          {submitting ? '저장 중...' : (isEdit ? '수정 완료' : '공유하기')}
+          {submitting ? 'Saving...' : (isEdit ? 'Save changes' : 'Submit')}
         </button>
       </div>
     </div>
@@ -446,7 +482,7 @@ function QuestionCard({ q, user, onLoginPrompt, onDelete }) {
       const { data: profiles } = await supabase.from('profiles').select('id, nickname').in('id', userIds)
       if (profiles) profiles.forEach(p => { nickMap[p.id] = p.nickname })
     }
-    setAnswers(data.map(a => ({ ...a, nickname: nickMap[a.user_id] || '익명' })))
+    setAnswers(data.map(a => ({ ...a, nickname: nickMap[a.user_id] || 'Anonymous' })))
   }
 
   useEffect(() => { if (open) fetchAnswers() }, [open])
@@ -471,7 +507,7 @@ function QuestionCard({ q, user, onLoginPrompt, onDelete }) {
       <div style={{ padding:'14px 16px' }}>
         <div style={{ display:'flex', gap:6, marginBottom:8, alignItems:'center', flexWrap:'wrap' }}>
           <span style={{ fontSize:10, background: isRequest ? '#EEF2FF' : C.fill, color: isRequest ? '#3A4A9A' : C.sub, border:`1px solid ${isRequest ? '#C5D0F0' : C.border}`, borderRadius:10, padding:'1px 8px', fontFamily:'Noto Sans KR' }}>
-            {isRequest ? '📝 후기 요청' : '💬 질문'}
+            {isRequest ? '📝 Review request' : '💬 Question'}
           </span>
           {q.region && <span style={{ fontSize:10, background:C.fill, color:C.sub, border:`1px solid ${C.border}`, borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>{q.region}</span>}
           {q.tag && !isRequest && <span style={{ fontSize:10, background:C.fill, color:C.sub, border:`1px solid ${C.border}`, borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>{q.tag}</span>}
@@ -481,17 +517,17 @@ function QuestionCard({ q, user, onLoginPrompt, onDelete }) {
           <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR' }}>{q.nickname}</span>
           <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR' }}>· {timeAgo(q.created_at)}</span>
           <span style={{ fontSize:11, color: open ? C.accent : C.sub, fontFamily:'Noto Sans KR', marginLeft:'auto' }}>
-            💬 {open ? answers.length : (q.answer_count || 0)}개 · {open ? '접기 ∧' : '답변 보기 ∨'}
+            💬 {open ? answers.length : (q.answer_count || 0)} · {open ? 'Close ∧' : 'See answers ∨'}
           </span>
           {user?.id === q.user_id && (
             <button onClick={e => { e.stopPropagation(); onDelete(q.id) }}
-              style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', fontFamily:'Noto Sans KR', padding:'0 4px' }}>삭제</button>
+              style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', fontFamily:'Noto Sans KR', padding:'0 4px' }}>Delete</button>
           )}
         </div>
       </div>
       {open && (
         <div onClick={e => e.stopPropagation()} style={{ borderTop:`1px solid ${C.border}`, padding:'14px 16px', background:C.bg }}>
-          {answers.length === 0 && <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:12, opacity:0.6 }}>아직 답변이 없어요. 첫 답변을 달아보세요!</div>}
+          {answers.length === 0 && <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:12, opacity:0.6 }}>No answers yet. Be the first!</div>}
           {answers.map((a, i) => (
             <div key={a.id} style={{ marginBottom:12, paddingBottom:12, borderBottom: i < answers.length-1 ? `1px solid ${C.border}` : 'none' }}>
               <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:4 }}>
@@ -505,14 +541,14 @@ function QuestionCard({ q, user, onLoginPrompt, onDelete }) {
             <div style={{ display:'flex', gap:8, marginTop:answers.length > 0 ? 4 : 0 }}>
               <input value={answerText} onChange={e => setAnswerText(e.target.value)}
                 onKeyDown={e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); postAnswer() } }}
-                placeholder="답변 달기..."
+                placeholder="Write an answer..."
                 style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 12px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none' }} />
               <button onClick={postAnswer} disabled={posting || !answerText.trim()}
-                style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', opacity:(!answerText.trim()||posting)?0.5:1 }}>등록</button>
+                style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', opacity:(!answerText.trim()||posting)?0.5:1 }}>Post</button>
             </div>
           ) : (
             <button onClick={onLoginPrompt} style={{ fontSize:12, color:C.accent, fontFamily:'Noto Sans KR', background:'none', border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 14px', cursor:'pointer', width:'100%' }}>
-              로그인하면 답변할 수 있어요
+              Log in to answer
             </button>
           )}
         </div>
@@ -559,7 +595,7 @@ function QuestionBoard({ user, onLoginPrompt }) {
     <div>
       {/* 오픈채팅 섹션 */}
       <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'14px 16px', marginBottom:16 }}>
-        <div style={{ fontSize:13, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginBottom:10 }}>💬 지역별 카카오 오픈채팅</div>
+        <div style={{ fontSize:13, fontWeight:700, color:C.dark, fontFamily:'Noto Sans KR', marginBottom:10 }}>💬 Regional open chats</div>
         <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
           {Object.entries(OPENCHAT_LINKS).map(([region, url]) => (
             url ? (
@@ -574,15 +610,15 @@ function QuestionBoard({ user, onLoginPrompt }) {
             )
           ))}
         </div>
-        <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginTop:8, opacity:0.7 }}>링크는 순차적으로 추가될 예정이에요</div>
+        <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginTop:8, opacity:0.7 }}>Links will be added gradually</div>
       </div>
 
       {/* 헤더 */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
-        <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>{filtered.length}개의 글</div>
+        <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>{filtered.length} posts</div>
         <button onClick={() => user ? setShowForm(v => !v) : onLoginPrompt()}
           style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'7px 16px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-          + 글쓰기
+          + Post
         </button>
       </div>
 
@@ -590,7 +626,7 @@ function QuestionBoard({ user, onLoginPrompt }) {
       {showForm && (
         <div style={{ background:C.card, border:`1.5px solid ${C.accent}`, borderRadius:12, padding:'16px', marginBottom:16 }}>
           <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-            {[['question','💬 질문'],['request','📝 후기 요청']].map(([type, label]) => (
+            {[['question','💬 Question'],['request','📝 Review request']].map(([type, label]) => (
               <button key={type} onClick={() => setFormType(type)}
                 style={{ flex:1, padding:'8px', borderRadius:8, cursor:'pointer', fontSize:13, fontFamily:'Noto Sans KR', border:'1.5px solid', transition:'all 0.15s',
                   background: formType===type ? C.dark : 'transparent',
@@ -602,24 +638,24 @@ function QuestionBoard({ user, onLoginPrompt }) {
           </div>
           <div style={{ display:'flex', gap:8, marginBottom:10 }}>
             <select value={formRegion} onChange={e => setFormRegion(e.target.value)} style={{ ...selectStyle, flex:1 }}>
-              <option value="">지역 선택 (선택)</option>
+              <option value="">State (optional)</option>
               {['WA','NSW','VIC','QLD','SA','NT','TAS','ACT'].map(r => <option key={r}>{r}</option>)}
             </select>
             {formType === 'question' && (
               <select value={formTag} onChange={e => setFormTag(e.target.value)} style={{ ...selectStyle, flex:1 }}>
-                <option value="">직종 선택 (선택)</option>
+                <option value="">Category (optional)</option>
                 {TAGS.map(t => <option key={t}>{t}</option>)}
               </select>
             )}
           </div>
           <textarea value={formContent} onChange={e => setFormContent(e.target.value)}
-            placeholder={formType === 'request' ? '어떤 직종/회사의 후기가 필요한가요? (예: 퍼스 BWS 편의점 후기 있으신 분?)' : '궁금한 점을 자유롭게 질문해요. (예: 농장일 한국어만 해도 되나요?)'}
+            placeholder={formType === 'request' ? 'What job/company review do you need? (e.g. Anyone worked at BWS in Perth?)' : 'Ask anything freely. (e.g. Can I do farm work with only basic English?)'}
             style={{ width:'100%', background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'10px 12px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none', resize:'vertical', minHeight:80, boxSizing:'border-box' }} />
           <div style={{ display:'flex', gap:8, marginTop:10, justifyContent:'flex-end' }}>
-            <button onClick={() => setShowForm(false)} style={{ background:'transparent', border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 14px', fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, cursor:'pointer' }}>취소</button>
+            <button onClick={() => setShowForm(false)} style={{ background:'transparent', border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 14px', fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, cursor:'pointer' }}>Cancel</button>
             <button onClick={handleSubmit} disabled={submitting || !formContent.trim()}
               style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'7px 16px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer', opacity:(!formContent.trim()||submitting)?0.5:1 }}>
-              {submitting ? '등록 중...' : '등록'}
+              {submitting ? 'Posting...' : 'Post'}
             </button>
           </div>
         </div>
@@ -627,7 +663,7 @@ function QuestionBoard({ user, onLoginPrompt }) {
 
       {/* 지역 필터 */}
       <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:14 }}>
-        <button onClick={() => setFilterRegion('')} style={chip(!filterRegion)}>전체</button>
+        <button onClick={() => setFilterRegion('')} style={chip(!filterRegion)}>All</button>
         {['WA','NSW','VIC','QLD','SA','NT','TAS','ACT'].map(r => (
           <button key={r} onClick={() => setFilterRegion(filterRegion === r ? '' : r)} style={chip(filterRegion === r)}>{r}</button>
         ))}
@@ -635,10 +671,10 @@ function QuestionBoard({ user, onLoginPrompt }) {
 
       {/* 글 목록 */}
       {loading ? (
-        <div style={{ textAlign:'center', padding:'40px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:13 }}>불러오는 중...</div>
+        <div style={{ textAlign:'center', padding:'40px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:13 }}>Loading...</div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign:'center', padding:'60px 20px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:14 }}>
-          아직 글이 없어요.<br />첫 질문이나 후기 요청을 올려보세요!
+          No posts yet.<br />Ask the first question or request a review!
         </div>
       ) : (
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
@@ -661,13 +697,13 @@ function BestPosts({ jobs, likedIds, onLike, user, onEdit, onLoginPrompt, onShar
   const medals = ['🥇','🥈','🥉']
 
   if (!jobs.length) return (
-    <div style={{ textAlign:'center', padding:'60px 20px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:14 }}>후기가 아직 없어요.</div>
+    <div style={{ textAlign:'center', padding:'60px 20px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:14 }}>No reviews yet.</div>
   )
 
   return (
     <div>
       <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:16, lineHeight:1.6 }}>
-        이달 좋아요를 가장 많이 받은 후기예요. {best.length < 3 ? '(전체 기간 기준)' : ''}
+        Most liked reviews this month. {best.length < 3 ? '(All-time)' : ''}
       </div>
       <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
         {best.map((job, i) => (
@@ -679,7 +715,7 @@ function BestPosts({ jobs, likedIds, onLike, user, onEdit, onLoginPrompt, onShar
               isBookmarked={bookmarkedIds.includes(job.id)} onBookmark={onBookmark}
               user={user} onEdit={onEdit} onLoginPrompt={onLoginPrompt} onShare={onShare}
               updateJob={updateJob} incrementView={incrementView} onAuthorClick={onAuthorClick}
-              authorBadges={getAuthorBadges(job.author || '익명', authorStats)} />
+              authorBadges={getAuthorBadges(job.author || 'Anonymous', authorStats)} />
           </div>
         ))}
       </div>
@@ -716,7 +752,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
     e.stopPropagation()
     const url = `${window.location.origin}?id=${job.id}`
     if (navigator.share) {
-      try { await navigator.share({ title: `${job.title} — 호주잡`, text: `"${job.review}"`, url }) } catch {}
+      try { await navigator.share({ title: `${job.title} — WOHOL`, text: `"${job.review}"`, url }) } catch {}
     } else {
       navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
     }
@@ -743,7 +779,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
     const { data: profilesData } = await supabase.from('profiles').select('id, nickname').in('id', userIds)
     const nickMap = {}
     if (profilesData) profilesData.forEach(p => { nickMap[p.id] = p.nickname })
-    setComments(commentsData.map(c => ({ ...c, nickname: nickMap[c.user_id] || '익명', _localLikes: 0 })))
+    setComments(commentsData.map(c => ({ ...c, nickname: nickMap[c.user_id] || 'Anonymous', _localLikes: 0 })))
   }
 
   const postComment = async (e) => {
@@ -803,7 +839,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
               <span style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>{job.region}{job.location ? ` · ${job.location}` : ''} · {job.type}</span>
               {job.second_visa === true  && <span style={{ fontSize:10, background:'#E8F5E9', color:'#2E7D32', border:'1px solid #A5D6A7', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✓</span>}
               {job.second_visa === false && <span style={{ fontSize:10, background:'#F5F5F5', color:'#AAAAAA', border:'1px solid #E0E0E0', borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>2nd ✗</span>}
-              {job.english_level && <span style={{ fontSize:10, background: job.english_level==='하'?'#E8F5E9':job.english_level==='중'?'#FFF8E1':'#FFEBEE', color: job.english_level==='하'?'#2E7D32':job.english_level==='중'?'#FF9800':'#C62828', border:`1px solid ${job.english_level==='하'?'#A5D6A7':job.english_level==='중'?'#FFD54F':'#EF9A9A'}`, borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>영어 {ENG_LABELS[job.english_level]}</span>}
+              {job.english_level && <span style={{ fontSize:10, background: job.english_level==='하'?'#E8F5E9':job.english_level==='중'?'#FFF8E1':'#FFEBEE', color: job.english_level==='하'?'#2E7D32':job.english_level==='중'?'#FF9800':'#C62828', border:`1px solid ${job.english_level==='하'?'#A5D6A7':job.english_level==='중'?'#FFD54F':'#EF9A9A'}`, borderRadius:10, padding:'1px 7px', fontFamily:'Noto Sans KR' }}>Eng {ENG_LABELS[job.english_level]}</span>}
             </div>
           </div>
           <div style={{ background:C.dark, color:C.gold, borderRadius:10, padding:'8px 14px', textAlign:'center', minWidth:56, flexShrink:0 }}>
@@ -822,7 +858,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
             {isOwner && (
               <button onClick={e => { e.stopPropagation(); onEdit(job) }}
                 style={{ background:'transparent', border:`1px solid ${C.accent}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:11, color:C.accent }}>
-                수정
+                Edit
               </button>
             )}
           </div>
@@ -831,15 +867,15 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
             {authorBadges?.map(b => (
               <span key={b.emoji} title={b.label} style={{ fontSize:13, cursor:'default' }}>{b.emoji}</span>
             ))}
-            <div onClick={e => { e.stopPropagation(); onAuthorClick(job.author || '익명') }}
+            <div onClick={e => { e.stopPropagation(); onAuthorClick(job.author || 'Anonymous') }}
               style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.8, cursor:'pointer', textDecoration:'underline', textDecorationStyle:'dotted', textUnderlineOffset:2 }}>
-              {job.author || '익명'}
+              {job.author || 'Anonymous'}
             </div>
             {/* 도움됐어요 (구 좋아요) */}
             <button onClick={e => { e.stopPropagation(); onLike(job.id) }}
               style={{ display:'flex', alignItems:'center', gap:4, background: liked ? 'rgba(200,150,60,0.1)' : 'transparent', border:`1px solid ${liked ? C.accent : C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:12, color: liked ? C.accent : C.sub, transition:'all 0.15s' }}>
               <span>{liked ? '👍' : '👍'}</span>
-              <span style={{ fontSize:11 }}>{liked ? '도움됐어요' : '도움돼요'} {job.likes > 0 ? job.likes : ''}</span>
+              <span style={{ fontSize:11 }}>{liked ? 'Helpful ✓' : 'Helpful?'} {job.likes > 0 ? job.likes : ''}</span>
             </button>
             <div style={{ display:'flex', alignItems:'center', gap:3, fontSize:13, color:C.sub, opacity:0.7 }}>
               <span>💬</span><span style={{ fontSize:11 }}>{comments.length}</span>
@@ -847,7 +883,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
             {job.views > 0 && <div style={{ display:'flex', alignItems:'center', gap:2, fontSize:11, color:C.sub, opacity:0.6 }}><span>👁</span><span>{job.views}</span></div>}
             <button onClick={shareJob}
               style={{ display:'flex', alignItems:'center', gap:4, background: copied?'rgba(200,150,60,0.1)':'transparent', border:`1px solid ${copied?C.accent:C.border}`, borderRadius:20, padding:'4px 10px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:12, color: copied?C.accent:C.sub, transition:'all 0.15s' }}>
-              {copied ? '✓ 복사됨' : '🔗 공유'}
+              {copied ? '✓ Copied' : '🔗 Share'}
             </button>
           </div>
         </div>
@@ -857,11 +893,11 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
         <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 20px 20px', background:C.bg }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom: (job.daily_life||job.interview_tips) ? 10 : 0 }}>
             <div style={{ background:'#F3FAF3', borderRadius:10, padding:14 }}>
-              <div style={{ fontSize:11, color:'#3A7A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👍 장점</div>
+              <div style={{ fontSize:11, color:'#3A7A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👍 Pros</div>
               {job.pros.map((p,i) => <div key={i} style={{ fontSize:13, color:'#2A5A2A', fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {p}</div>)}
             </div>
             <div style={{ background:'#FAF3F3', borderRadius:10, padding:14 }}>
-              <div style={{ fontSize:11, color:'#8A3A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👎 단점</div>
+              <div style={{ fontSize:11, color:'#8A3A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>👎 Cons</div>
               {job.cons.map((c,i) => <div key={i} style={{ fontSize:13, color:'#6A2A2A', fontFamily:'Noto Sans KR', marginBottom:4, lineHeight:1.5 }}>· {c}</div>)}
             </div>
           </div>
@@ -873,15 +909,17 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
           )}
           {job.interview_tips && (
             <div style={{ background:'#F0F4FF', borderRadius:10, padding:14 }}>
-              <div style={{ fontSize:11, color:'#3A4A8A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>💡 면접 꿀팁</div>
+              <div style={{ fontSize:11, color:'#3A4A8A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:8 }}>💡 Interview tips</div>
               <div style={{ fontSize:13, color:'#2A3060', fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{job.interview_tips}</div>
             </div>
           )}
 
-          {/* 댓글 */}
+          <TranslateButton fields={[job.review, ...(job.pros||[]), ...(job.cons||[]), job.daily_life, job.interview_tips].filter(Boolean)} />
+
+          {/* Comments */}
           <div style={{ marginTop:14, borderTop:`1px solid ${C.border}`, paddingTop:14 }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:10 }}>댓글 {comments.length > 0 ? comments.length : ''}</div>
-            {topLevel.length === 0 && <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.6, marginBottom:10 }}>첫 댓글을 달아보세요</div>}
+            <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:10 }}>Comments {comments.length > 0 ? comments.length : ''}</div>
+            {topLevel.length === 0 && <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', opacity:0.6, marginBottom:10 }}>Be the first to comment</div>}
 
             {topLevel.map(c => (
               <div key={c.id} style={{ marginBottom:12 }}>
@@ -898,10 +936,10 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
                     </button>
                     {user && replyTo?.id !== c.id && (
                       <button onClick={e => { e.stopPropagation(); setReplyTo({ id:c.id, nickname:c.nickname }); setReplyText('') }}
-                        style={{ background:'none', border:'none', color:C.accent, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>답글</button>
+                        style={{ background:'none', border:'none', color:C.accent, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>Reply</button>
                     )}
                     {user?.id === c.user_id && (
-                      <button onClick={e => deleteComment(e, c.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>삭제</button>
+                      <button onClick={e => deleteComment(e, c.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>Delete</button>
                     )}
                   </div>
                 </div>
@@ -919,7 +957,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
                         {likedCommentIds.includes(r.id) ? '❤️' : '🤍'}{(r._localLikes > 0) && <span>{r._localLikes}</span>}
                       </button>
                       {user?.id === r.user_id && (
-                        <button onClick={e => deleteComment(e, r.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>삭제</button>
+                        <button onClick={e => deleteComment(e, r.id)} style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', padding:'0 4px', fontFamily:'Noto Sans KR' }}>Delete</button>
                       )}
                     </div>
                   </div>
@@ -929,12 +967,12 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
                   <div style={{ display:'flex', gap:8, marginTop:8, paddingLeft:16 }}>
                     <input autoFocus value={replyText} onChange={e => setReplyText(e.target.value)}
                       onKeyDown={e => { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); postReply(e) } }}
-                      placeholder={`@${replyTo.nickname}에게 답글...`}
+                      placeholder={`@${replyTo.nickname} reply...`}
                       style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 11px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none' }} />
                     <button onClick={postReply} disabled={posting||!replyText.trim()}
-                      style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'7px 12px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', opacity:(!replyText.trim()||posting)?0.5:1 }}>등록</button>
+                      style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'7px 12px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', opacity:(!replyText.trim()||posting)?0.5:1 }}>Post</button>
                     <button onClick={e => { e.stopPropagation(); setReplyTo(null) }}
-                      style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 10px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, cursor:'pointer' }}>취소</button>
+                      style={{ background:'none', border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 10px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, cursor:'pointer' }}>Cancel</button>
                   </div>
                 )}
               </div>
@@ -944,26 +982,26 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
               <div style={{ display:'flex', gap:8, marginTop:4 }}>
                 <input value={commentText} onChange={e => setCommentText(e.target.value)}
                   onKeyDown={e => { if (e.key==='Enter'&&!e.shiftKey) { e.preventDefault(); postComment(e) } }}
-                  placeholder="댓글 달기..."
+                  placeholder="Add a comment..."
                   style={{ flex:1, background:C.fill, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 12px', fontSize:13, fontFamily:'Noto Sans KR', color:C.dark, outline:'none' }} />
                 <button onClick={postComment} disabled={posting||!commentText.trim()}
-                  style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', opacity:(!commentText.trim()||posting)?0.5:1 }}>등록</button>
+                  style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer', opacity:(!commentText.trim()||posting)?0.5:1 }}>Post</button>
               </div>
             ) : (
               <button onClick={onLoginPrompt} style={{ fontSize:12, color:C.accent, fontFamily:'Noto Sans KR', background:'none', border:`1px solid ${C.border}`, borderRadius:8, padding:'7px 14px', cursor:'pointer', width:'100%' }}>
-                로그인하면 댓글을 달 수 있어요
+                Log in to comment
               </button>
             )}
           </div>
 
-          {/* 경험 공유 유도 CTA */}
+          {/* CTA */}
           <div style={{ marginTop:14, background:`linear-gradient(135deg, rgba(200,150,60,0.06), rgba(44,26,0,0.03))`, border:`1px solid rgba(200,150,60,0.25)`, borderRadius:10, padding:'12px 16px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }} onClick={e => e.stopPropagation()}>
             <div>
-              <div style={{ fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, color:C.dark }}>비슷한 경험 있으세요?</div>
-              <div style={{ fontFamily:'Noto Sans KR', fontSize:11, color:C.sub, marginTop:2 }}>후기 하나가 다음 워홀러에게 큰 도움이 돼요</div>
+              <div style={{ fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, color:C.dark }}>Had a similar experience?</div>
+              <div style={{ fontFamily:'Noto Sans KR', fontSize:11, color:C.sub, marginTop:2 }}>One review can really help the next WHV worker</div>
             </div>
             <button onClick={() => onShare()} style={{ flexShrink:0, background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:12, cursor:'pointer', whiteSpace:'nowrap' }}>
-              경험 공유하기 →
+              Share experience →
             </button>
           </div>
         </div>
@@ -978,25 +1016,25 @@ function ReviewTypeModal({ onClose, onSelect }) {
   return (
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:32, width:'100%', maxWidth:360, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:18, fontWeight:700, color:C.dark, marginBottom:6 }}>어떤 후기인가요?</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:24 }}>후기 유형을 선택해주세요</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:18, fontWeight:700, color:C.dark, marginBottom:6 }}>What type of review?</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:24 }}>Select review type</div>
         <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
           <button onClick={() => onSelect('general')}
             style={{ background:C.fill, border:`1.5px solid ${C.border}`, borderRadius:12, padding:'16px', cursor:'pointer', textAlign:'left', transition:'border-color 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.borderColor=C.accent}
             onMouseLeave={e => e.currentTarget.style.borderColor=C.border}>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:15, fontWeight:700, color:C.dark, marginBottom:4 }}>📋 일반 후기</div>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub }}>카페, 농장, 건설 등 모든 직종</div>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:15, fontWeight:700, color:C.dark, marginBottom:4 }}>📋 General review</div>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub }}>Cafe, farm, construction, and more</div>
           </button>
           <button onClick={() => onSelect('fifo')}
             style={{ background:'rgba(200,150,60,0.06)', border:`1.5px solid rgba(200,150,60,0.3)`, borderRadius:12, padding:'16px', cursor:'pointer', textAlign:'left', transition:'border-color 0.15s' }}
             onMouseEnter={e => e.currentTarget.style.borderColor=C.accent}
             onMouseLeave={e => e.currentTarget.style.borderColor='rgba(200,150,60,0.3)'}>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:15, fontWeight:700, color:C.dark, marginBottom:4 }}>⛏️ 광산 스윙 후기</div>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub }}>FIFO 캠프 서비스 어텐던트 전용</div>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:15, fontWeight:700, color:C.dark, marginBottom:4 }}>⛏️ FIFO camp review</div>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub }}>For FIFO camp service attendants</div>
           </button>
         </div>
-        <button onClick={onClose} style={{ marginTop:16, background:'transparent', border:'none', color:C.sub, fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>취소</button>
+        <button onClick={onClose} style={{ marginTop:16, background:'transparent', border:'none', color:C.sub, fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>Cancel</button>
       </div>
     </div>
   )
@@ -1004,8 +1042,8 @@ function ReviewTypeModal({ onClose, onSelect }) {
 
 // ─── FIFO 상수 ────────────────────────────────────────────────────────────────
 const KNOWN_CAMPS = ['Punurunha','Hope Downs 1','Hope Downs 4','Newman Camp','Yandi','Mining Area C','Cloudbreak','Christmas Creek','Karara','Sino Iron','Yandicoogina','Tom Price','Paraburdoo','Pannawonica','South Flank','Jimblebar','Wheelarra']
-const CATERING_COS = ['Sodexo','Compass Group','Downer','ISS','Broadspectrum','기타']
-const CAMP_POSITIONS = ['Kitchen Hand','Housekeeping','Utility','Bar','Retail','기타']
+const CATERING_COS = ['Sodexo','Compass Group','Downer','ISS','Broadspectrum','Other']
+const CAMP_POSITIONS = ['Kitchen Hand','Housekeeping','Utility','Bar','Retail','Other']
 
 // ─── CampReviewModal ──────────────────────────────────────────────────────────
 function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
@@ -1038,15 +1076,15 @@ function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
     : KNOWN_CAMPS
 
   const handleSubmit = async () => {
-    if (!form.camp_name || !form.review) { alert('캠프 이름과 한줄평은 필수예요!'); return }
+    if (!form.camp_name || !form.review) { alert('Camp name and summary are required!'); return }
     setSubmitting(true)
-    const finalPositions = form.positions.map(p => p === '기타' ? (form.position_custom || '기타') : p)
+    const finalPositions = form.positions.map(p => p === 'Other' ? (form.position_custom || 'Other') : p)
     const { positions, position_custom, ...rest } = form
     const payload = { ...rest, position: finalPositions.join(', ') || null }
     const errMsg = isEdit ? await updateReview(editData.id, payload) : await addReview(payload)
     setSubmitting(false)
     if (!errMsg) setDone(true)
-    else alert(`저장 실패: ${errMsg}`)
+    else alert(`Save failed: ${errMsg}`)
   }
 
   const inputStyle = { width:'100%', background:C.fill, border:`1.5px solid ${C.border}`, borderRadius:8, padding:'10px 12px', color:C.dark, fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box' }
@@ -1056,9 +1094,9 @@ function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:40, width:'100%', maxWidth:400, textAlign:'center' }}>
         <div style={{ fontSize:44, marginBottom:16 }}>⛏️</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? '수정 완료!' : '후기 등록 완료!'}</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? '변경사항이 저장됐어요.' : '다음 워홀러에게 큰 도움이 될 거예요.'}</div>
-        <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? 'Updated!' : 'Review submitted!'}</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? 'Your changes have been saved.' : 'This will help the next WHV worker.'}</div>
+        <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>Close</button>
       </div>
     </div>
   )
@@ -1067,14 +1105,14 @@ function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:28, width:'100%', maxWidth:520, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark }}>⛏️ FIFO 캠프 후기</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark }}>⛏️ FIFO Camp Review</div>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'#bbb' }}>✕</button>
         </div>
 
         {/* 캠프 이름 */}
         <div style={{ marginBottom:12, position:'relative' }}>
-          <label style={labelStyle}>캠프 이름 *</label>
-          <input style={inputStyle} placeholder="예: Punurunha, Hope Downs 1"
+          <label style={labelStyle}>Camp name *</label>
+          <input style={inputStyle} placeholder="e.g. Punurunha, Hope Downs 1"
             value={campInput}
             onChange={e => { setCampInput(e.target.value); set('camp_name', e.target.value); setShowSuggestions(true) }}
             onFocus={() => setShowSuggestions(true)}
@@ -1095,7 +1133,7 @@ function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
 
         {/* 케이터링 회사 */}
         <div style={{ marginBottom:12 }}>
-          <label style={labelStyle}>케이터링 회사</label>
+          <label style={labelStyle}>Catering company</label>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             {CATERING_COS.map(c => (
               <button key={c} type="button" onClick={() => set('catering_company', form.catering_company===c ? '' : c)}
@@ -1108,7 +1146,7 @@ function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
 
         {/* 포지션 (다중선택) */}
         <div style={{ marginBottom:12 }}>
-          <label style={labelStyle}>포지션 (복수 선택 가능)</label>
+          <label style={labelStyle}>Position(s) — multiple allowed</label>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
             {CAMP_POSITIONS.map(p => {
               const active = form.positions.includes(p)
@@ -1120,38 +1158,38 @@ function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
               )
             })}
           </div>
-          {form.positions.includes('기타') && (
-            <input style={{ ...inputStyle, marginTop:8 }} placeholder="기타 포지션 직접 입력" value={form.position_custom} onChange={e => set('position_custom', e.target.value)} />
+          {form.positions.includes('Other') && (
+            <input style={{ ...inputStyle, marginTop:8 }} placeholder="Enter custom position" value={form.position_custom} onChange={e => set('position_custom', e.target.value)} />
           )}
         </div>
 
         {/* 한줄평 */}
         <div style={{ marginBottom:12 }}>
-          <label style={labelStyle}>한줄평 *</label>
-          <input style={inputStyle} placeholder="이 캠프를 한 문장으로!" value={form.review} onChange={e => set('review', e.target.value)} />
+          <label style={labelStyle}>One-line summary *</label>
+          <input style={inputStyle} placeholder="Summarize this camp in one sentence!" value={form.review} onChange={e => set('review', e.target.value)} />
         </div>
 
         {/* 장단점 */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 }}>
-          <div><label style={labelStyle}>장점 (줄바꿈 구분)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder={'방 퀄리티 좋음\n식사 훌륭\n저축 빠름'} value={form.pros} onChange={e => set('pros', e.target.value)} /></div>
-          <div><label style={labelStyle}>단점 (줄바꿈 구분)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder={'소셜 생활 없음\n인터넷 느림'} value={form.cons} onChange={e => set('cons', e.target.value)} /></div>
+          <div><label style={labelStyle}>Pros (one per line)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder={'Good room quality\nGreat meals\nFast savings'} value={form.pros} onChange={e => set('pros', e.target.value)} /></div>
+          <div><label style={labelStyle}>Cons (one per line)</label><textarea style={{ ...inputStyle, height:80, resize:'vertical' }} placeholder={'No social life\nSlow internet'} value={form.cons} onChange={e => set('cons', e.target.value)} /></div>
         </div>
 
         {/* 하루일과 */}
         <div style={{ marginBottom:12 }}>
-          <label style={labelStyle}>하루일과</label>
-          <textarea style={{ ...inputStyle, height:100, resize:'vertical' }} placeholder="예: 5:30 기상 → 6시 브렉퍼스트 서비스 → 8시 룸 서비스 → ..." value={form.daily_life} onChange={e => set('daily_life', e.target.value)} />
+          <label style={labelStyle}>Daily routine</label>
+          <textarea style={{ ...inputStyle, height:100, resize:'vertical' }} placeholder="e.g. 5:30am wake up → 6am breakfast service → 8am room service → ..." value={form.daily_life} onChange={e => set('daily_life', e.target.value)} />
         </div>
 
         {/* 만족도 4개 */}
         {[
-          { key:'food_satisfaction', label:'🍽️ 음식 만족도' },
-          { key:'accommodation_satisfaction', label:'🛏️ 숙소 만족도' },
-          { key:'work_satisfaction', label:'💼 일 만족도' },
-          { key:'swing_satisfaction', label:'⛏️ 스윙 종합 만족도' },
+          { key:'food_satisfaction', label:'🍽️ Food (1–10)' },
+          { key:'accommodation_satisfaction', label:'🛏️ Accommodation (1–10)' },
+          { key:'work_satisfaction', label:'💼 Work (1–10)' },
+          { key:'swing_satisfaction', label:'⛏️ Overall swing (1–10)' },
         ].map(({ key, label }) => (
           <div key={key} style={{ marginBottom:14 }}>
-            <label style={labelStyle}>{label} (1-10점) {form[key] ? `— ${form[key]}점` : ''}</label>
+            <label style={labelStyle}>{label} {form[key] ? `— ${form[key]}` : ''}</label>
             <div style={{ display:'flex', gap:4 }}>
               {[1,2,3,4,5,6,7,8,9,10].map(n => {
                 const color = n <= 3 ? '#E53935' : n <= 6 ? '#FF9800' : '#43A047'
@@ -1168,14 +1206,14 @@ function CampReviewModal({ onClose, addReview, updateReview, editData, user }) {
               })}
             </div>
             <div style={{ display:'flex', justifyContent:'space-between', marginTop:3 }}>
-              <span style={{ fontSize:10, color:'#E53935', fontFamily:'Noto Sans KR' }}>별로</span>
-              <span style={{ fontSize:10, color:'#43A047', fontFamily:'Noto Sans KR' }}>최고</span>
+              <span style={{ fontSize:10, color:'#E53935', fontFamily:'Noto Sans KR' }}>Poor</span>
+              <span style={{ fontSize:10, color:'#43A047', fontFamily:'Noto Sans KR' }}>Great</span>
             </div>
           </div>
         ))}
 
         <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting?'default':'pointer', opacity: submitting?0.7:1 }}>
-          {submitting ? '저장 중...' : (isEdit ? '수정 완료' : '후기 등록하기')}
+          {submitting ? 'Saving...' : (isEdit ? 'Save changes' : 'Submit review')}
         </button>
       </div>
     </div>
@@ -1226,9 +1264,9 @@ function CampReviewCard({ review, user, onDelete, onEdit }) {
               {user?.id === review.user_id && (
                 <>
                   <button onClick={e => { e.stopPropagation(); onEdit(review) }}
-                    style={{ background:'transparent', border:`1px solid ${C.accent}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:11, color:C.accent }}>수정</button>
+                    style={{ background:'transparent', border:`1px solid ${C.accent}`, borderRadius:6, padding:'2px 8px', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:11, color:C.accent }}>Edit</button>
                   <button onClick={e => { e.stopPropagation(); onDelete(review.id) }}
-                    style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', fontFamily:'Noto Sans KR' }}>삭제</button>
+                    style={{ background:'none', border:'none', color:C.sub, fontSize:11, cursor:'pointer', fontFamily:'Noto Sans KR' }}>Delete</button>
                 </>
               )}
             </div>
@@ -1242,13 +1280,13 @@ function CampReviewCard({ review, user, onDelete, onEdit }) {
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom: review.daily_life ? 10 : 0 }}>
               {review.pros?.length > 0 && (
                 <div style={{ background:'#F3FAF3', borderRadius:10, padding:12 }}>
-                  <div style={{ fontSize:11, color:'#3A7A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:6 }}>👍 장점</div>
+                  <div style={{ fontSize:11, color:'#3A7A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:6 }}>👍 Pros</div>
                   {review.pros.map((p,i) => <div key={i} style={{ fontSize:12, color:'#2A5A2A', fontFamily:'Noto Sans KR', marginBottom:3, lineHeight:1.5 }}>· {p}</div>)}
                 </div>
               )}
               {review.cons?.length > 0 && (
                 <div style={{ background:'#FAF3F3', borderRadius:10, padding:12 }}>
-                  <div style={{ fontSize:11, color:'#8A3A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:6 }}>👎 단점</div>
+                  <div style={{ fontSize:11, color:'#8A3A3A', fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:6 }}>👎 Cons</div>
                   {review.cons.map((c,i) => <div key={i} style={{ fontSize:12, color:'#6A2A2A', fontFamily:'Noto Sans KR', marginBottom:3, lineHeight:1.5 }}>· {c}</div>)}
                 </div>
               )}
@@ -1256,10 +1294,11 @@ function CampReviewCard({ review, user, onDelete, onEdit }) {
           )}
           {review.daily_life && (
             <div style={{ background:C.fill, borderRadius:10, padding:12 }}>
-              <div style={{ fontSize:11, color:C.accent, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:6 }}>🌅 하루일과</div>
+              <div style={{ fontSize:11, color:C.accent, fontFamily:'Noto Sans KR', fontWeight:700, marginBottom:6 }}>🌅 Daily routine</div>
               <div style={{ fontSize:12, color:C.dark, fontFamily:'Noto Sans KR', lineHeight:1.8, whiteSpace:'pre-line' }}>{review.daily_life}</div>
             </div>
           )}
+          <TranslateButton fields={[review.review, ...(review.pros||[]), ...(review.cons||[]), review.daily_life].filter(Boolean)} />
         </div>
       )}
     </div>
@@ -1295,29 +1334,29 @@ function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, updateRevie
       {/* 헤더 */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
         <div>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:16, fontWeight:700, color:C.dark }}>⛏️ FIFO 캠프 후기</div>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, marginTop:2 }}>사이트별 서비스 어텐던트 실제 경험담</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:16, fontWeight:700, color:C.dark }}>⛏️ FIFO Camp Reviews</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, marginTop:2 }}>Real experiences from camp service attendants</div>
         </div>
         <button onClick={() => user ? setShowModal(true) : onLoginPrompt()}
           style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-          + 후기 쓰기
+          + Write a review
         </button>
       </div>
 
       {/* 캠프 지도 */}
       <div style={{ marginBottom:16 }}>
-        <Suspense fallback={<div style={{ height:320, background:C.fill, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>지도 불러오는 중...</div>}>
+        <Suspense fallback={<div style={{ height:320, background:C.fill, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>Loading map...</div>}>
           <LazyCampMapView reviews={reviews} onSelectCamp={setSelectedCamp} selectedCamp={selectedCamp} />
         </Suspense>
-        <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginTop:6, textAlign:'center', opacity:0.7 }}>핀 클릭으로 캠프 필터 · 후기 있는 캠프는 숫자 표시</div>
+        <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginTop:6, textAlign:'center', opacity:0.7 }}>Click a pin to filter by camp · camps with reviews show a count</div>
       </div>
 
       {/* 캠프 필터 */}
       {campsWithReviews.length > 0 && (
         <div style={{ marginBottom:10 }}>
-          <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:6 }}>캠프별 보기</div>
+          <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:6 }}>Filter by camp</div>
           <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-            <button onClick={() => setSelectedCamp('')} style={chip(!selectedCamp)}>전체 ({reviews.length})</button>
+            <button onClick={() => setSelectedCamp('')} style={chip(!selectedCamp)}>All ({reviews.length})</button>
             {campsWithReviews.map(name => (
               <button key={name} onClick={() => setSelectedCamp(selectedCamp===name ? '' : name)} style={chip(selectedCamp===name)}>
                 {name} ({campCounts[name]})
@@ -1345,17 +1384,17 @@ function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, updateRevie
 
       {/* 후기 목록 */}
       {loading ? (
-        <div style={{ textAlign:'center', padding:'40px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:13 }}>불러오는 중...</div>
+        <div style={{ textAlign:'center', padding:'40px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:13 }}>Loading...</div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign:'center', padding:'60px 20px' }}>
           <div style={{ fontSize:40, marginBottom:16 }}>⛏️</div>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:15, fontWeight:700, color:C.dark, marginBottom:8 }}>아직 캠프 후기가 없어요</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:15, fontWeight:700, color:C.dark, marginBottom:8 }}>No camp reviews yet</div>
           <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, lineHeight:1.7, marginBottom:20 }}>
-            Punurunha, Hope Downs 1 등<br />캠프 경험 있으신 분 첫 후기 부탁드려요!
+            Been to Punurunha, Hope Downs 1 or another camp?<br />Be the first to leave a review!
           </div>
           <button onClick={() => user ? setShowModal(true) : onLoginPrompt()}
             style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'10px 24px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-            첫 후기 남기기
+            Write the first review
           </button>
         </div>
       ) : (
@@ -1363,7 +1402,7 @@ function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, updateRevie
           {selectedCamp ? (
             <>
               <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:4 }}>
-                <b style={{ color:C.dark }}>{selectedCamp}</b> 후기 {filtered.length}개
+                <b style={{ color:C.dark }}>{selectedCamp}</b> — {filtered.length} review{filtered.length !== 1 ? 's' : ''}
               </div>
               {filtered.map(r => <CampReviewCard key={r.id} review={r} user={user} onDelete={deleteReview} onEdit={setEditReview} />)}
             </>
@@ -1378,14 +1417,14 @@ function FIFOTab({ user, onLoginPrompt, reviews, loading, addReview, updateRevie
                     onClick={() => setSelectedCamp(campName)}>
                     <div style={{ fontFamily:'Noto Sans KR', fontSize:14, fontWeight:700, color:C.dark }}>{campName}</div>
                     <Stars n={avgStars} />
-                    <span style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>후기 {campReviews.length}개</span>
-                    <span style={{ fontSize:12, color:C.accent, fontFamily:'Noto Sans KR', marginLeft:'auto' }}>전체보기 →</span>
+                    <span style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR' }}>{campReviews.length} review{campReviews.length !== 1 ? 's' : ''}</span>
+                    <span style={{ fontSize:12, color:C.accent, fontFamily:'Noto Sans KR', marginLeft:'auto' }}>View all →</span>
                   </div>
                   {campReviews.slice(0,2).map(r => <CampReviewCard key={r.id} review={r} user={user} onDelete={deleteReview} onEdit={setEditReview} />)}
                   {campReviews.length > 2 && (
                     <button onClick={() => setSelectedCamp(campName)}
                       style={{ width:'100%', marginTop:4, background:'transparent', border:`1px dashed ${C.border}`, borderRadius:8, padding:'7px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, cursor:'pointer' }}>
-                      +{campReviews.length-2}개 더 보기
+                      +{campReviews.length-2} more
                     </button>
                   )}
                 </div>
@@ -1413,9 +1452,9 @@ export default function App() {
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
   const { reviews: campReviews, loading: campLoading, addReview, updateReview, deleteReview } = useCampReviews(user)
   const [tab, setTab] = useState('reviews') // 'reviews' | 'qna' | 'best'
-  const [region, setRegion]       = useState(params.get('region') || "전체")
-  const [type, setType]           = useState(params.get('type') || "전체")
-  const [sort, setSort]           = useState("좋아요순")
+  const [region, setRegion]       = useState(params.get('region') || "All")
+  const [type, setType]           = useState(params.get('type') || "All")
+  const [sort, setSort]           = useState("Most liked")
   const [photoOnly, setPhotoOnly] = useState(false)
   const [myPostsOnly, setMyPostsOnly] = useState(false)
   const [authorFilter, setAuthorFilter] = useState('')
@@ -1459,8 +1498,8 @@ export default function App() {
     setNewJobsBanner(fresh)
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       const regions = [...new Set(fresh.map(j => j.region))].join(', ')
-      new Notification('🦘 호주잡 — 새 후기', {
-        body: `${regions}에 후기 ${fresh.length}개가 새로 올라왔어요!`,
+      new Notification('🦘 WOHOL — New reviews', {
+        body: `${fresh.length} new review${fresh.length !== 1 ? 's' : ''} in ${regions}!`,
         icon: '/og-image.png',
       })
     }
@@ -1474,8 +1513,8 @@ export default function App() {
   // 뱃지용 author stats (user_id 기준, 없으면 author 문자열 fallback)
   const authorStats = {}
   jobs.forEach(j => {
-    const key = j.user_id || j.author || '익명'
-    if (!authorStats[key]) authorStats[key] = { count:0, hasPhoto:false, totalLikes:0, author: j.author || '익명' }
+    const key = j.user_id || j.author || 'Anonymous'
+    if (!authorStats[key]) authorStats[key] = { count:0, hasPhoto:false, totalLikes:0, author: j.author || 'Anonymous' }
     authorStats[key].count++
     if (j.photos?.length > 0) authorStats[key].hasPhoto = true
     authorStats[key].totalLikes += j.likes
@@ -1487,15 +1526,15 @@ export default function App() {
     if (!targetId || loading || !jobs.length) return
     const job = jobs.find(j => String(j.id) === targetId)
     if (!job) return
-    document.title = `${job.title} (${job.region}) — 호주잡`
+    document.title = `${job.title} (${job.region}) — WOHOL`
     const setMeta = (attr, val, prop = 'property') => {
       let el = document.querySelector(`meta[${prop}="${attr}"]`)
       if (!el) { el = document.createElement('meta'); el.setAttribute(prop, attr); document.head.appendChild(el) }
       el.content = val
     }
-    setMeta('og:title', `${job.title} — 호주잡`)
+    setMeta('og:title', `${job.title} — WOHOL`)
     setMeta('og:description', `${job.region} · $${job.hourly}/hr · "${job.review}"`)
-    setMeta('twitter:title', `${job.title} — 호주잡`, 'name')
+    setMeta('twitter:title', `${job.title} — WOHOL`, 'name')
     setMeta('twitter:description', `${job.region} · $${job.hourly}/hr · "${job.review}"`, 'name')
   }, [targetId, jobs.length, loading])
 
@@ -1527,8 +1566,8 @@ export default function App() {
 
   useEffect(() => {
     const p = new URLSearchParams()
-    if (region !== '전체') p.set('region', region)
-    if (type !== '전체') p.set('type', type)
+    if (region !== 'All') p.set('region', region)
+    if (type !== 'All') p.set('type', type)
     if (selectedTags.length) p.set('tags', selectedTags.join(','))
     const qs = p.toString()
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
@@ -1540,21 +1579,21 @@ export default function App() {
   const q = search.trim().toLowerCase()
   const filtered = jobs
     .filter(j => !q || j.title.toLowerCase().includes(q) || (j.company||'').toLowerCase().includes(q))
-    .filter(j => region === "전체"  || j.region.includes(region))
-    .filter(j => type === "전체"    || j.type === type)
+    .filter(j => region === "All"  || j.region.includes(region))
+    .filter(j => type === "All"    || j.type === type)
     .filter(j => !photoOnly         || j.photos?.length > 0)
     .filter(j => !myPostsOnly       || j.user_id === user?.id)
-    .filter(j => !authorFilter      || (j.author||'익명') === authorFilter)
+    .filter(j => !authorFilter      || (j.author||'Anonymous') === authorFilter)
     .filter(j => selectedTags.length === 0 || j.tags?.some(t => selectedTags.includes(t)))
     .filter(j => j.hourly >= minHourly)
     .filter(j => !secondVisaOnly    || j.second_visa === true)
     .filter(j => !engLevel          || j.english_level === engLevel)
     .filter(j => !bookmarkOnly      || bookmarkedIds.includes(j.id))
     .sort((a,b) =>
-      sort === "좋아요순" ? b.likes - a.likes :
-      sort === "별점순"   ? b.stars - a.stars :
-      sort === "시급순"   ? b.hourly - a.hourly :
-      sort === "조회순"   ? (b.views||0) - (a.views||0) : b.id - a.id
+      sort === "Most liked" ? b.likes - a.likes :
+      sort === "Stars"      ? b.stars - a.stars :
+      sort === "Hourly"     ? b.hourly - a.hourly :
+      sort === "Most viewed"? (b.views||0) - (a.views||0) : b.id - a.id
     )
 
   const stats = !loading && jobs.length > 0 ? (() => {
@@ -1580,8 +1619,8 @@ export default function App() {
         {/* 헤더 */}
         <div style={{ borderBottom:`1px solid ${C.border}`, background: dark?'rgba(26,18,16,0.96)':'rgba(250,247,242,0.95)', backdropFilter:'blur(8px)', position:'sticky', top:0, zIndex:50, padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', transition:'background 0.3s' }}>
           <div>
-            <div style={{ fontFamily:"'Jua','Noto Sans KR',sans-serif", fontSize:22, fontWeight:400, color:C.dark }}>🦘 호주잡</div>
-            <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>호주 워홀러들의 경험담</div>
+            <div style={{ fontFamily:"'Jua','Noto Sans KR',sans-serif", fontSize:22, fontWeight:400, color:C.dark }}>🦘 WOHOL</div>
+            <div style={{ fontSize:10, color:C.sub, fontFamily:'Noto Sans KR', marginTop:1 }}>WHV Jobs & Reviews in Australia</div>
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
             <button onClick={() => setDark(d => !d)} title={dark?'라이트 모드':'다크 모드'}
@@ -1590,21 +1629,21 @@ export default function App() {
             </button>
             {user ? (
               <>
-                <img src={user.user_metadata?.avatar_url} alt="프로필" title="닉네임 수정" onClick={() => setEditNickname(true)}
+                <img src={user.user_metadata?.avatar_url} alt="Profile" title="Edit nickname" onClick={() => setEditNickname(true)}
                   style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${C.accent}`, objectFit:'cover', cursor:'pointer' }}
                   onError={e => { e.target.style.display='none' }} />
-                <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly?C.dark:'transparent', color: myPostsOnly?C.gold:C.sub, border:`1px solid ${myPostsOnly?C.dark:C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>내 글</button>
-                <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>로그아웃</button>
+                <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly?C.dark:'transparent', color: myPostsOnly?C.gold:C.sub, border:`1px solid ${myPostsOnly?C.dark:C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>My posts</button>
+                <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>Sign out</button>
               </>
             ) : (
               <button onClick={signIn} style={{ background:'transparent', color:C.dark, border:`1.5px solid ${C.dark}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:12, cursor:'pointer', display:'flex', alignItems:'center', gap:6 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                구글로 로그인
+                Sign in with Google
               </button>
             )}
             <button onClick={() => user ? setShowReviewTypePicker(true) : setShowLoginPrompt(true)}
               style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:13, cursor:'pointer' }}>
-              + 후기 쓰기
+              + Write a review
             </button>
           </div>
         </div>
@@ -1615,11 +1654,11 @@ export default function App() {
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <span style={{ fontSize:16 }}>🆕</span>
               <span style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.dark }}>
-                <b>{[...new Set(newJobsBanner.map(j => j.region))].join(', ')}</b>에 새 후기 {newJobsBanner.length}개가 올라왔어요!
+                <b>{newJobsBanner.length}</b> new review{newJobsBanner.length !== 1 ? 's' : ''} in <b>{[...new Set(newJobsBanner.map(j => j.region))].join(', ')}</b>!
               </span>
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
-              <button onClick={() => { setTab('reviews'); setNewJobsBanner([]) }} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'5px 12px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:12, cursor:'pointer' }}>보러가기</button>
+              <button onClick={() => { setTab('reviews'); setNewJobsBanner([]) }} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'5px 12px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:12, cursor:'pointer' }}>View now</button>
               <button onClick={() => setNewJobsBanner([])} style={{ background:'none', border:'none', fontSize:15, cursor:'pointer', color:C.sub, lineHeight:1 }}>✕</button>
             </div>
           </div>
@@ -1629,20 +1668,20 @@ export default function App() {
 
           {/* 히어로 */}
           <div style={{ padding:'36px 0 24px' }}>
-            <div style={{ fontSize:20, marginBottom:10, letterSpacing:'4px' }}>🇰🇷 → 🇦🇺</div>
+            <div style={{ fontSize:20, marginBottom:10, letterSpacing:'4px' }}>🇦🇺</div>
             <h1 style={{ fontFamily:"'Jua','Noto Sans KR',sans-serif", fontSize:'clamp(30px,7vw,48px)', fontWeight:400, color:C.dark, margin:'0 0 12px', lineHeight:1.2 }}>
-              <span style={{ fontSize:'clamp(14px,3.5vw,20px)', color:C.sub, display:'block', marginBottom:6 }}>한국인끼리만 공유하는</span>
-              호주 워킹홀리데이<br />경험담
+              <span style={{ fontSize:'clamp(14px,3.5vw,20px)', color:C.sub, display:'block', marginBottom:6 }}>Real experiences from WHV workers</span>
+              Australia Working<br />Holiday Reviews
             </h1>
             <p style={{ color:C.sub, fontSize:14, fontFamily:'Noto Sans KR', lineHeight:1.8, margin:0 }}>
-              시급부터 장단점, 면접 꿀팁까지 — 직접 겪은 사람만 아는 정보.
+              Hourly rates, pros &amp; cons, interview tips — from people who've actually been there.
             </p>
           </div>
 
           {/* 통계 배너 */}
           {stats && (
             <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
-              {[{label:'총 후기', value:`${stats.total}개`},{label:'평균 시급', value:`$${stats.avgHourly}/hr`},{label:'인기 직종', value:stats.topTag}].map(({ label, value }) => (
+              {[{label:'Reviews', value:`${stats.total}`},{label:'Avg hourly', value:`$${stats.avgHourly}/hr`},{label:'Top category', value:stats.topTag}].map(({ label, value }) => (
                 <div key={label} style={{ flex:1, minWidth:90, background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'10px 14px', textAlign:'center' }}>
                   <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:4 }}>{label}</div>
                   <div style={{ fontSize:16, fontWeight:700, color:C.dark, fontFamily:"'Jua',sans-serif" }}>{value}</div>
@@ -1653,7 +1692,7 @@ export default function App() {
 
           {/* 탭 네비게이션 */}
           <div style={{ display:'flex', borderBottom:`2px solid ${C.border}`, marginBottom:20 }}>
-            {[['reviews','📋 후기'],['fifo','⛏️ FIFO'],['qna','💬 Q&A'],['best','🏆 베스트']].map(([key, label]) => (
+            {[['reviews','📋 Reviews'],['fifo','⛏️ FIFO'],['qna','💬 Q&A'],['best','🏆 Top Posts']].map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)}
                 style={{ flex:1, background:'none', border:'none', borderBottom: tab===key ? `2px solid ${C.accent}` : '2px solid transparent', marginBottom:-2, padding:'10px 0', cursor:'pointer', fontFamily:'Noto Sans KR', fontSize:13, fontWeight: tab===key ? 700 : 400, color: tab===key ? C.accent : C.sub, transition:'all 0.15s' }}>
                 {label}
@@ -1666,14 +1705,14 @@ export default function App() {
             <>
               <div style={{ marginBottom:12, position:'relative' }}>
                 <span style={{ position:'absolute', left:12, top:'50%', transform:'translateY(-50%)', fontSize:15, pointerEvents:'none' }}>🔍</span>
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="직업명, 회사명으로 검색..."
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Job title, company..."
                   style={{ width:'100%', background:C.card, border:`1.5px solid ${search?C.accent:C.border}`, borderRadius:10, padding:'10px 14px 10px 36px', fontFamily:'Noto Sans KR', fontSize:14, color:C.dark, outline:'none', boxSizing:'border-box', transition:'border-color 0.15s' }} />
                 {search && <button onClick={() => setSearch('')} style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:14, color:C.sub }}>✕</button>}
               </div>
 
               <div style={{ display:'flex', gap:6, marginBottom:12 }}>
-                <button onClick={() => setViewMode('list')} style={chip(viewMode==='list')}>📋 목록</button>
-                <button onClick={() => setViewMode('map')} style={chip(viewMode==='map')}>🗺️ 지도</button>
+                <button onClick={() => setViewMode('list')} style={chip(viewMode==='list')}>📋 List</button>
+                <button onClick={() => setViewMode('map')} style={chip(viewMode==='map')}>🗺️ Map</button>
               </div>
 
               <div style={{ marginBottom:20, display:'flex', flexDirection:'column', gap:8 }}>
@@ -1686,21 +1725,21 @@ export default function App() {
                 <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
                   {TYPES.map(t => <button key={t} onClick={() => setType(t)} style={chip(type===t)}>{t}</button>)}
                   <div style={{ width:1, height:16, background:C.border, margin:'0 2px' }} />
-                  {[0,20,25,30,35].map(n => <button key={n} onClick={() => setMinHourly(n)} style={chip(minHourly===n)}>{n===0?'시급 전체':`$${n}+`}</button>)}
+                  {[0,20,25,30,35].map(n => <button key={n} onClick={() => setMinHourly(n)} style={chip(minHourly===n)}>{n===0?'All rates':`$${n}+`}</button>)}
                 </div>
                 <div style={{ display:'flex', gap:6, flexWrap:'wrap', alignItems:'center' }}>
-                  <button onClick={() => setSecondVisaOnly(v=>!v)} style={{ ...chip(secondVisaOnly), borderColor: secondVisaOnly?'#4CAF50':C.border, background: secondVisaOnly?'#E8F5E9':'transparent', color: secondVisaOnly?'#2E7D32':C.sub }}>2nd 비자 가능</button>
+                  <button onClick={() => setSecondVisaOnly(v=>!v)} style={{ ...chip(secondVisaOnly), borderColor: secondVisaOnly?'#4CAF50':C.border, background: secondVisaOnly?'#E8F5E9':'transparent', color: secondVisaOnly?'#2E7D32':C.sub }}>2nd visa</button>
                   {['','하','중','상'].map(lv => (
                     <button key={lv} onClick={() => setEngLevel(lv)}
                       style={{ ...chip(engLevel===lv), borderColor: engLevel===lv&&lv?(lv==='하'?'#4CAF50':lv==='중'?'#FFD54F':'#F44336'):engLevel===lv?C.dark:C.border, background: engLevel===lv&&lv?(lv==='하'?'#E8F5E9':lv==='중'?'#FFF8E1':'#FFEBEE'):engLevel===lv?C.dark:'transparent', color: engLevel===lv&&lv?(lv==='하'?'#2E7D32':lv==='중'?'#FF9800':'#C62828'):engLevel===lv?C.gold:C.sub }}>
-                      {lv===''?'영어 전체':`영어 ${ENG_LABELS[lv]??lv}`}
+                      {lv===''?'All English':`Eng ${ENG_LABELS[lv]??lv}`}
                     </button>
                   ))}
-                  <button onClick={() => setPhotoOnly(p=>!p)} style={{ ...chip(photoOnly), borderColor: photoOnly?C.accent:C.border, background: photoOnly?'rgba(200,150,60,0.12)':'transparent', color: photoOnly?C.accent:C.sub }}>📷 사진만</button>
-                  <button onClick={() => setBookmarkOnly(v=>!v)} style={{ ...chip(bookmarkOnly), borderColor: bookmarkOnly?C.accent:C.border, background: bookmarkOnly?'rgba(200,150,60,0.12)':'transparent', color: bookmarkOnly?C.accent:C.sub }}>🔖 북마크</button>
+                  <button onClick={() => setPhotoOnly(p=>!p)} style={{ ...chip(photoOnly), borderColor: photoOnly?C.accent:C.border, background: photoOnly?'rgba(200,150,60,0.12)':'transparent', color: photoOnly?C.accent:C.sub }}>📷 Photos only</button>
+                  <button onClick={() => setBookmarkOnly(v=>!v)} style={{ ...chip(bookmarkOnly), borderColor: bookmarkOnly?C.accent:C.border, background: bookmarkOnly?'rgba(200,150,60,0.12)':'transparent', color: bookmarkOnly?C.accent:C.sub }}>🔖 Bookmarks</button>
                   <div style={{ marginLeft:'auto' }}>
                     <select value={sort} onChange={e => setSort(e.target.value)} style={selectStyle}>
-                      {["좋아요순","별점순","시급순","조회순","최신순"].map(s => <option key={s}>{s}</option>)}
+                      {["Most liked","Stars","Hourly","Most viewed","Latest"].map(s => <option key={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>
@@ -1708,20 +1747,20 @@ export default function App() {
 
               {authorFilter && (
                 <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, background:'rgba(200,150,60,0.08)', border:`1px solid ${C.accent}`, borderRadius:10, padding:'8px 14px' }}>
-                  <span style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.dark }}><b>{authorFilter}</b>님의 후기만 보는 중</span>
-                  <button onClick={() => setAuthorFilter('')} style={{ marginLeft:'auto', background:'none', border:'none', color:C.sub, cursor:'pointer', fontSize:13 }}>✕ 해제</button>
+                  <span style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.dark }}>Showing posts by <b>{authorFilter}</b> only</span>
+                  <button onClick={() => setAuthorFilter('')} style={{ marginLeft:'auto', background:'none', border:'none', color:C.sub, cursor:'pointer', fontSize:13 }}>✕ Clear</button>
                 </div>
               )}
               <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:16, opacity:0.7 }}>
-                {loading ? '불러오는 중…' : `${filtered.length}개 결과`}
+                {loading ? 'Loading...' : `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`}
               </div>
 
               {viewMode === 'map' && (
                 <div style={{ marginBottom:16 }}>
-                  <Suspense fallback={<div style={{ height:360, display:'flex', alignItems:'center', justifyContent:'center', background:C.card, border:`1px solid ${C.border}`, borderRadius:12, fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>지도 불러오는 중...</div>}>
+                  <Suspense fallback={<div style={{ height:360, display:'flex', alignItems:'center', justifyContent:'center', background:C.card, border:`1px solid ${C.border}`, borderRadius:12, fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>Loading map...</div>}>
                     <LazyMapView jobs={filtered} onSelectRegion={r => setRegion(r)} selectedRegion={region} />
                   </Suspense>
-                  <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginTop:8, textAlign:'center', opacity:0.7 }}>핀을 클릭하면 해당 State로 필터돼요 · 다시 클릭하면 해제</div>
+                  <div style={{ fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginTop:8, textAlign:'center', opacity:0.7 }}>Click a pin to filter by state · click again to clear</div>
                 </div>
               )}
 
@@ -1742,13 +1781,13 @@ export default function App() {
                   : filtered.map(job => (
                       <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} {...cardProps}
                         defaultOpen={targetId===String(job.id)}
-                        authorBadges={getAuthorBadges(job.user_id || job.author || '익명', authorStats)} />
+                        authorBadges={getAuthorBadges(job.user_id || job.author || 'Anonymous', authorStats)} />
                     ))
                 }
               </div>
               {!loading && filtered.length === 0 && (
                 <div style={{ textAlign:'center', padding:'60px 20px', color:C.sub, fontFamily:'Noto Sans KR', fontSize:14 }}>
-                  {bookmarkOnly ? '북마크한 후기가 없어요.' : '아직 후기가 없어요. 첫 번째로 공유해보세요!'}
+                  {bookmarkOnly ? 'No bookmarked reviews.' : 'No reviews yet. Be the first to share!'}
                 </div>
               )}
             </>

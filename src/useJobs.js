@@ -60,12 +60,14 @@ export function useJobs(user) {
           return s.split(',').map(url => ({ url: url.trim(), caption: '' })).filter(p => p.url)
         })(),
         tags: (() => {
+          const TAG_MAP = { '광산':'Mining','카페':'Cafe','농장':'Farm','주방':'Kitchen','건설':'Construction','서비스':'Service','물류':'Logistics','기타':'Other' }
+          const norm = (t) => TAG_MAP[t] || t
           const raw = job.tag || ''
-          if (!raw) return [inferTag(job.title, job.region)].filter(Boolean)
-          if (raw.trim().startsWith('[')) { try { return JSON.parse(raw) } catch {} }
-          return [raw]
+          if (!raw) return [norm(inferTag(job.title, job.region))].filter(t => t && t !== 'Other')
+          if (raw.trim().startsWith('[')) { try { return JSON.parse(raw).map(norm) } catch {} }
+          return [norm(raw)]
         })(),
-        author: job.user_id ? (nicknameMap[job.user_id] || '알 수 없음') : (job.author || '익명'),
+        author: job.user_id ? (nicknameMap[job.user_id] || 'Unknown') : (job.author || 'Anonymous'),
       }))
       setJobs(parsed)
     }
@@ -127,13 +129,13 @@ export function useJobs(user) {
 function inferTag(title, region) {
   const t = (title || '').toLowerCase()
   const r = (region || '').toLowerCase()
-  if (t.includes('barista') || t.includes('cafe') || t.includes('coffee') || t.includes('waiter') || t.includes('waitress') || t.includes('barman') || t.includes('bartender') || t.includes('bar ') || t.includes('pub') || t.includes('restaurant') || t.includes('hospitality')) return '카페'
-  if (t.includes('farm') || t.includes('fruit') || t.includes('harvest') || t.includes('picker') || t.includes('packing') || t.includes('orchard') || t.includes('vineyard') || t.includes('crop')) return '농장'
-  if (t.includes('kitchen') || t.includes('cook') || t.includes('chef') || t.includes('dish') || t.includes('food prep')) return '주방'
-  if (t.includes('construction') || t.includes('labour') || t.includes('builder') || t.includes('carpenter') || t.includes('electrician') || t.includes('plumber') || t.includes('scaffold') || t.includes('labor')) return '건설'
-  if (t.includes('retail') || t.includes('shop') || t.includes('store') || t.includes('cashier') || t.includes('supermarket') || t.includes('checkout') || t.includes('sales')) return '서비스'
-  if (r.includes('fifo') || r.includes('mine') || r.includes('광산') || t.includes('mine') || t.includes('mining') || t.includes('driller') || t.includes('operator')) return '광산'
-  if (t.includes('pick packer') || t.includes('pickpacker') || t.includes('warehouse') || t.includes('forklift') || t.includes('packer') || t.includes('picker') && (t.includes('warehouse') || t.includes('pack')) || t.includes('logistics') || t.includes('dispatch') || t.includes('inventory')) return '물류'
-  if (t.includes('driver') || t.includes('delivery') || t.includes('rider') || t.includes('courier') || t.includes('truck') || t.includes('cleaner') || t.includes('cleaning') || t.includes('housekeeper') || t.includes('housekeeping') || t.includes('care') || t.includes('hotel') || t.includes('resort') || t.includes('motel') || t.includes('receptionist') || t.includes('front desk') || t.includes('attendant') || t.includes('service') || t.includes('laundry') || t.includes('pedicab')) return '서비스'
-  return '기타'
+  if (t.includes('barista') || t.includes('cafe') || t.includes('coffee') || t.includes('waiter') || t.includes('waitress') || t.includes('barman') || t.includes('bartender') || t.includes('bar ') || t.includes('pub') || t.includes('restaurant') || t.includes('hospitality')) return 'Cafe'
+  if (t.includes('farm') || t.includes('fruit') || t.includes('harvest') || t.includes('picker') || t.includes('packing') || t.includes('orchard') || t.includes('vineyard') || t.includes('crop')) return 'Farm'
+  if (t.includes('kitchen') || t.includes('cook') || t.includes('chef') || t.includes('dish') || t.includes('food prep')) return 'Kitchen'
+  if (t.includes('construction') || t.includes('labour') || t.includes('builder') || t.includes('carpenter') || t.includes('electrician') || t.includes('plumber') || t.includes('scaffold') || t.includes('labor')) return 'Construction'
+  if (t.includes('retail') || t.includes('shop') || t.includes('store') || t.includes('cashier') || t.includes('supermarket') || t.includes('checkout') || t.includes('sales')) return 'Service'
+  if (r.includes('fifo') || r.includes('mine') || r.includes('광산') || t.includes('mine') || t.includes('mining') || t.includes('driller') || t.includes('operator')) return 'Mining'
+  if (t.includes('pick packer') || t.includes('pickpacker') || t.includes('warehouse') || t.includes('forklift') || t.includes('packer') || t.includes('picker') && (t.includes('warehouse') || t.includes('pack')) || t.includes('logistics') || t.includes('dispatch') || t.includes('inventory')) return 'Logistics'
+  if (t.includes('driver') || t.includes('delivery') || t.includes('rider') || t.includes('courier') || t.includes('truck') || t.includes('cleaner') || t.includes('cleaning') || t.includes('housekeeper') || t.includes('housekeeping') || t.includes('care') || t.includes('hotel') || t.includes('resort') || t.includes('motel') || t.includes('receptionist') || t.includes('front desk') || t.includes('attendant') || t.includes('service') || t.includes('laundry') || t.includes('pedicab')) return 'Service'
+  return 'Other'
 }
