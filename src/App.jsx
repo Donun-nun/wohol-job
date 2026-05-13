@@ -1756,6 +1756,7 @@ export default function App() {
     }
 
     supabase.auth.getSession().then(({ data }) => {
+      localStorage.setItem('auth_debug_session', JSON.stringify({ hasSession: !!data.session, user: data.session?.user?.email, hash: location.hash.slice(0,60), ts: Date.now() }))
       const u = data.session?.user ?? null; setUser(u); if (u) fetchProfile(u.id)
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -1775,7 +1776,9 @@ export default function App() {
   }, [region, type, selectedTags])
 
   const signIn  = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: window.location.origin + '/' } })
+    localStorage.setItem('auth_debug', JSON.stringify({ step: 'signIn_called', ts: Date.now(), url: location.href }))
+    const { data, error } = await supabase.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: window.location.origin + '/' } })
+    localStorage.setItem('auth_debug_after', JSON.stringify({ error: error?.message, data: JSON.stringify(data), ts: Date.now() }))
     if (error) alert('로그인 오류: ' + error.message)
   }
   const signOut = () => supabase.auth.signOut()
