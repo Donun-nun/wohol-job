@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, createContext, useContext, lazy, Suspense 
 import { useJobs } from './useJobs'
 import { useQuestions } from './useQuestions'
 import { useCampReviews } from './useCampReviews'
+import { useAccess, fetchPendingPayslips, approvePayslip, rejectPayslip } from './useAccess'
 import { supabase } from './supabase'
 
 // ─── Themes ──────────────────────────────────────────────────────────────────
@@ -173,6 +174,108 @@ async function uploadPhoto(file) {
   formData.append('upload_preset', CLOUDINARY_PRESET)
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:formData })
   return (await res.json()).secure_url
+}
+
+// ─── PayslipModal ─────────────────────────────────────────────────────────────
+function PayslipModal({ user, onClose, onUploaded, payslipPending }) {
+  const C = useC()
+  const [uploading, setUploading] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const handleFile = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    const url = await uploadPhoto(file)
+    const ok = await onUploaded(url)
+    if (ok) setDone(true)
+    setUploading(false)
+  }
+
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:400, boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ fontSize:36, textAlign:'center', marginBottom:14 }}>📄</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark, marginBottom:8, textAlign:'center' }}>Verify with payslip</div>
+        {done || payslipPending ? (
+          <>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#2E7D32', textAlign:'center', marginBottom:24, lineHeight:1.7, background:'#E8F5E9', borderRadius:10, padding:'14px' }}>
+              ✅ Payslip submitted!<br />
+              <span style={{ fontSize:12, color:C.sub }}>An admin will review and approve your access shortly.</span>
+            </div>
+            <button onClick={onClose} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>Close</button>
+          </>
+        ) : (
+          <>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:20, lineHeight:1.7, textAlign:'center' }}>
+              Upload a payslip or work photo to prove you've worked in Australia.<br />
+              <span style={{ fontSize:12 }}>An admin will approve your access within 24 hours.</span>
+            </div>
+            <label style={{ display:'block', background:C.fill, border:`2px dashed ${C.border}`, borderRadius:12, padding:'24px', textAlign:'center', cursor:'pointer', marginBottom:16 }}>
+              <input type="file" accept="image/*,.pdf" style={{ display:'none' }} onChange={handleFile} />
+              <div style={{ fontSize:28, marginBottom:8 }}>📎</div>
+              <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>{uploading ? 'Uploading...' : 'Tap to upload payslip / work photo'}</div>
+            </label>
+            <button onClick={onClose} style={{ width:'100%', background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px', fontFamily:'Noto Sans KR', fontSize:14, cursor:'pointer' }}>Cancel</button>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── AdminPanel ───────────────────────────────────────────────────────────────
+function AdminPanel({ onClose }) {
+  const C = useC()
+  const [payslips, setPayslips] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const load = async () => {
+    setLoading(true)
+    const data = await fetchPendingPayslips()
+    setPayslips(data)
+    setLoading(false)
+  }
+
+  useEffect(() => { load() }, [])
+
+  const approve = async (id, userId) => {
+    await approvePayslip(id, userId)
+    setPayslips(prev => prev.filter(p => p.id !== id))
+  }
+
+  const reject = async (id) => {
+    await rejectPayslip(id)
+    setPayslips(prev => prev.filter(p => p.id !== id))
+  }
+
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.card, borderRadius:16, padding:28, width:'100%', maxWidth:520, maxHeight:'80vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:18, fontWeight:700, color:C.dark }}>🛡 Admin — Payslip Review</div>
+          <button onClick={onClose} style={{ background:'none', border:'none', fontSize:18, cursor:'pointer', color:C.sub }}>✕</button>
+        </div>
+        {loading ? (
+          <div style={{ textAlign:'center', padding:40, color:C.sub, fontFamily:'Noto Sans KR', fontSize:13 }}>Loading...</div>
+        ) : payslips.length === 0 ? (
+          <div style={{ textAlign:'center', padding:40, color:C.sub, fontFamily:'Noto Sans KR', fontSize:13 }}>No pending payslips 🎉</div>
+        ) : payslips.map(p => (
+          <div key={p.id} style={{ border:`1px solid ${C.border}`, borderRadius:12, padding:16, marginBottom:12 }}>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, color:C.dark, marginBottom:6 }}>{p.nickname} <span style={{ fontWeight:400, color:C.sub, fontSize:11 }}>{timeAgo(p.created_at)}</span></div>
+            <a href={p.file_url} target="_blank" rel="noreferrer" style={{ display:'block', marginBottom:12 }}>
+              <img src={p.file_url} alt="payslip" style={{ maxWidth:'100%', borderRadius:8, maxHeight:200, objectFit:'cover' }} onError={e => { e.target.style.display='none' }} />
+              <span style={{ fontSize:12, color:C.accent, fontFamily:'Noto Sans KR' }}>View file ↗</span>
+            </a>
+            <div style={{ display:'flex', gap:8 }}>
+              <button onClick={() => approve(p.id, p.user_id)} style={{ flex:1, background:'#E8F5E9', color:'#2E7D32', border:'1px solid #A5D6A7', borderRadius:8, padding:'8px', fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, cursor:'pointer' }}>✅ Approve</button>
+              <button onClick={() => reject(p.id)} style={{ flex:1, background:'#FFEBEE', color:'#C62828', border:'1px solid #EF9A9A', borderRadius:8, padding:'8px', fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, cursor:'pointer' }}>❌ Reject</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
 function Stars({ n }) {
@@ -724,7 +827,7 @@ function BestPosts({ jobs, likedIds, onLike, user, onEdit, onLoginPrompt, onShar
 }
 
 // ─── JobCard ──────────────────────────────────────────────────────────────────
-function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, onLoginPrompt, onShare, defaultOpen, updateJob, incrementView, onAuthorClick, authorBadges }) {
+function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, onLoginPrompt, onShare, defaultOpen, updateJob, incrementView, onAuthorClick, authorBadges, hasAccess, onUnlockPrompt }) {
   const C = useC()
   const [open, setOpen] = useState(!!defaultOpen)
   const [comments, setComments] = useState([])
@@ -848,9 +951,23 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
           </div>
         </div>
 
-        <div style={{ background:C.fill, borderLeft:`3px solid ${C.accent}`, borderRadius:'0 8px 8px 0', padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:13, color:C.dark, fontStyle:'italic', lineHeight:1.6, opacity:0.85 }}>
-          "{job.review}"
-        </div>
+        {!hasAccess && !isOwner ? (
+          <div style={{ position:'relative', marginBottom:12 }}>
+            <div style={{ background:C.fill, borderLeft:`3px solid ${C.accent}`, borderRadius:'0 8px 8px 0', padding:'10px 14px', fontFamily:'Noto Sans KR', fontSize:13, color:C.dark, fontStyle:'italic', lineHeight:1.6, opacity:0.85, filter:'blur(5px)', userSelect:'none' }}>
+              "{job.review}"
+            </div>
+            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <button onClick={e => { e.stopPropagation(); onUnlockPrompt() }}
+                style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'6px 14px', fontFamily:'Noto Sans KR', fontSize:12, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
+                🔒 Post a review to unlock
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ background:C.fill, borderLeft:`3px solid ${C.accent}`, borderRadius:'0 8px 8px 0', padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:13, color:C.dark, fontStyle:'italic', lineHeight:1.6, opacity:0.85 }}>
+            "{job.review}"
+          </div>
+        )}
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -889,7 +1006,27 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
         </div>
       </div>
 
-      {open && (
+      {open && !hasAccess && !isOwner && (
+        <div style={{ borderTop:`1px solid ${C.border}`, padding:'24px 20px', background:C.bg, textAlign:'center' }}>
+          <div style={{ fontSize:28, marginBottom:10 }}>🔒</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:14, fontWeight:700, color:C.dark, marginBottom:6 }}>Unlock full reviews</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, marginBottom:16, lineHeight:1.7 }}>
+            Share your own experience to read everyone else's.<br />
+            Or upload a payslip to verify your work history.
+          </div>
+          <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
+            <button onClick={e => { e.stopPropagation(); onUnlockPrompt('review') }}
+              style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, cursor:'pointer' }}>
+              ✍️ Write a review
+            </button>
+            <button onClick={e => { e.stopPropagation(); onUnlockPrompt('payslip') }}
+              style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
+              📄 Upload payslip
+            </button>
+          </div>
+        </div>
+      )}
+      {open && (hasAccess || isOwner) && (
         <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 20px 20px', background:C.bg }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom: (job.daily_life||job.interview_tips) ? 10 : 0 }}>
             <div style={{ background:'#F3FAF3', borderRadius:10, padding:14 }}>
@@ -1451,6 +1588,9 @@ export default function App() {
   const [user, setUser] = useState(null)
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
   const { reviews: campReviews, loading: campLoading, addReview, updateReview, deleteReview } = useCampReviews(user)
+  const { hasAccess, isAdmin, payslipPending, photoCreditsBalance, uploadPayslip } = useAccess(user, jobs)
+  const [showPayslipModal, setShowPayslipModal] = useState(false)
+  const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [tab, setTab] = useState('reviews') // 'reviews' | 'qna' | 'best'
   const [region, setRegion]       = useState(params.get('region') || "All")
   const [type, setType]           = useState(params.get('type') || "All")
@@ -1610,7 +1750,13 @@ export default function App() {
   })
   const selectStyle = { background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:'5px 10px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, cursor:'pointer', outline:'none' }
 
-  const cardProps = { likedIds, onLike:toggleLike, user, onEdit:setEditJob, onLoginPrompt:() => setShowLoginPrompt(true), onShare:() => user ? setShowModal(true) : setShowLoginPrompt(true), updateJob, incrementView, onAuthorClick:setAuthorFilter, bookmarkedIds, onBookmark:toggleBookmark }
+  const handleUnlockPrompt = (type) => {
+    if (!user) { setShowLoginPrompt(true); return }
+    if (type === 'payslip') { setShowPayslipModal(true); return }
+    setShowReviewTypePicker(true)
+  }
+
+  const cardProps = { likedIds, onLike:toggleLike, user, onEdit:setEditJob, onLoginPrompt:() => setShowLoginPrompt(true), onShare:() => user ? setShowModal(true) : setShowLoginPrompt(true), updateJob, incrementView, onAuthorClick:setAuthorFilter, bookmarkedIds, onBookmark:toggleBookmark, hasAccess, onUnlockPrompt:handleUnlockPrompt }
 
   return (
     <ThemeCtx.Provider value={C}>
@@ -1632,6 +1778,23 @@ export default function App() {
                 <img src={user.user_metadata?.avatar_url} alt="Profile" title="Edit nickname" onClick={() => setEditNickname(true)}
                   style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${C.accent}`, objectFit:'cover', cursor:'pointer' }}
                   onError={e => { e.target.style.display='none' }} />
+                {isAdmin && (
+                  <button onClick={() => setShowAdminPanel(true)}
+                    style={{ background:'#FFF8E1', color:'#FF8F00', border:'1px solid #FFD54F', borderRadius:8, padding:'6px 10px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
+                    🛡 Admin
+                  </button>
+                )}
+                {!hasAccess && !isAdmin && (
+                  payslipPending
+                    ? <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', padding:'4px 8px', border:`1px solid ${C.border}`, borderRadius:8 }}>⏳ Pending</span>
+                    : <button onClick={() => setShowPayslipModal(true)}
+                        style={{ background:'rgba(200,150,60,0.12)', color:C.accent, border:`1px solid ${C.accent}`, borderRadius:8, padding:'6px 10px', fontFamily:'Noto Sans KR', fontSize:11, fontWeight:700, cursor:'pointer' }}>
+                        🔒 Unlock
+                      </button>
+                )}
+                {hasAccess && photoCreditsBalance > 0 && !isAdmin && (
+                  <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR' }}>📷 {photoCreditsBalance}</span>
+                )}
                 <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly?C.dark:'transparent', color: myPostsOnly?C.gold:C.sub, border:`1px solid ${myPostsOnly?C.dark:C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>My posts</button>
                 <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>Sign out</button>
               </>
@@ -1829,6 +1992,15 @@ export default function App() {
         {showModal && <SubmitModal onClose={() => setShowModal(false)} addJob={addJob} updateJob={updateJob} user={user} />}
         {showCampModal && <CampReviewModal onClose={() => setShowCampModal(false)} addReview={addReview} user={user} />}
         {editJob && <SubmitModal onClose={() => setEditJob(null)} addJob={addJob} updateJob={updateJob} editData={editJob} user={user} />}
+        {showPayslipModal && user && (
+          <PayslipModal
+            user={user}
+            payslipPending={payslipPending}
+            onClose={() => setShowPayslipModal(false)}
+            onUploaded={uploadPayslip}
+          />
+        )}
+        {showAdminPanel && isAdmin && <AdminPanel onClose={() => setShowAdminPanel(false)} />}
       </div>
     </ThemeCtx.Provider>
   )
