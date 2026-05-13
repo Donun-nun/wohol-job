@@ -1765,7 +1765,10 @@ export default function App() {
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
   }, [region, type, selectedTags])
 
-  const signIn  = () => supabase.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: window.location.origin + '/' } })
+  const signIn  = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: window.location.origin + '/' } })
+    if (error) alert('로그인 오류: ' + error.message)
+  }
   const signOut = () => supabase.auth.signOut()
 
   const q = search.trim().toLowerCase()
