@@ -7,6 +7,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.5",
     "@supabase/supabase-js": "^2.39.0",
     "leaflet": "^1.9.4",
     "react": "^18.2.0",

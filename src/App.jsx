@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, createContext, useContext, lazy, Suspense } from 'react'
+import { useGoogleLogin } from '@react-oauth/google'
 import { useJobs } from './useJobs'
 import { useQuestions } from './useQuestions'
 import { useCampReviews } from './useCampReviews'
@@ -1774,13 +1775,17 @@ export default function App() {
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
   }, [region, type, selectedTags])
 
-  const signIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin + '/' },
-    })
-    if (error) alert('Login error: ' + error.message)
-  }
+  const signIn = useGoogleLogin({
+    flow: 'implicit',
+    scope: 'openid email profile',
+    onSuccess: async (tokenResponse) => {
+      const idToken = tokenResponse.id_token
+      if (!idToken) { alert('Login error: no ID token received'); return }
+      const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken })
+      if (error) alert('Login error: ' + error.message)
+    },
+    onError: () => alert('Google sign-in failed'),
+  })
   const signOut = () => supabase.auth.signOut()
 
   const q = search.trim().toLowerCase()
