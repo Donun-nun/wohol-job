@@ -1775,22 +1775,11 @@ export default function App() {
   }, [region, type, selectedTags])
 
   const signIn = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/', skipBrowserRedirect: true },
+      options: { redirectTo: window.location.origin + '/' },
     })
-    if (error) { alert('Login error: ' + error.message); return }
-    const oauthUrl = data?.url
-    if (!oauthUrl) { alert('DEBUG: data=' + JSON.stringify(data)); return }
-    const popup = window.open(oauthUrl, 'oauth', 'width=500,height=600,left=200,top=100')
-    if (!popup) { window.location.href = oauthUrl; return }
-    const timer = setInterval(async () => {
-      if (popup.closed) {
-        clearInterval(timer)
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) { setUser(session.user); fetchProfile(session.user.id) }
-      }
-    }, 500)
+    if (error) alert('Login error: ' + error.message)
   }
   const signOut = () => supabase.auth.signOut()
 
