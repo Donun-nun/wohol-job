@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, createContext, useContext, lazy, Suspense } from 'react'
-import { useGoogleLogin } from '@react-oauth/google'
 import { useJobs } from './useJobs'
 import { useQuestions } from './useQuestions'
 import { useCampReviews } from './useCampReviews'
@@ -1775,17 +1774,20 @@ export default function App() {
     window.history.replaceState(null, '', qs ? `?${qs}` : window.location.pathname)
   }, [region, type, selectedTags])
 
-  const signIn = useGoogleLogin({
-    flow: 'implicit',
-    scope: 'openid email profile',
-    onSuccess: async (tokenResponse) => {
-      const idToken = tokenResponse.id_token
-      if (!idToken) { alert('Login error: no ID token received'); return }
-      const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken })
-      if (error) alert('Login error: ' + error.message)
-    },
-    onError: () => alert('Google sign-in failed'),
-  })
+  const signIn = () => {
+    const gsi = window.google?.accounts?.id
+    if (!gsi) { alert('Google login not ready, please refresh'); return }
+    gsi.initialize({
+      client_id: '596937966421-53mo6kdqs67n080ghjg8s2df1c80ve6t.apps.googleusercontent.com',
+      callback: async ({ credential }) => {
+        const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: credential })
+        if (error) alert('Login error: ' + error.message)
+      },
+      ux_mode: 'popup',
+      cancel_on_tap_outside: false,
+    })
+    gsi.prompt()
+  }
   const signOut = () => supabase.auth.signOut()
 
   const q = search.trim().toLowerCase()
