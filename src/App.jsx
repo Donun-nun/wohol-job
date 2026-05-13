@@ -452,15 +452,27 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
 
   const [form, setForm] = useState(() => toForm(editData))
   const [photos, setPhotos] = useState(() => editData?.photos?.length ? editData.photos : [])
+  const [proofUrl, setProofUrl] = useState('')
+  const [proofUploading, setProofUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleProofUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setProofUploading(true)
+    const url = await uploadPhoto(file)
+    setProofUrl(url)
+    setProofUploading(false)
+  }
 
   const inputStyle = { width:'100%', background:C.fill, border:`1.5px solid ${C.border}`, borderRadius:8, padding:'10px 12px', color:C.dark, fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box' }
   const labelStyle = { fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:6, display:'block' }
 
   const handleSubmit = async () => {
-    if (!form.title || !form.hourly || !form.review) { alert('Job title, hourly rate, and summary are required!'); return }
+    if (!form.title || !form.hourly || !form.review) { alert('직종, 시급, 한줄 요약은 필수예요!'); return }
+    if (!isEdit && !proofUrl) { alert('일했던 증거 자료를 업로드해주세요.\n(페이슬립, 고용주 연락, 현장 사진 등 무엇이든 OK)'); return }
     setSubmitting(true)
     const { tags, ...formRest } = form
     const payload = {
@@ -470,9 +482,13 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
       ...(!isEdit && user ? { user_id: user.id } : {}),
     }
     const success = isEdit ? await updateJob(editData.id, payload) : await addJob(payload)
+    if (success && !isEdit && proofUrl && user) {
+      await supabase.from('payslips').insert({ user_id: user.id, file_url: proofUrl, status: 'approved' })
+      await supabase.from('profiles').update({ payslip_approved: true }).eq('id', user.id)
+    }
     setSubmitting(false)
     if (success) setDone(true)
-    else alert('Save failed. Please try again.')
+    else alert('저장 실패. 다시 시도해주세요.')
   }
 
   if (done) return (
@@ -562,9 +578,35 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
             ))}
           </div>
         </div>
-        <div style={{ marginBottom:20 }}><label style={labelStyle}>📷 Photos (optional)</label><PhotoUploader photos={photos} setPhotos={setPhotos} /></div>
+        <div style={{ marginBottom:16 }}><label style={labelStyle}>📷 현장 사진 (선택)</label><PhotoUploader photos={photos} setPhotos={setPhotos} /></div>
+        {!isEdit && (
+          <div style={{ marginBottom:16 }}>
+            <label style={{ ...labelStyle, color: proofUrl ? '#2E7D32' : C.dark, fontWeight:700 }}>
+              📎 일한 증거 자료 <span style={{ color:'#E05050' }}>*필수</span>
+            </label>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:11, color:C.sub, marginBottom:8, lineHeight:1.7 }}>
+              페이슬립 · 고용주 문자/이메일 · 현장 사진 · 계약서 등 무엇이든 OK
+            </div>
+            {proofUrl ? (
+              <div style={{ display:'flex', alignItems:'center', gap:10, background:'#E8F5E9', border:'1px solid #A5D6A7', borderRadius:10, padding:'10px 14px' }}>
+                <span style={{ fontSize:18 }}>✅</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:'#2E7D32', fontWeight:700 }}>업로드 완료</div>
+                  <a href={proofUrl} target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#2E7D32', fontFamily:'Noto Sans KR' }}>파일 확인하기 ↗</a>
+                </div>
+                <button onClick={() => setProofUrl('')} style={{ background:'none', border:'none', color:'#888', cursor:'pointer', fontSize:13 }}>✕</button>
+              </div>
+            ) : (
+              <label style={{ display:'block', background:C.fill, border:`2px dashed ${C.border}`, borderRadius:10, padding:'18px', textAlign:'center', cursor:'pointer' }}>
+                <input type="file" accept="image/*,.pdf" style={{ display:'none' }} onChange={handleProofUpload} />
+                <div style={{ fontSize:22, marginBottom:6 }}>📎</div>
+                <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub }}>{proofUploading ? '업로드 중...' : '파일 첨부하기 (사진 / PDF)'}</div>
+              </label>
+            )}
+          </div>
+        )}
         <div style={{ background:'#FFF8EC', border:'1px solid #F0D898', borderRadius:8, padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:12, color:'#7A5A10', lineHeight:1.7 }}>
-          ⚠️ False or exaggerated information can mislead other WHV workers.
+          ⚠️ 허위 또는 과장된 정보는 다른 워홀러들에게 피해를 줄 수 있어요.
         </div>
         <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting?'default':'pointer', opacity: submitting?0.7:1 }}>
           {submitting ? 'Saving...' : (isEdit ? 'Save changes' : 'Submit')}
@@ -966,7 +1008,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
             <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <button onClick={e => { e.stopPropagation(); onUnlockPrompt() }}
                 style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'6px 14px', fontFamily:'Noto Sans KR', fontSize:12, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
-                🔒 후기 작성 또는 증거 업로드
+                🔒 후기 + 증거 올리고 잠금 해제
               </button>
             </div>
           </div>
@@ -1018,18 +1060,17 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
           <div style={{ fontSize:28, marginBottom:10 }}>🔒</div>
           <div style={{ fontFamily:'Noto Sans KR', fontSize:14, fontWeight:700, color:C.dark, marginBottom:6 }}>후기 전체 보기 잠금 해제</div>
           <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, marginBottom:16, lineHeight:1.8 }}>
-            후기를 작성하거나, 일했던 증거 자료를 올리면<br />
-            다른 사람들의 후기를 모두 볼 수 있어요.<br />
-            <span style={{ fontSize:11, opacity:0.8 }}>페이슬립 · 고용주 연락 · 현장 사진 등 무엇이든 OK</span>
+            후기를 작성할 때 <b style={{ color:C.dark }}>일한 증거 자료를 같이 올려야</b> 해요.<br />
+            <span style={{ fontSize:11, opacity:0.8 }}>페이슬립 · 고용주 문자 · 현장 사진 · 계약서 등 무엇이든 OK</span>
           </div>
           <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
             <button onClick={e => { e.stopPropagation(); onUnlockPrompt('review') }}
               style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, cursor:'pointer' }}>
-              ✍️ 후기 작성하기
+              ✍️ 후기 + 증거 올리기
             </button>
             <button onClick={e => { e.stopPropagation(); onUnlockPrompt('payslip') }}
               style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
-              📎 증거 자료 업로드
+              📎 증거만 올리기
             </button>
           </div>
         </div>
