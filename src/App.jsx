@@ -196,27 +196,34 @@ function PayslipModal({ user, onClose, onUploaded, payslipPending }) {
     <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:400, boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ fontSize:36, textAlign:'center', marginBottom:14 }}>📄</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark, marginBottom:8, textAlign:'center' }}>Verify with payslip</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark, marginBottom:8, textAlign:'center' }}>일했던 증거 업로드</div>
         {done || payslipPending ? (
           <>
             <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#2E7D32', textAlign:'center', marginBottom:24, lineHeight:1.7, background:'#E8F5E9', borderRadius:10, padding:'14px' }}>
-              ✅ Payslip submitted!<br />
-              <span style={{ fontSize:12, color:C.sub }}>An admin will review and approve your access shortly.</span>
+              ✅ 제출 완료!<br />
+              <span style={{ fontSize:12, color:C.sub }}>관리자가 확인 후 24시간 내 승인해드릴게요.</span>
             </div>
-            <button onClick={onClose} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>Close</button>
+            <button onClick={onClose} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
           </>
         ) : (
           <>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:20, lineHeight:1.7, textAlign:'center' }}>
-              Upload a payslip or work photo to prove you've worked in Australia.<br />
-              <span style={{ fontSize:12 }}>An admin will approve your access within 24 hours.</span>
+            <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:16, lineHeight:1.9, textAlign:'left' }}>
+              호주에서 일했다는 걸 증명할 수 있는 자료라면 <b style={{ color:C.dark }}>무엇이든</b> 괜찮아요.<br />
+              아래 예시 중 하나만 있으면 충분해요 👇
+            </div>
+            <div style={{ background:C.fill, borderRadius:10, padding:'12px 14px', marginBottom:16, fontFamily:'Noto Sans KR', fontSize:12, color:C.dark, lineHeight:2 }}>
+              📄 페이슬립 (급여 명세서)<br />
+              💬 고용주와의 문자 / 이메일<br />
+              📸 현장 사진 (작업복, 현장 배경 등)<br />
+              🪪 고용 계약서<br />
+              🏕️ 캠프 입소 확인서 등
             </div>
             <label style={{ display:'block', background:C.fill, border:`2px dashed ${C.border}`, borderRadius:12, padding:'24px', textAlign:'center', cursor:'pointer', marginBottom:16 }}>
               <input type="file" accept="image/*,.pdf" style={{ display:'none' }} onChange={handleFile} />
               <div style={{ fontSize:28, marginBottom:8 }}>📎</div>
-              <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>{uploading ? 'Uploading...' : 'Tap to upload payslip / work photo'}</div>
+              <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>{uploading ? '업로드 중...' : '파일 첨부하기 (사진 / PDF)'}</div>
             </label>
-            <button onClick={onClose} style={{ width:'100%', background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px', fontFamily:'Noto Sans KR', fontSize:14, cursor:'pointer' }}>Cancel</button>
+            <button onClick={onClose} style={{ width:'100%', background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px', fontFamily:'Noto Sans KR', fontSize:14, cursor:'pointer' }}>취소</button>
           </>
         )}
       </div>
@@ -959,7 +966,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
             <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <button onClick={e => { e.stopPropagation(); onUnlockPrompt() }}
                 style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'6px 14px', fontFamily:'Noto Sans KR', fontSize:12, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
-                🔒 Post a review to unlock
+                🔒 후기 작성 또는 증거 업로드
               </button>
             </div>
           </div>
@@ -1009,19 +1016,20 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
       {open && !hasAccess && !isOwner && (
         <div style={{ borderTop:`1px solid ${C.border}`, padding:'24px 20px', background:C.bg, textAlign:'center' }}>
           <div style={{ fontSize:28, marginBottom:10 }}>🔒</div>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:14, fontWeight:700, color:C.dark, marginBottom:6 }}>Unlock full reviews</div>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, marginBottom:16, lineHeight:1.7 }}>
-            Share your own experience to read everyone else's.<br />
-            Or upload a payslip to verify your work history.
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:14, fontWeight:700, color:C.dark, marginBottom:6 }}>후기 전체 보기 잠금 해제</div>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, marginBottom:16, lineHeight:1.8 }}>
+            후기를 작성하거나, 일했던 증거 자료를 올리면<br />
+            다른 사람들의 후기를 모두 볼 수 있어요.<br />
+            <span style={{ fontSize:11, opacity:0.8 }}>페이슬립 · 고용주 연락 · 현장 사진 등 무엇이든 OK</span>
           </div>
           <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
             <button onClick={e => { e.stopPropagation(); onUnlockPrompt('review') }}
               style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, cursor:'pointer' }}>
-              ✍️ Write a review
+              ✍️ 후기 작성하기
             </button>
             <button onClick={e => { e.stopPropagation(); onUnlockPrompt('payslip') }}
               style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
-              📄 Upload payslip
+              📎 증거 자료 업로드
             </button>
           </div>
         </div>
