@@ -42,6 +42,82 @@ function getAuthorBadges(author, authorStats) {
   return badges
 }
 
+// ─── SurveyModal ─────────────────────────────────────────────────────────────
+function SurveyModal({ user, onDone }) {
+  const C = useC()
+  const [stage, setStage] = useState('')
+  const [jobsTried, setJobsTried] = useState(null)
+  const [goal, setGoal] = useState('')
+  const [goalOther, setGoalOther] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const WHV_STAGES = ['입국 전', '1년차', '2년차', '3년차', '그 이상']
+  const GOALS = ['특정 지역/회사 후기 찾기', '시급 정보 비교', '세컨비자 가능한 일자리', 'FIFO / 광산 취업 정보', '인터뷰 팁 / 취업 준비', '기타']
+
+  const canSubmit = stage && jobsTried !== null && goal && (goal !== '기타' || goalOther.trim())
+
+  const handleSave = async () => {
+    if (!canSubmit) return
+    setSaving(true)
+    await supabase.from('profiles').update({
+      whv_stage: stage,
+      jobs_tried: jobsTried,
+      main_goal: goal === '기타' ? `기타: ${goalOther.trim()}` : goal,
+      survey_done: true,
+    }).eq('id', user.id)
+    setSaving(false)
+    onDone()
+  }
+
+  const optBtn = (label, selected, onClick) => (
+    <button key={label} onClick={onClick}
+      style={{ padding:'8px 14px', borderRadius:20, cursor:'pointer', fontSize:13, fontFamily:'Noto Sans KR', border:`1.5px solid ${selected ? C.dark : C.border}`, background: selected ? C.dark : 'transparent', color: selected ? C.gold : C.sub, transition:'all 0.15s' }}>
+      {label}
+    </button>
+  )
+
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.card, borderRadius:16, padding:28, width:'100%', maxWidth:420, maxHeight:'90vh', overflowY:'auto', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ fontSize:32, textAlign:'center', marginBottom:10 }}>🦘</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:18, fontWeight:700, color:C.dark, marginBottom:4, textAlign:'center' }}>빠르게 3가지만 알려주세요</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, textAlign:'center', marginBottom:24 }}>더 나은 서비스를 위해 활용해요</div>
+
+        <div style={{ marginBottom:20 }}>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, color:C.dark, marginBottom:10 }}>1. 호주 워홀 어느 단계예요?</div>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {WHV_STAGES.map(s => optBtn(s, stage === s, () => setStage(s)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:20 }}>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, color:C.dark, marginBottom:10 }}>2. 호주에서 몇 가지 일을 해봤어요?</div>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {[0,1,2,3,4,'5개 이상'].map(n => optBtn(String(n), jobsTried === n, () => setJobsTried(n)))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom:24 }}>
+          <div style={{ fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, color:C.dark, marginBottom:10 }}>3. 이 사이트에서 가장 원하는 게 뭐예요?</div>
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {GOALS.map(g => optBtn(g, goal === g, () => { setGoal(g); if (g !== '기타') setGoalOther('') }))}
+          </div>
+          {goal === '기타' && (
+            <input value={goalOther} onChange={e => setGoalOther(e.target.value)}
+              placeholder="직접 입력해주세요" maxLength={50} autoFocus
+              style={{ marginTop:10, width:'100%', background:C.fill, border:`1.5px solid ${C.border}`, borderRadius:8, padding:'10px 12px', color:C.dark, fontSize:13, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box' }} />
+          )}
+        </div>
+
+        <button onClick={handleSave} disabled={!canSubmit || saving}
+          style={{ width:'100%', background: canSubmit ? C.dark : C.border, color: canSubmit ? C.gold : C.sub, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor: canSubmit ? 'pointer' : 'default', transition:'all 0.2s' }}>
+          {saving ? '저장 중...' : '완료 — 후기 보러 가기 →'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ─── NicknameModal ────────────────────────────────────────────────────────────
 function NicknameModal({ user, onSave, onClose, isEdit, currentNickname }) {
   const C = useC()
@@ -96,8 +172,8 @@ function LoginPromptModal({ onClose, onLogin }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:360, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
         <div style={{ fontSize:36, marginBottom:14 }}>🔐</div>
-        <div style={{ fontFamily:"'Noto Sans KR'", fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>Login required</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:28 }}>Please sign in with your Google account.</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>로그인이 필요해요</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:28 }}>후기 내용을 보려면 구글 로그인이 필요해요.<br /><span style={{ fontSize:12 }}>간단한 설문 3가지만 답하면 바로 볼 수 있어요 👍</span></div>
         <button onClick={onLogin} style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'center', gap:8, background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer', marginBottom:10 }}>
           <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
           Sign in with Google
@@ -892,8 +968,13 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
   const topLevel = comments.filter(c => !c.parent_id)
   const replies = (parentId) => comments.filter(c => c.parent_id === parentId)
 
+  const handleToggle = () => {
+    if (!user && !open) { onLoginPrompt(); return }
+    setOpen(o => !o)
+  }
+
   return (
-    <div onClick={() => setOpen(o => !o)}
+    <div onClick={handleToggle}
       style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s', boxShadow:'0 1px 4px rgba(0,0,0,0.06)', position:'relative' }}
       onMouseEnter={e => e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.1)'}
       onMouseLeave={e => e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'}>
@@ -1578,6 +1659,7 @@ export default function App() {
   const [editNickname, setEditNickname] = useState(false)
   const [currentNickname, setCurrentNickname] = useState('')
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [showSurvey, setShowSurvey] = useState(false)
 
   const [bookmarkedIds, setBookmarkedIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem('bookmarked_ids') || '[]') } catch { return [] }
@@ -1655,9 +1737,12 @@ export default function App() {
   }
 
   const fetchProfile = async (userId) => {
-    const { data } = await supabase.from('profiles').select('nickname').eq('id', userId).single()
+    const { data } = await supabase.from('profiles').select('nickname, survey_done').eq('id', userId).single()
     if (!data) setShowNicknameModal(true)
-    else setCurrentNickname(data.nickname || '')
+    else {
+      setCurrentNickname(data.nickname || '')
+      if (!data.survey_done) setShowSurvey(true)
+    }
   }
 
   useEffect(() => {
@@ -1929,7 +2014,10 @@ export default function App() {
         </div>
 
         {showNicknameModal && user && (
-          <NicknameModal user={user} onSave={(n) => { setCurrentNickname(n); setShowNicknameModal(false) }} />
+          <NicknameModal user={user} onSave={(n) => { setCurrentNickname(n); setShowNicknameModal(false); setShowSurvey(true) }} />
+        )}
+        {showSurvey && user && !showNicknameModal && (
+          <SurveyModal user={user} onDone={() => setShowSurvey(false)} />
         )}
         {editNickname && user && (
           <NicknameModal user={user} isEdit currentNickname={currentNickname}
