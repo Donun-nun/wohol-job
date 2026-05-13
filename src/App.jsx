@@ -1780,9 +1780,12 @@ export default function App() {
       options: { redirectTo: window.location.origin + '/', skipBrowserRedirect: true },
     })
     if (error) { alert('Login error: ' + error.message); return }
-    const popup = window.open(data.url, 'oauth', 'width=500,height=600,left=200,top=100')
+    const oauthUrl = data?.url
+    if (!oauthUrl) { alert('DEBUG: data=' + JSON.stringify(data)); return }
+    const popup = window.open(oauthUrl, 'oauth', 'width=500,height=600,left=200,top=100')
+    if (!popup) { window.location.href = oauthUrl; return }
     const timer = setInterval(async () => {
-      if (popup?.closed) {
+      if (popup.closed) {
         clearInterval(timer)
         const { data: { session } } = await supabase.auth.getSession()
         if (session) { setUser(session.user); fetchProfile(session.user.id) }
