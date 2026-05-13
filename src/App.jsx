@@ -117,6 +117,19 @@ const EMPTY_FORM = { title:'', company:'', region:'WA', location:'', type:'Casua
 
 const CLOUDINARY_CLOUD  = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const CLOUDINARY_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
+const TG_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN
+const TG_CHAT  = import.meta.env.VITE_TELEGRAM_CHAT_ID
+
+async function notifyAdmin(text) {
+  if (!TG_TOKEN || !TG_CHAT) return
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TG_CHAT, text, parse_mode: 'HTML' }),
+    })
+  } catch {}
+}
 
 // 지역별 오픈채팅 링크 — 실제 링크 추가 시 여기에 입력
 const OPENCHAT_LINKS = {
@@ -174,61 +187,6 @@ async function uploadPhoto(file) {
   formData.append('upload_preset', CLOUDINARY_PRESET)
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:formData })
   return (await res.json()).secure_url
-}
-
-// ─── PayslipModal ─────────────────────────────────────────────────────────────
-function PayslipModal({ user, onClose, onUploaded, payslipPending }) {
-  const C = useC()
-  const [uploading, setUploading] = useState(false)
-  const [done, setDone] = useState(false)
-
-  const handleFile = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setUploading(true)
-    const url = await uploadPhoto(file)
-    const ok = await onUploaded(url)
-    if (ok) setDone(true)
-    setUploading(false)
-  }
-
-  return (
-    <div style={{ position:'fixed', inset:0, zIndex:150, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
-      <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:400, boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
-        <div style={{ fontSize:36, textAlign:'center', marginBottom:14 }}>📄</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark, marginBottom:8, textAlign:'center' }}>일했던 증거 업로드</div>
-        {done || payslipPending ? (
-          <>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:'#2E7D32', textAlign:'center', marginBottom:24, lineHeight:1.7, background:'#E8F5E9', borderRadius:10, padding:'14px' }}>
-              ✅ 제출 완료!<br />
-              <span style={{ fontSize:12, color:C.sub }}>관리자가 확인 후 24시간 내 승인해드릴게요.</span>
-            </div>
-            <button onClick={onClose} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
-          </>
-        ) : (
-          <>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub, marginBottom:16, lineHeight:1.9, textAlign:'left' }}>
-              호주에서 일했다는 걸 증명할 수 있는 자료라면 <b style={{ color:C.dark }}>무엇이든</b> 괜찮아요.<br />
-              아래 예시 중 하나만 있으면 충분해요 👇
-            </div>
-            <div style={{ background:C.fill, borderRadius:10, padding:'12px 14px', marginBottom:16, fontFamily:'Noto Sans KR', fontSize:12, color:C.dark, lineHeight:2 }}>
-              📄 페이슬립 (급여 명세서)<br />
-              💬 고용주와의 문자 / 이메일<br />
-              📸 현장 사진 (작업복, 현장 배경 등)<br />
-              🪪 고용 계약서<br />
-              🏕️ 캠프 입소 확인서 등
-            </div>
-            <label style={{ display:'block', background:C.fill, border:`2px dashed ${C.border}`, borderRadius:12, padding:'24px', textAlign:'center', cursor:'pointer', marginBottom:16 }}>
-              <input type="file" accept="image/*,.pdf" style={{ display:'none' }} onChange={handleFile} />
-              <div style={{ fontSize:28, marginBottom:8 }}>📎</div>
-              <div style={{ fontFamily:'Noto Sans KR', fontSize:13, color:C.sub }}>{uploading ? '업로드 중...' : '파일 첨부하기 (사진 / PDF)'}</div>
-            </label>
-            <button onClick={onClose} style={{ width:'100%', background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px', fontFamily:'Noto Sans KR', fontSize:14, cursor:'pointer' }}>취소</button>
-          </>
-        )}
-      </div>
-    </div>
-  )
 }
 
 // ─── AdminPanel ───────────────────────────────────────────────────────────────
@@ -483,8 +441,19 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     }
     const success = isEdit ? await updateJob(editData.id, payload) : await addJob(payload)
     if (success && !isEdit && proofUrl && user) {
-      await supabase.from('payslips').insert({ user_id: user.id, file_url: proofUrl, status: 'approved' })
-      await supabase.from('profiles').update({ payslip_approved: true }).eq('id', user.id)
+      await supabase.from('payslips').insert({ user_id: user.id, file_url: proofUrl, status: 'pending' })
+      const msg = [
+        `🆕 <b>새 후기 제출됨 — 증거 확인 필요</b>`,
+        ``,
+        `👤 ${user.email}`,
+        `🏢 ${form.title}${form.company ? ` @ ${form.company}` : ''} (${form.region})`,
+        `💰 $${form.hourly}/hr`,
+        ``,
+        `📎 증거 자료: ${proofUrl}`,
+        ``,
+        `👉 wohol-job.vercel.app (어드민 패널에서 승인)`,
+      ].join('\n')
+      notifyAdmin(msg)
     }
     setSubmitting(false)
     if (success) setDone(true)
@@ -495,8 +464,8 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
     <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
       <div style={{ background:C.card, borderRadius:16, padding:40, width:'100%', maxWidth:400, textAlign:'center' }}>
         <div style={{ fontSize:44, marginBottom:16 }}>{isEdit ? '✅' : '🎉'}</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? 'Updated!' : 'Thanks for sharing!'}</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? 'Your changes have been saved.' : 'This will help the next WHV worker.'}</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? '수정 완료!' : '후기 등록 완료!'}</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? '변경사항이 저장됐어요.' : '관리자가 증거를 확인하면 곧 승인돼요.\n다른 사람들의 후기도 볼 수 있게 될 거예요 👍'}</div>
         <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>Close</button>
       </div>
     </div>
@@ -1008,7 +977,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
             <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
               <button onClick={e => { e.stopPropagation(); onUnlockPrompt() }}
                 style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'6px 14px', fontFamily:'Noto Sans KR', fontSize:12, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
-                🔒 후기 + 증거 올리고 잠금 해제
+                🔒 후기 쓰고 잠금 해제
               </button>
             </div>
           </div>
@@ -1064,13 +1033,9 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
             <span style={{ fontSize:11, opacity:0.8 }}>페이슬립 · 고용주 문자 · 현장 사진 · 계약서 등 무엇이든 OK</span>
           </div>
           <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
-            <button onClick={e => { e.stopPropagation(); onUnlockPrompt('review') }}
+            <button onClick={e => { e.stopPropagation(); onUnlockPrompt() }}
               style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, cursor:'pointer' }}>
               ✍️ 후기 + 증거 올리기
-            </button>
-            <button onClick={e => { e.stopPropagation(); onUnlockPrompt('payslip') }}
-              style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'8px 14px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
-              📎 증거만 올리기
             </button>
           </div>
         </div>
@@ -1637,8 +1602,7 @@ export default function App() {
   const [user, setUser] = useState(null)
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
   const { reviews: campReviews, loading: campLoading, addReview, updateReview, deleteReview } = useCampReviews(user)
-  const { hasAccess, isAdmin, payslipPending, photoCreditsBalance, uploadPayslip } = useAccess(user, jobs)
-  const [showPayslipModal, setShowPayslipModal] = useState(false)
+  const { hasAccess, isAdmin, payslipPending, photoCreditsBalance } = useAccess(user, jobs)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [tab, setTab] = useState('reviews') // 'reviews' | 'qna' | 'best'
   const [region, setRegion]       = useState(params.get('region') || "All")
@@ -1799,9 +1763,8 @@ export default function App() {
   })
   const selectStyle = { background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:'5px 10px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, cursor:'pointer', outline:'none' }
 
-  const handleUnlockPrompt = (type) => {
+  const handleUnlockPrompt = () => {
     if (!user) { setShowLoginPrompt(true); return }
-    if (type === 'payslip') { setShowPayslipModal(true); return }
     setShowReviewTypePicker(true)
   }
 
@@ -1835,14 +1798,8 @@ export default function App() {
                 )}
                 {!hasAccess && !isAdmin && (
                   payslipPending
-                    ? <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', padding:'4px 8px', border:`1px solid ${C.border}`, borderRadius:8 }}>⏳ Pending</span>
-                    : <button onClick={() => setShowPayslipModal(true)}
-                        style={{ background:'rgba(200,150,60,0.12)', color:C.accent, border:`1px solid ${C.accent}`, borderRadius:8, padding:'6px 10px', fontFamily:'Noto Sans KR', fontSize:11, fontWeight:700, cursor:'pointer' }}>
-                        🔒 Unlock
-                      </button>
-                )}
-                {hasAccess && photoCreditsBalance > 0 && !isAdmin && (
-                  <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR' }}>📷 {photoCreditsBalance}</span>
+                    ? <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', padding:'4px 8px', border:`1px solid ${C.border}`, borderRadius:8 }}>⏳ 승인 대기 중</span>
+                    : null
                 )}
                 <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly?C.dark:'transparent', color: myPostsOnly?C.gold:C.sub, border:`1px solid ${myPostsOnly?C.dark:C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>My posts</button>
                 <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>Sign out</button>
@@ -2041,14 +1998,6 @@ export default function App() {
         {showModal && <SubmitModal onClose={() => setShowModal(false)} addJob={addJob} updateJob={updateJob} user={user} />}
         {showCampModal && <CampReviewModal onClose={() => setShowCampModal(false)} addReview={addReview} user={user} />}
         {editJob && <SubmitModal onClose={() => setEditJob(null)} addJob={addJob} updateJob={updateJob} editData={editJob} user={user} />}
-        {showPayslipModal && user && (
-          <PayslipModal
-            user={user}
-            payslipPending={payslipPending}
-            onClose={() => setShowPayslipModal(false)}
-            onUploaded={uploadPayslip}
-          />
-        )}
         {showAdminPanel && isAdmin && <AdminPanel onClose={() => setShowAdminPanel(false)} />}
       </div>
     </ThemeCtx.Provider>
