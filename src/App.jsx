@@ -410,27 +410,15 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
 
   const [form, setForm] = useState(() => toForm(editData))
   const [photos, setPhotos] = useState(() => editData?.photos?.length ? editData.photos : [])
-  const [proofUrl, setProofUrl] = useState('')
-  const [proofUploading, setProofUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
-
-  const handleProofUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setProofUploading(true)
-    const url = await uploadPhoto(file)
-    setProofUrl(url)
-    setProofUploading(false)
-  }
 
   const inputStyle = { width:'100%', background:C.fill, border:`1.5px solid ${C.border}`, borderRadius:8, padding:'10px 12px', color:C.dark, fontSize:14, fontFamily:'Noto Sans KR', outline:'none', boxSizing:'border-box' }
   const labelStyle = { fontSize:12, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:6, display:'block' }
 
   const handleSubmit = async () => {
     if (!form.title || !form.hourly || !form.review) { alert('직종, 시급, 한줄 요약은 필수예요!'); return }
-    if (!isEdit && !proofUrl) { alert('일했던 증거 자료를 업로드해주세요.\n(페이슬립, 고용주 연락, 현장 사진 등 무엇이든 OK)'); return }
     setSubmitting(true)
     const { tags, ...formRest } = form
     const payload = {
@@ -440,18 +428,15 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
       ...(!isEdit && user ? { user_id: user.id } : {}),
     }
     const success = isEdit ? await updateJob(editData.id, payload) : await addJob(payload)
-    if (success && !isEdit && proofUrl && user) {
-      await supabase.from('payslips').insert({ user_id: user.id, file_url: proofUrl, status: 'pending' })
+    if (success && !isEdit && user) {
       const msg = [
-        `🆕 <b>새 후기 제출됨 — 증거 확인 필요</b>`,
+        `🆕 <b>새 후기 등록</b>`,
         ``,
         `👤 ${user.email}`,
         `🏢 ${form.title}${form.company ? ` @ ${form.company}` : ''} (${form.region})`,
         `💰 $${form.hourly}/hr`,
         ``,
-        `📎 증거 자료: ${proofUrl}`,
-        ``,
-        `👉 wohol-job.vercel.app (어드민 패널에서 승인)`,
+        `👉 wohol-job.vercel.app`,
       ].join('\n')
       notifyAdmin(msg)
     }
@@ -465,8 +450,8 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
       <div style={{ background:C.card, borderRadius:16, padding:40, width:'100%', maxWidth:400, textAlign:'center' }}>
         <div style={{ fontSize:44, marginBottom:16 }}>{isEdit ? '✅' : '🎉'}</div>
         <div style={{ fontFamily:'Noto Sans KR', fontSize:22, fontWeight:700, color:C.dark, marginBottom:8 }}>{isEdit ? '수정 완료!' : '후기 등록 완료!'}</div>
-        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? '변경사항이 저장됐어요.' : '관리자가 증거를 확인하면 곧 승인돼요.\n다른 사람들의 후기도 볼 수 있게 될 거예요 👍'}</div>
-        <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>Close</button>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:24 }}>{isEdit ? '변경사항이 저장됐어요.' : '공유해줘서 고마워요 🙌\n다른 워홀러들에게 큰 도움이 될 거예요!'}</div>
+        <button onClick={onClose} style={{ background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'12px 28px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer' }}>닫기</button>
       </div>
     </div>
   )
@@ -547,35 +532,12 @@ function SubmitModal({ onClose, addJob, updateJob, editData, user }) {
             ))}
           </div>
         </div>
-        <div style={{ marginBottom:16 }}><label style={labelStyle}>📷 현장 사진 (선택)</label><PhotoUploader photos={photos} setPhotos={setPhotos} /></div>
-        {!isEdit && (
-          <div style={{ marginBottom:16 }}>
-            <label style={{ ...labelStyle, color: proofUrl ? '#2E7D32' : C.dark, fontWeight:700 }}>
-              📎 일한 증거 자료 <span style={{ color:'#E05050' }}>*필수</span>
-            </label>
-            <div style={{ fontFamily:'Noto Sans KR', fontSize:11, color:C.sub, marginBottom:8, lineHeight:1.7 }}>
-              페이슬립 · 고용주 문자/이메일 · 현장 사진 · 계약서 등 무엇이든 OK
-            </div>
-            {proofUrl ? (
-              <div style={{ display:'flex', alignItems:'center', gap:10, background:'#E8F5E9', border:'1px solid #A5D6A7', borderRadius:10, padding:'10px 14px' }}>
-                <span style={{ fontSize:18 }}>✅</span>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:'#2E7D32', fontWeight:700 }}>업로드 완료</div>
-                  <a href={proofUrl} target="_blank" rel="noreferrer" style={{ fontSize:11, color:'#2E7D32', fontFamily:'Noto Sans KR' }}>파일 확인하기 ↗</a>
-                </div>
-                <button onClick={() => setProofUrl('')} style={{ background:'none', border:'none', color:'#888', cursor:'pointer', fontSize:13 }}>✕</button>
-              </div>
-            ) : (
-              <label style={{ display:'block', background:C.fill, border:`2px dashed ${C.border}`, borderRadius:10, padding:'18px', textAlign:'center', cursor:'pointer' }}>
-                <input type="file" accept="image/*,.pdf" style={{ display:'none' }} onChange={handleProofUpload} />
-                <div style={{ fontSize:22, marginBottom:6 }}>📎</div>
-                <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub }}>{proofUploading ? '업로드 중...' : '파일 첨부하기 (사진 / PDF)'}</div>
-              </label>
-            )}
-          </div>
-        )}
-        <div style={{ background:'#FFF8EC', border:'1px solid #F0D898', borderRadius:8, padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:12, color:'#7A5A10', lineHeight:1.7 }}>
-          ⚠️ 허위 또는 과장된 정보는 다른 워홀러들에게 피해를 줄 수 있어요.
+        <div style={{ marginBottom:16 }}>
+          <label style={labelStyle}>📷 현장 사진 <span style={{ color:C.sub, fontWeight:400 }}>(올리면 다른 사람들의 사진도 볼 수 있어요)</span></label>
+          <PhotoUploader photos={photos} setPhotos={setPhotos} />
+        </div>
+        <div style={{ background:'#FFF0F0', border:'1px solid #F5AAAA', borderRadius:8, padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:12, color:'#8B2020', lineHeight:1.8 }}>
+          ⚠️ 허위 또는 과장된 정보를 작성할 경우 관리자에 의해 <b>후기가 삭제</b>되고 <b>계정이 정지</b>될 수 있어요.
         </div>
         <button onClick={handleSubmit} disabled={submitting} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'14px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:15, cursor: submitting?'default':'pointer', opacity: submitting?0.7:1 }}>
           {submitting ? 'Saving...' : (isEdit ? 'Save changes' : 'Submit')}
@@ -845,7 +807,7 @@ function BestPosts({ jobs, likedIds, onLike, user, onEdit, onLoginPrompt, onShar
 }
 
 // ─── JobCard ──────────────────────────────────────────────────────────────────
-function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, onLoginPrompt, onShare, defaultOpen, updateJob, incrementView, onAuthorClick, authorBadges, hasAccess, onUnlockPrompt }) {
+function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, onLoginPrompt, onShare, defaultOpen, updateJob, incrementView, onAuthorClick, authorBadges, hasPhotoAccess, onWriteReview }) {
   const C = useC()
   const [open, setOpen] = useState(!!defaultOpen)
   const [comments, setComments] = useState([])
@@ -945,7 +907,28 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
         🔖
       </button>
 
-      {hasPhotos && <div style={{ paddingTop:14 }}><PhotoGallery photos={job.photos} isOwner={isOwner} onCaptionSave={handleCaptionSave} /></div>}
+      {hasPhotos && (
+        isOwner || hasPhotoAccess ? (
+          <div style={{ paddingTop:14 }}><PhotoGallery photos={job.photos} isOwner={isOwner} onCaptionSave={handleCaptionSave} /></div>
+        ) : (
+          <div style={{ position:'relative', paddingTop:14 }}>
+            <div style={{ filter:'blur(8px)', pointerEvents:'none', userSelect:'none' }}>
+              <PhotoGallery photos={job.photos} isOwner={false} onCaptionSave={() => {}} />
+            </div>
+            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:8 }}>
+              <div style={{ background:'rgba(255,255,255,0.92)', borderRadius:12, padding:'14px 20px', textAlign:'center', boxShadow:'0 2px 12px rgba(0,0,0,0.12)' }}>
+                <div style={{ fontSize:20, marginBottom:6 }}>📷</div>
+                <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:'#2C1A00', fontWeight:700, marginBottom:4 }}>현장 사진을 올리면 볼 수 있어요</div>
+                <div style={{ fontFamily:'Noto Sans KR', fontSize:11, color:'#8A7060', marginBottom:10 }}>후기 작성 시 사진을 1장 이상 올리면 잠금 해제</div>
+                <button onClick={e => { e.stopPropagation(); onWriteReview() }}
+                  style={{ background:'#2C1A00', color:'#FFD580', border:'none', borderRadius:8, padding:'7px 16px', fontFamily:'Noto Sans KR', fontSize:12, fontWeight:700, cursor:'pointer' }}>
+                  ✍️ 사진 포함해서 후기 쓰기
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      )}
 
       <div style={{ padding:'16px 20px' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:10 }}>
@@ -969,23 +952,9 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
           </div>
         </div>
 
-        {!hasAccess && !isOwner ? (
-          <div style={{ position:'relative', marginBottom:12 }}>
-            <div style={{ background:C.fill, borderLeft:`3px solid ${C.accent}`, borderRadius:'0 8px 8px 0', padding:'10px 14px', fontFamily:'Noto Sans KR', fontSize:13, color:C.dark, fontStyle:'italic', lineHeight:1.6, opacity:0.85, filter:'blur(5px)', userSelect:'none' }}>
-              "{job.review}"
-            </div>
-            <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-              <button onClick={e => { e.stopPropagation(); onUnlockPrompt() }}
-                style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'6px 14px', fontFamily:'Noto Sans KR', fontSize:12, fontWeight:700, cursor:'pointer', boxShadow:'0 2px 8px rgba(0,0,0,0.2)' }}>
-                🔒 후기 쓰고 잠금 해제
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div style={{ background:C.fill, borderLeft:`3px solid ${C.accent}`, borderRadius:'0 8px 8px 0', padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:13, color:C.dark, fontStyle:'italic', lineHeight:1.6, opacity:0.85 }}>
-            "{job.review}"
-          </div>
-        )}
+        <div style={{ background:C.fill, borderLeft:`3px solid ${C.accent}`, borderRadius:'0 8px 8px 0', padding:'10px 14px', marginBottom:12, fontFamily:'Noto Sans KR', fontSize:13, color:C.dark, fontStyle:'italic', lineHeight:1.6, opacity:0.85 }}>
+          "{job.review}"
+        </div>
 
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
@@ -1024,23 +993,7 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
         </div>
       </div>
 
-      {open && !hasAccess && !isOwner && (
-        <div style={{ borderTop:`1px solid ${C.border}`, padding:'24px 20px', background:C.bg, textAlign:'center' }}>
-          <div style={{ fontSize:28, marginBottom:10 }}>🔒</div>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:14, fontWeight:700, color:C.dark, marginBottom:6 }}>후기 전체 보기 잠금 해제</div>
-          <div style={{ fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, marginBottom:16, lineHeight:1.8 }}>
-            후기를 작성할 때 <b style={{ color:C.dark }}>일한 증거 자료를 같이 올려야</b> 해요.<br />
-            <span style={{ fontSize:11, opacity:0.8 }}>페이슬립 · 고용주 문자 · 현장 사진 · 계약서 등 무엇이든 OK</span>
-          </div>
-          <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
-            <button onClick={e => { e.stopPropagation(); onUnlockPrompt() }}
-              style={{ background:C.dark, color:C.gold, border:'none', borderRadius:8, padding:'8px 16px', fontFamily:'Noto Sans KR', fontSize:13, fontWeight:700, cursor:'pointer' }}>
-              ✍️ 후기 + 증거 올리기
-            </button>
-          </div>
-        </div>
-      )}
-      {open && (hasAccess || isOwner) && (
+      {open && (
         <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 20px 20px', background:C.bg }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom: (job.daily_life||job.interview_tips) ? 10 : 0 }}>
             <div style={{ background:'#F3FAF3', borderRadius:10, padding:14 }}>
@@ -1602,7 +1555,8 @@ export default function App() {
   const [user, setUser] = useState(null)
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
   const { reviews: campReviews, loading: campLoading, addReview, updateReview, deleteReview } = useCampReviews(user)
-  const { hasAccess, isAdmin, payslipPending, photoCreditsBalance } = useAccess(user, jobs)
+  const { isAdmin } = useAccess(user, jobs)
+  const hasPhotoAccess = isAdmin || jobs.some(j => j.user_id === user?.id && j.photos?.length > 0)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
   const [tab, setTab] = useState('reviews') // 'reviews' | 'qna' | 'best'
   const [region, setRegion]       = useState(params.get('region') || "All")
@@ -1763,12 +1717,12 @@ export default function App() {
   })
   const selectStyle = { background:C.card, border:`1px solid ${C.border}`, borderRadius:8, padding:'5px 10px', fontFamily:'Noto Sans KR', fontSize:12, color:C.sub, cursor:'pointer', outline:'none' }
 
-  const handleUnlockPrompt = () => {
+  const handleWriteReview = () => {
     if (!user) { setShowLoginPrompt(true); return }
     setShowReviewTypePicker(true)
   }
 
-  const cardProps = { likedIds, onLike:toggleLike, user, onEdit:setEditJob, onLoginPrompt:() => setShowLoginPrompt(true), onShare:() => user ? setShowModal(true) : setShowLoginPrompt(true), updateJob, incrementView, onAuthorClick:setAuthorFilter, bookmarkedIds, onBookmark:toggleBookmark, hasAccess, onUnlockPrompt:handleUnlockPrompt }
+  const cardProps = { likedIds, onLike:toggleLike, user, onEdit:setEditJob, onLoginPrompt:() => setShowLoginPrompt(true), onShare:() => user ? setShowModal(true) : setShowLoginPrompt(true), updateJob, incrementView, onAuthorClick:setAuthorFilter, bookmarkedIds, onBookmark:toggleBookmark, hasPhotoAccess, onWriteReview:handleWriteReview }
 
   return (
     <ThemeCtx.Provider value={C}>
@@ -1795,11 +1749,6 @@ export default function App() {
                     style={{ background:'#FFF8E1', color:'#FF8F00', border:'1px solid #FFD54F', borderRadius:8, padding:'6px 10px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
                     🛡 Admin
                   </button>
-                )}
-                {!hasAccess && !isAdmin && (
-                  payslipPending
-                    ? <span style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', padding:'4px 8px', border:`1px solid ${C.border}`, borderRadius:8 }}>⏳ 승인 대기 중</span>
-                    : null
                 )}
                 <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly?C.dark:'transparent', color: myPostsOnly?C.gold:C.sub, border:`1px solid ${myPostsOnly?C.dark:C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>My posts</button>
                 <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>Sign out</button>
