@@ -1746,10 +1746,19 @@ export default function App() {
   }
 
   useEffect(() => {
+    // OAuth 리다이렉트 후 URL에 에러 있으면 표시
+    const hash = window.location.hash
+    if (hash.includes('error=')) {
+      const params = new URLSearchParams(hash.replace('#', ''))
+      const errDesc = params.get('error_description') || params.get('error') || '알 수 없는 오류'
+      alert('로그인 오류: ' + decodeURIComponent(errDesc.replace(/\+/g, ' ')))
+      window.history.replaceState(null, '', window.location.pathname)
+    }
+
     supabase.auth.getSession().then(({ data }) => {
       const u = data.session?.user ?? null; setUser(u); if (u) fetchProfile(u.id)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const u = session?.user ?? null; setUser(u)
       if (u) fetchProfile(u.id); else setShowNicknameModal(false)
     })
