@@ -188,14 +188,32 @@ function GoogleSignInBtn({ width = 260 }) {
   const ref = useRef(null)
   useEffect(() => {
     let timer
-    const tryRender = () => {
-      if (!window.google?.accounts?.id || !ref.current) { timer = setTimeout(tryRender, 200); return }
+    let alive = true
+    const init = async () => {
+      if (!window.google?.accounts?.id || !ref.current) { timer = setTimeout(init, 200); return }
+      if (!alive) return
+      const rawNonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+      const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(rawNonce))
+      const hashedNonce = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2,'0')).join('')
+      if (!alive || !ref.current) return
       window.google.accounts.id.initialize({
         client_id: '596937966421-53mo6kdqs67n080ghjg8s2df1c80ve6t.apps.googleusercontent.com',
+        nonce: hashedNonce,
         callback: async ({ credential }) => {
           if (!credential) return
-          const { error } = await supabase.auth.signInWithIdToken({ provider: 'google', token: credential })
-          if (error) alert('Login error: ' + error.message)
+          try {
+            const res = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/token?grant_type=id_token`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'apikey': import.meta.env.VITE_SUPABASE_KEY },
+                body: JSON.stringify({ provider: 'google', id_token: credential, nonce: rawNonce }),
+              }
+            )
+            const json = await res.json()
+            if (!res.ok) { alert('Login error: ' + (json.error_description || json.msg || json.message || JSON.stringify(json))); return }
+            if (json.access_token) await supabase.auth.setSession({ access_token: json.access_token, refresh_token: json.refresh_token })
+          } catch (e) { alert('Network error: ' + e.message) }
         },
       })
       window.google.accounts.id.renderButton(ref.current, {
@@ -203,8 +221,8 @@ function GoogleSignInBtn({ width = 260 }) {
         text: 'signin_with', shape: 'rectangular', width: String(width),
       })
     }
-    tryRender()
-    return () => clearTimeout(timer)
+    init()
+    return () => { alive = false; clearTimeout(timer) }
   }, [])
   return <div ref={ref} />
 }
