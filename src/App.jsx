@@ -183,6 +183,27 @@ function LoginPromptModal({ onClose, onLogin }) {
   )
 }
 
+// ─── PostPromptModal ──────────────────────────────────────────────────────────
+function PostPromptModal({ onClose, onWriteReview }) {
+  const C = useC()
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+      <div style={{ background:C.card, borderRadius:16, padding:36, width:'100%', maxWidth:360, textAlign:'center', boxShadow:'0 20px 60px rgba(0,0,0,0.15)' }}>
+        <div style={{ fontSize:36, marginBottom:14 }}>✍️</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:20, fontWeight:700, color:C.dark, marginBottom:8 }}>후기를 남겨보세요</div>
+        <div style={{ fontFamily:'Noto Sans KR', fontSize:14, color:C.sub, lineHeight:1.7, marginBottom:28 }}>
+          후기 1개를 작성하면 모든 글을 자유롭게 볼 수 있어요.<br />
+          <span style={{ fontSize:12 }}>현장 사진을 올리면 다른 분들 사진도 볼 수 있어요 📸</span>
+        </div>
+        <button onClick={onWriteReview} style={{ width:'100%', background:C.dark, color:C.gold, border:'none', borderRadius:10, padding:'13px', fontFamily:'Noto Sans KR', fontWeight:700, fontSize:14, cursor:'pointer', marginBottom:10 }}>
+          후기 작성하기
+        </button>
+        <button onClick={onClose} style={{ width:'100%', background:'transparent', color:C.sub, border:'none', fontFamily:'Noto Sans KR', fontSize:13, cursor:'pointer' }}>닫기</button>
+      </div>
+    </div>
+  )
+}
+
 // ─── GoogleSignInBtn ──────────────────────────────────────────────────────────
 function GoogleSignInBtn({ width = 260 }) {
   const ref = useRef(null)
@@ -890,7 +911,7 @@ function QuestionBoard({ user, onLoginPrompt }) {
 }
 
 // ─── BestPosts ────────────────────────────────────────────────────────────────
-function BestPosts({ jobs, likedIds, onLike, user, onEdit, onLoginPrompt, onShare, updateJob, incrementView, onAuthorClick, bookmarkedIds, onBookmark, authorStats }) {
+function BestPosts({ jobs, likedIds, onLike, user, onEdit, onLoginPrompt, onShare, updateJob, incrementView, onAuthorClick, bookmarkedIds, onBookmark, authorStats, canExpandCard, recordCardOpened }) {
   const C = useC()
   const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
   let best = jobs.filter(j => new Date(j.created_at) > monthAgo).sort((a,b) => b.likes - a.likes).slice(0, 5)
@@ -917,7 +938,9 @@ function BestPosts({ jobs, likedIds, onLike, user, onEdit, onLoginPrompt, onShar
               isBookmarked={bookmarkedIds.includes(job.id)} onBookmark={onBookmark}
               user={user} onEdit={onEdit} onLoginPrompt={onLoginPrompt} onShare={onShare}
               updateJob={updateJob} incrementView={incrementView} onAuthorClick={onAuthorClick}
-              authorBadges={getAuthorBadges(job.author || 'Anonymous', authorStats)} />
+              authorBadges={getAuthorBadges(job.author || 'Anonymous', authorStats)}
+              canExpand={canExpandCard?.(job.id) ?? true}
+              onExpanded={() => recordCardOpened?.(job.id)} />
           </div>
         ))}
       </div>
@@ -926,7 +949,7 @@ function BestPosts({ jobs, likedIds, onLike, user, onEdit, onLoginPrompt, onShar
 }
 
 // ─── JobCard ──────────────────────────────────────────────────────────────────
-function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, onLoginPrompt, onShare, defaultOpen, updateJob, incrementView, onAuthorClick, authorBadges, hasPhotoAccess, onWriteReview }) {
+function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, onLoginPrompt, onShare, defaultOpen, updateJob, incrementView, onAuthorClick, authorBadges, hasPhotoAccess, onWriteReview, canExpand, onExpanded }) {
   const C = useC()
   const [open, setOpen] = useState(!!defaultOpen)
   const [comments, setComments] = useState([])
@@ -956,7 +979,8 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
     if (navigator.share) {
       try { await navigator.share({ title: `${job.title} — WOHOL`, text: `"${job.review}"`, url }) } catch {}
     } else {
-      navigator.clipboard.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+      const text = `${job.tags?.[0]||job.title}, ${job.region} — $${job.hourly}/hr ⭐${(job.stars||0).toFixed(1)}/5\n${url}`
+      navigator.clipboard.writeText(text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
     }
   }
 
@@ -1012,12 +1036,13 @@ function JobCard({ job, liked, onLike, isBookmarked, onBookmark, user, onEdit, o
   const replies = (parentId) => comments.filter(c => c.parent_id === parentId)
 
   const handleToggle = () => {
-    if (!user && !open) { onLoginPrompt(); return }
+    if (!open && !canExpand) { onLoginPrompt(); return }
+    if (!open && onExpanded) onExpanded()
     setOpen(o => !o)
   }
 
   return (
-    <div onClick={handleToggle}
+    <div id={`job-${job.id}`} onClick={handleToggle}
       style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', cursor:'pointer', transition:'box-shadow 0.18s', boxShadow:'0 1px 4px rgba(0,0,0,0.06)', position:'relative' }}
       onMouseEnter={e => e.currentTarget.style.boxShadow='0 6px 24px rgba(0,0,0,0.1)'}
       onMouseLeave={e => e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'}>
@@ -1679,9 +1704,26 @@ export default function App() {
   const [user, setUser] = useState(null)
   const { jobs, loading, likedIds, toggleLike, addJob, updateJob, incrementView } = useJobs(user)
   const { reviews: campReviews, loading: campLoading, addReview, updateReview, deleteReview } = useCampReviews(user)
-  const { isAdmin } = useAccess(user, jobs)
+  const { isAdmin, hasPosted } = useAccess(user, jobs)
   const hasPhotoAccess = isAdmin || jobs.some(j => j.user_id === user?.id && j.photos?.length > 0)
   const [showAdminPanel, setShowAdminPanel] = useState(false)
+  const [openedCardIds, setOpenedCardIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('opened_card_ids') || '[]') } catch { return [] }
+  })
+  const recordCardOpened = (id) => {
+    setOpenedCardIds(prev => {
+      if (prev.includes(id)) return prev
+      const next = [...prev, id]
+      localStorage.setItem('opened_card_ids', JSON.stringify(next))
+      return next
+    })
+  }
+  const canExpandCard = (id) => {
+    if (isAdmin || hasPosted) return true
+    if (openedCardIds.includes(id)) return true
+    const limit = user ? 2 : 1
+    return openedCardIds.length < limit
+  }
   const [tab, setTab] = useState('reviews') // 'reviews' | 'qna' | 'best'
   const [region, setRegion]       = useState(params.get('region') || "All")
   const [type, setType]           = useState(params.get('type') || "All")
@@ -1702,6 +1744,7 @@ export default function App() {
   const [editNickname, setEditNickname] = useState(false)
   const [currentNickname, setCurrentNickname] = useState('')
   const [showLoginPrompt, setShowLoginPrompt] = useState(false)
+  const [showPostPrompt, setShowPostPrompt] = useState(false)
   const [showSurvey, setShowSurvey] = useState(false)
 
   const [bookmarkedIds, setBookmarkedIds] = useState(() => {
@@ -1758,6 +1801,9 @@ export default function App() {
     if (!targetId || loading || !jobs.length) return
     const job = jobs.find(j => String(j.id) === targetId)
     if (!job) return
+    setTimeout(() => {
+      document.getElementById(`job-${targetId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 400)
     document.title = `${job.title} (${job.region}) — WOHOL`
     const setMeta = (attr, val, prop = 'property') => {
       let el = document.querySelector(`meta[${prop}="${attr}"]`)
@@ -1845,7 +1891,8 @@ export default function App() {
     const tagCount = {}
     jobs.forEach(j => j.tags?.forEach(t => { tagCount[t] = (tagCount[t]||0)+1 }))
     const topTag = Object.entries(tagCount).sort((a,b) => b[1]-a[1])[0]?.[0] || ''
-    return { total: jobs.length, avgHourly, topTag }
+    const companies = new Set(jobs.map(j => j.company).filter(Boolean)).size
+    return { total: jobs.length, avgHourly, topTag, companies }
   })() : null
 
   const chip = (active) => ({
@@ -1859,7 +1906,8 @@ export default function App() {
     setShowReviewTypePicker(true)
   }
 
-  const cardProps = { likedIds, onLike:toggleLike, user, onEdit:setEditJob, onLoginPrompt:() => setShowLoginPrompt(true), onShare:() => user ? setShowModal(true) : setShowLoginPrompt(true), updateJob, incrementView, onAuthorClick:setAuthorFilter, bookmarkedIds, onBookmark:toggleBookmark, hasPhotoAccess, onWriteReview:handleWriteReview }
+  const handleLoginPrompt = () => user ? setShowPostPrompt(true) : setShowLoginPrompt(true)
+  const cardProps = { likedIds, onLike:toggleLike, user, onEdit:setEditJob, onLoginPrompt:handleLoginPrompt, onShare:() => user ? setShowModal(true) : setShowLoginPrompt(true), updateJob, incrementView, onAuthorClick:setAuthorFilter, bookmarkedIds, onBookmark:toggleBookmark, hasPhotoAccess, onWriteReview:handleWriteReview }
 
   return (
     <ThemeCtx.Provider value={C}>
@@ -1881,12 +1929,6 @@ export default function App() {
                 <img src={user.user_metadata?.avatar_url} alt="Profile" title="Edit nickname" onClick={() => setEditNickname(true)}
                   style={{ width:28, height:28, borderRadius:'50%', border:`2px solid ${C.accent}`, objectFit:'cover', cursor:'pointer' }}
                   onError={e => { e.target.style.display='none' }} />
-                {isAdmin && (
-                  <button onClick={() => setShowAdminPanel(true)}
-                    style={{ background:'#FFF8E1', color:'#FF8F00', border:'1px solid #FFD54F', borderRadius:8, padding:'6px 10px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>
-                    🛡 Admin
-                  </button>
-                )}
                 <button onClick={() => setMyPostsOnly(v => !v)} style={{ background: myPostsOnly?C.dark:'transparent', color: myPostsOnly?C.gold:C.sub, border:`1px solid ${myPostsOnly?C.dark:C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer', transition:'all 0.15s' }}>My posts</button>
                 <button onClick={signOut} style={{ background:'transparent', color:C.sub, border:`1px solid ${C.border}`, borderRadius:8, padding:'6px 12px', fontFamily:'Noto Sans KR', fontSize:12, cursor:'pointer' }}>Sign out</button>
               </>
@@ -1933,7 +1975,7 @@ export default function App() {
           {/* 통계 배너 */}
           {stats && (
             <div style={{ display:'flex', gap:8, marginBottom:20, flexWrap:'wrap' }}>
-              {[{label:'Reviews', value:`${stats.total}`},{label:'Avg hourly', value:`$${stats.avgHourly}/hr`},{label:'Top category', value:stats.topTag}].map(({ label, value }) => (
+              {[{label:'Reviews', value:`${stats.total}`},{label:'Companies', value:`${stats.companies}`},{label:'Avg hourly', value:`$${stats.avgHourly}/hr`},{label:'Top category', value:stats.topTag}].map(({ label, value }) => (
                 <div key={label} style={{ flex:1, minWidth:90, background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'10px 14px', textAlign:'center' }}>
                   <div style={{ fontSize:11, color:C.sub, fontFamily:'Noto Sans KR', marginBottom:4 }}>{label}</div>
                   <div style={{ fontSize:16, fontWeight:700, color:C.dark, fontFamily:"'Jua',sans-serif" }}>{value}</div>
@@ -2033,6 +2075,8 @@ export default function App() {
                   : filtered.map(job => (
                       <JobCard key={job.id} job={job} liked={likedIds.includes(job.id)} {...cardProps}
                         defaultOpen={targetId===String(job.id)}
+                        canExpand={targetId===String(job.id) || canExpandCard(job.id)}
+                        onExpanded={() => recordCardOpened(job.id)}
                         authorBadges={getAuthorBadges(job.user_id || job.author || 'Anonymous', authorStats)} />
                     ))
                 }
@@ -2058,7 +2102,7 @@ export default function App() {
 
           {/* ─── 베스트 탭 ─── */}
           {tab === 'best' && (
-            <BestPosts jobs={jobs} {...cardProps} authorStats={authorStats} />
+            <BestPosts jobs={jobs} {...cardProps} authorStats={authorStats} canExpandCard={canExpandCard} recordCardOpened={recordCardOpened} />
           )}
         </div>
 
@@ -2074,6 +2118,7 @@ export default function App() {
             onClose={() => setEditNickname(false)} />
         )}
         {showLoginPrompt && <LoginPromptModal onClose={() => setShowLoginPrompt(false)} onLogin={signIn} />}
+        {showPostPrompt && <PostPromptModal onClose={() => setShowPostPrompt(false)} onWriteReview={() => { setShowPostPrompt(false); setShowReviewTypePicker(true) }} />}
         {showReviewTypePicker && (
           <ReviewTypeModal onClose={() => setShowReviewTypePicker(false)} onSelect={type => {
             setShowReviewTypePicker(false)
